@@ -1,21 +1,9 @@
+# Corticotrophs heterogeneity
+
 This repository contains scripts for the analysis of corticotrophs in scRNAseq pituitary datasets.
 
-The following datasets have been used
-
-| PMID                                                 | Species | Reference                    | Data source                                                                           |
-|------------------------------------------------------|---------|------------------------------|---------------------------------------------------------------------------------------|
-| [33571131](https://pubmed.ncbi.nlm.nih.gov/33571131) |  Mouse  | Lopez et al.2021             |                                                                                       |
-| [33373440](https://pubmed.ncbi.nlm.nih.gov/33373440) |  Mouse  | Allensworth-James et al.2021 |                                                                                       |
-| [33808370](https://pubmed.ncbi.nlm.nih.gov/33808370) |  Mouse  | Scagliotti et al.2021        |                                                                                       |
-| [34161279](https://pubmed.ncbi.nlm.nih.gov/34161279) |  Mouse  | Vennekens et al.2021         |                                                                                       |
-| [31915267](https://pubmed.ncbi.nlm.nih.gov/31915267) |  Mouse  | Chen et al.2020              |                                                                                       |
-| [32193873](https://pubmed.ncbi.nlm.nih.gov/32193873) |  Mouse  | Ho et al.2020                |                                                                                       |
-| [31444346](https://pubmed.ncbi.nlm.nih.gov/31444346) |  Mouse  | Mayran et al.2019            | [PRJNA517137](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA517137&o=acc_s%3Aa) |
-| [30335147](https://pubmed.ncbi.nlm.nih.gov/30335147) |  Mouse  | Cheung et al.2018            |                                                                                       |
-| [35058881](https://pubmed.ncbi.nlm.nih.gov/35058881) |   Rat   | Kučka et al.2021             |                                                                                       |
-| [31620083](https://pubmed.ncbi.nlm.nih.gov/31620083) |   Rat   | Fletcher et al.2019          | [PRJNA546549](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA546549&o=acc_s%3Aa) |
-
-The scripts have been numbered sequentially to help navigating the repository. A brief description of each script follows
+The datasets used for this study are listed in the `datasets.csv` file
+The scripts have been numbered sequentially to help navigate the repository. A brief description of each script follows
 
 ---
 
@@ -24,8 +12,23 @@ The scripts have been numbered sequentially to help navigating the repository. A
 Downloads raw data for each dataset - Note that this takes **a lot** of space.
 Usage
 
-    00_download_data.sh SRA_id output_dir
-    
+    00_download_data.sh <SRA_id> <output_dir> <SRA_toolkit_dir>
+
 For example
 
-    00_download_data.sh SRR9203724 /home/pitdatasets/Fletcher2019
+    00_download_data.sh SRR123456 /home/pitdatasets/Example2022 /home/sratoolkit/
+
+Note some data is deposited on ArrayExpress, which is not accessible from the NCBI SRA toolkit. A list of files to download is available in the directory and can be simply downloaded using wget.
+
+`01_align_to_genome.sh`
+
+Aligns the raw data to the genome using Cell Ranger.
+Usage
+
+    01_align_to_genome.sh <fastq_dir> <id (sample/output)> <cellranger_dir> <genome> [<expected cells>]
+
+For example
+
+    01_align_to_genome.sh /home/pitdatasets/Example2022/SRR9203724 SRR12345 /home/cellranger/ /home/cellranger/genomes/refdata-gex-GRCh38-2020-A 6000
+
+Data in this study was aligned to the mouse reference dataset 2020-A (July 7, 2020) available on [the 10x website](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest), based on mouse reference mm10 (GENCODE vM23/Ensembl 98).
