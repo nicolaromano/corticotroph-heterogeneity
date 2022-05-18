@@ -6,6 +6,10 @@ if [ $# -ne 3 ]; then
     exit 1
 fi
 
+# Time the script
+# Note: SECONDS is a bash builtin variable that gives the number of seconds since the script was started
+SECONDS=0
+
 SRR_ID=$1
 OUTPUT_DIR=$2
 SRA_TOOLKIT_DIR=$3
@@ -20,8 +24,13 @@ echo "$(date) - Download complete"
 
 echo "$(date) - Renaming files to match expected CellRanger format"
 
+# Files _1 and _2 (optional) are the R1 and R2 files
 mv ${OUTPUT_DIR}/${SRR_ID}_1.fastq.gz ${OUTPUT_DIR}/${SRR_ID}_S1_L001_R1_001.fastq.gz
-mv ${OUTPUT_DIR}/${SRR_ID}_2.fastq.gz ${OUTPUT_DIR}/${SRR_ID}_S1_L001_R2_001.fastq.gz
+
+if [ -f ${OUTPUT_DIR}/${SRR_ID}_2.fastq.gz ]; then   
+    mv ${OUTPUT_DIR}/${SRR_ID}_2.fastq.gz ${OUTPUT_DIR}/${SRR_ID}_S1_L001_R2_001.fastq.gz
+fi
+
 # If we have a _3 or a _4 file, we need to rename it as well, this would be the index
 if [ -f ${OUTPUT_DIR}/${SRR_ID}_3.fastq.gz ]; then
     mv ${OUTPUT_DIR}/${SRR_ID}_3.fastq.gz ${OUTPUT_DIR}/${SRR_ID}_S1_L001_I1_001.fastq.gz
@@ -31,4 +40,4 @@ if [ -f ${OUTPUT_DIR}/${SRR_ID}_4.fastq.gz ]; then
     mv ${OUTPUT_DIR}/${SRR_ID}_4.fastq.gz ${OUTPUT_DIR}/${SRR_ID}_S1_L001_I2_001.fastq.gz
 fi
 
-echo "$(date) - All done."
+echo "All files downloaded in $(( $SECONDS / 60 )) minutes."
