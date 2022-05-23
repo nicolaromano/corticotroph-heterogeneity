@@ -18,7 +18,7 @@ For example
 
     00_download_data.sh SRR123456 /home/pitdatasets/Example2022 /home/sratoolkit/
 
-Note some data is deposited on ArrayExpress, which is not accessible from the NCBI SRA toolkit. A list of files to download is available in the directory and can be simply downloaded using wget.
+Note some data is deposited on ArrayExpress, which is not accessible from the NCBI SRA toolkit. A list of files to download is available in the directory and can be simply downloaded using `wget`.
 
 `01_align_to_genome.sh`
 
@@ -29,6 +29,20 @@ Usage
 
 For example
 
-    01_align_to_genome.sh /home/pitdatasets/Example2022/SRR9203724 SRR12345 /home/cellranger/ /home/cellranger/genomes/refdata-gex-GRCh38-2020-A 6000
+    01_align_to_genome.sh /home/pitdatasets/Example2022/ SRR12345 /home/cellranger/ /home/cellranger/genomes/refdata-gex-GRCh38-2020-A 6000
 
 Data in this study was aligned to the mouse reference dataset 2020-A (July 7, 2020) available on [the 10x website](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest), based on mouse reference mm10 (GENCODE vM23/Ensembl 98).
+
+`01b_make_cellranger_rat_reference.sh`
+
+Creates a rat reference dataset for Cell Ranger.
+
+`02_aggregate_counts.sh`
+
+Aggregates the counts from the aligned data using Cell Ranger.
+
+    02_aggregate_counts.sh <id> <output_dir> <cellranger_dir>
+
+For example
+
+    02_aggregate_counts.sh SRR12345 /home/pitdatasets/Example2022 /home/cellranger/
