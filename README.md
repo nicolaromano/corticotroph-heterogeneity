@@ -3,11 +3,16 @@
 This repository contains scripts for the analysis of corticotrophs in scRNAseq pituitary datasets.
 
 The datasets used for this study are listed in the `datasets.csv` file
-The scripts have been numbered sequentially to help navigate the repository. A brief description of each script follows
+The scripts have been numbered sequentially to help navigate the repository.
 
 ---
 
-`00_download_data.sh`
+[00__download_data.sh](#00downloaddatash)
+[01__align_to_genome.sh](#01aligntogenomesh)
+[01b__make_cellranger_rat_reference.sh](#01bmakecellrangerratreference)
+[02__aggregate_counts.sh](#02aggregatecountssh)
+
+### `00_download_data.sh`
 
 Downloads raw data for each dataset - Note that this takes **a lot** of space.
 Usage
@@ -20,7 +25,7 @@ For example
 
 Note some data is deposited on ArrayExpress, which is not accessible from the NCBI SRA toolkit. A list of files to download is available in the directory and can be simply downloaded using `wget`.
 
-`01_align_to_genome.sh`
+### `01_align_to_genome.sh`
 
 Aligns the raw data to the genome using Cell Ranger.
 Usage
@@ -33,11 +38,11 @@ For example
 
 Data in this study was aligned to the mouse reference dataset 2020-A (July 7, 2020) available on [the 10x website](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest), based on mouse reference mm10 (GENCODE vM23/Ensembl 98).
 
-`01b_make_cellranger_rat_reference.sh`
+### `01b_make_cellranger_rat_reference.sh`
 
 Creates a rat reference dataset for Cell Ranger.
 
-`02_aggregate_counts.sh`
+### `02_aggregate_counts.sh`
 
 Aggregates the counts from the aligned data using Cell Ranger.
 
@@ -46,3 +51,4 @@ Aggregates the counts from the aligned data using Cell Ranger.
 For example
 
     02_aggregate_counts.sh SRR12345 /home/pitdatasets/Example2022 /home/cellranger/
+
