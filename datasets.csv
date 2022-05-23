@@ -1,7 +1,6 @@
 Species,Strain,Data source (project/run),Sample description,Sex,PMID,First Author,Journal,Year,Title
 Mouse,C57BL/6N,PRJNA679294,"Adult males - Control, Chronic stress",,33571131,Lopez JP,Sci Adv,2021,Single-cell molecular profiling of all three components of the HPA axis reveals adrenal ABCB1 as a regulator of stress adaptation
 ,,SRR13081817,10 wk male - Control,M,,,,,
-,,SRR13081818,10 wk male - Chronic stress (CSDS),M,,,,,
 Mouse,FVB.129P,PRJNA641361,Females,,33373440,Allensworth-James M,Endocrinology,2021,Control of the Anterior Pituitary Cell Lineage Regulator POU1F1 by the Stem Cell Determinant Musashi
 ,,SRR12074650 to 57,8 wk diestrous females,F,,,,,
 Mouse,,E-MTAB-10021,Young and old damaged/undamaged pituitaries (ablation of mostly GH/PRL),,34161279,Vennekens A,Proc Natl Acad Sci U S A,2021,"Interleukin-6 is an activator of pituitary stem cells upon local damage, a competence quenched in the aging gland"
