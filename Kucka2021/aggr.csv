@@ -1,0 +1,7 @@
+sample_id,molecule_h5
+Sample_1,Kucka2021/SRR15926823_a/outs/molecule_info.h5
+Sample_2,Kucka2021/SRR15926823_b/outs/molecule_info.h5
+Sample_3,Kucka2021/SRR15926825_a/outs/molecule_info.h5
+Sample_4,Kucka2021/SRR15926825_b/outs/molecule_info.h5
+Sample_5,Kucka2021/SRR15926826_a/outs/molecule_info.h5
+Sample_6,Kucka2021/SRR15926826_b/outs/molecule_info.h5
