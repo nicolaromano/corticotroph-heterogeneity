@@ -1,23 +1,13 @@
-Species,Strain,Data source (project/run),Sample description,Sex,PMID,First Author,Journal,Year,Title
-Mouse,C57BL/6N,PRJNA679294,"Adult males - Control, Chronic stress",,33571131,Lopez JP,Sci Adv,2021,Single-cell molecular profiling of all three components of the HPA axis reveals adrenal ABCB1 as a regulator of stress adaptation
-,,SRR13081817,10 wk male - Control,M,,,,,
-Mouse,FVB.129P,PRJNA641361,Females,,33373440,Allensworth-James M,Endocrinology,2021,Control of the Anterior Pituitary Cell Lineage Regulator POU1F1 by the Stem Cell Determinant Musashi
-,,SRR12074650 to 57,8 wk diestrous females,F,,,,,
-Mouse,,E-MTAB-10021,Young and old damaged/undamaged pituitaries (ablation of mostly GH/PRL),,34161279,Vennekens A,Proc Natl Acad Sci U S A,2021,"Interleukin-6 is an activator of pituitary stem cells upon local damage, a competence quenched in the aging gland"
-,,scrEXT036 and scrEXT149,9-11 wk male GH+/+ R26iDTR/+ (undamaged) - s9 lane 1+2,M,,,,,
-,,scrEXT144 and scrEXT145,14 months old male GH+/+ R26iDTR/+ (undamaged),M,,,,,
-Mouse,CD1,PRJNA611520,"Male, females (virgin + lactation) - 10x + DropSeq",,32193873,Ho Y,Protein Cell,2020,Single-cell transcriptomic analysis of adult mouse pituitary reveals sexual dimorphism and physiologic demand-induced cellular plasticity
-,,SRR11268104,8 wk female (10x),F,,,,,
-,,SRR11268105,8 wk male (10x),M,,,,,
-,,SRR11268106 to 8113,"Drop-seq samples (male, virgin female, lactating female)",M/F,,,,,
-Mouse,C57BL/6N,PRJNA517137,Male,,31444346,Mayran A,Nat Commun,2019,Pioneer and nonpioneer factor cooperation drives lineage specific chromatin opening
-,,SRR8487461,4 months (16wk) male,M,,,,,
-Mouse,C57BL/6 ,PRJNA493013,Male,,30335147,Cheung LYM,Endocrinology,2018,Single-Cell RNA Sequencing Reveals Novel Markers of Male Pituitary Stem Cells and Hormone-Producing Cell Types
-,,SRR7898909 and 8910,7 wk male,M,,,,,
-Rat,SD,PRJNA763992,"Female anterior, posterior and whole pituitary",,35058881,Kučka M,Front Endocrinol (Lausanne),2021,Calcium-Prolactin Secretion Coupling in Rat Pituitary Lactotrophs Is Controlled by PI4-Kinase Alpha
-,,SRR15926823,Anterior pituitary,F,,,,,
-,,SRR15926824,Posterior pituitary,F,,,,,
-,,SRR15926825 and 6826,Whole pituitary,F,,,,,
-Rat,SD,PRJNA546549,,,31620083,Fletcher PA,Front Endocrinol (Lausanne),2019,Cell Type- and Sex-Dependent Transcriptome Profiles of Rat Anterior Pituitary Cells
-,,SRR9203724 to 3727,Day 44 (6 wk) female,F,,,,,
-,,SRR9203728 to 3731,Day 59 (8 wk) male,M,,,,,
+PMID,First Author,Year,Title,CR_output,Source,Species,Strain,Sex,Stage,Age_wk
+33976139,Ruf-Zamojski F,2021,Single nucleus multi-omics regulatory landscape of the murine pituitary,Ruf_Zamojsky2021/Ruf_Zamojsky2021AggrF/outs/count/filtered_feature_bc_matrix,PRJNA637894,Mouse,C57BL/6,F,Mixed,11
+33976139,Ruf-Zamojski F,2021,Single nucleus multi-omics regulatory landscape of the murine pituitary,Ruf_Zamojsky2021/Ruf_Zamojsky2021AggrM/outs/count/filtered_feature_bc_matrix,PRJNA637894,Mouse,C57BL/6,M,NA,11
+33571131,Lopez JP,2021,Single-cell molecular profiling of all three components of the HPA axis reveals adrenal ABCB1 as a regulator of stress adaptation,Lopez2021/SRR13081817/outs/raw_feature_bc_matrix,PRJNA679294,Mouse,C57BL/6N,M,NA,10
+33373440,Allensworth-James M,2021,Control of the Anterior Pituitary Cell Lineage Regulator POU1F1 by the Stem Cell Determinant Musashi,Allensworth2021/Allensworth2021Aggr/outs/count/filtered_feature_bc_matrix,PRJNA641361,Mouse,FVB.129P,F,Diestrous,8
+34161279,Vennekens A,2021,"Interleukin-6 is an activator of pituitary stem cells upon local damage, a competence quenched in the aging gland",Vennekens2021/Vennekens2021Aggr/outs/count/filtered_feature_bc_matrix,E-MTAB-10021,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
+32193873,Ho Y,2020,Single-cell transcriptomic analysis of adult mouse pituitary reveals sexual dimorphism and physiologic demand-induced cellular plasticity,Ho2020/SRR11268104/outs/raw_feature_bc_matrix,PRJNA611520,Mouse,CD1,F,Mixed,8
+32193873,Ho Y,2020,Single-cell transcriptomic analysis of adult mouse pituitary reveals sexual dimorphism and physiologic demand-induced cellular plasticity,Ho2020/SRR11268105/outs/raw_feature_bc_matrix,PRJNA611520,Mouse,CD1,M,NA,8
+31444346,Mayran A,2019,Pioneer and nonpioneer factor cooperation drives lineage specific chromatin opening,Mayran2019/SRR8487461/outs/raw_feature_bc_matrix,PRJNA517137,Mouse,C57BL/6N,M,NA,16
+30335147,Cheung LYM,2018,Single-Cell RNA Sequencing Reveals Novel Markers of Male Pituitary Stem Cells and Hormone-Producing Cell Types,Cheung2018/Cheung2018Aggr/outs/count/filtered_feature_bc_matrix,PRJNA493013,Mouse,C57BL/6 ,M,NA,7
+35058881,Kučka M,2021,Calcium-Prolactin Secretion Coupling in Rat Pituitary Lactotrophs Is Controlled by PI4-Kinase Alpha,Kucka2021/Kucka2021Aggr/outs/count/filtered_feature_bc_matrix,PRJNA763992,Rat,SD,F,Mixed,10
+31620083,Fletcher PA,2019,Cell Type- and Sex-Dependent Transcriptome Profiles of Rat Anterior Pituitary Cells,Fletcher2019/Fletcher2019AggrF/outs/count/filtered_feature_bc_matrix,PRJNA546549,Rat,SD,F,Diestrous,6
+31620083,Fletcher PA,2019,Cell Type- and Sex-Dependent Transcriptome Profiles of Rat Anterior Pituitary Cells,Fletcher2019/Fletcher2019AggrM/outs/count/filtered_feature_bc_matrix,PRJNA546549,Rat,SD,M,NA,8
