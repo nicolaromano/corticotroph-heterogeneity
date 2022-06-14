@@ -9,30 +9,37 @@ library(here)
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
 
-load_data <- function(metadata) {
-  input_cellranger_dir <- metadata$cr_output
-  project_name <- metadata$id
+load_data <- function(metadata, study) {
+  matrix10x_list <- apply(metadata, 1, function(row){
+      input_cellranger_dir <- row["cr_output"]
+      print(paste0("Loading ", row["source"], " (", study$study_id, ") from ", 
+                   input_cellranger_dir))
 
-  print(paste("Loading", project_name, "from", input_cellranger_dir))
+      res <- Read10X(paste0(getwd(), "/", input_cellranger_dir))
+      })
+
+  print("Merging matrices...")
+  matrix10x <- do.call("cbind", matrix10x_list)
+
   # Load data into Seurat
-  seurat_obj <- CreateSeuratObject(Read10X(paste0(
-    getwd(), "/",
-    input_cellranger_dir
-  )),
-  project = project_name
-  )
+  seurat_obj <- CreateSeuratObject(matrix10x, project = study$study_id)
 
   # Add metadata
   seurat_obj[["percent_mt"]] <- PercentageFeatureSet(seurat_obj,
     pattern = "^mt-"
   )
 
-  seurat_obj[["species"]] <- metadata$species
-  seurat_obj[["strain"]] <- metadata$strain
-  seurat_obj[["sex"]] <- metadata$sex
-  seurat_obj[["stage"]] <- metadata$stage
-  seurat_obj[["age_wk"]] <- metadata$age_wk
-
+  seurat_obj[["species"]] <- metadata$species[1]
+  seurat_obj[["strain"]] <- metadata$strain[1]
+  seurat_obj[["sex"]] <- metadata$sex[1]
+  seurat_obj[["stage"]] <- metadata$stage[1]
+  seurat_obj[["age_wk"]] <- metadata$age_wk[1]
+  seurat_obj[["data_source"]] <- metadata$source[1]
+  
+  filename <- paste0(study$study_id, ".rds")
+  print(paste("Saving to", filename))
+  saveRDS(object = seurat_obj, file = filename)
+  
   return(seurat_obj)
 }
 
@@ -261,13 +268,13 @@ plot_qc <- function(seurat_object,
     dev.off()
 }
 
-for (i in 8:nrow(datasets))
-  {
-  seurat_object <- load_data(datasets[i,])
-  plot_qc(seurat_object,
-    min_counts = 500,
-    min_features = 200,
-    main_title = paste(datasets[i,]$id, "QC"),
-    save_to_file = TRUE
-  )
-}
+seurat_objects <- datasets %>% 
+  group_by(study_id) %>% # Group by study (M/F have different IDs, so are separated)
+  group_map(~ load_data(.x, .y)) # Apply the load_data function to each group
+
+for (i in 1:length(seurat_objects))
+   {
+   plot_qc(seurat_objects[[i]],
+   main_title = paste(seurat_objects[[i]]$orig.ident[1], "QC"),
+   save_to_file = FALSE)
+   }
