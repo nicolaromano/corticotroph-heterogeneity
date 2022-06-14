@@ -36,7 +36,10 @@ load_data <- function(metadata, study) {
   seurat_obj[["age_wk"]] <- metadata$age_wk[1]
   seurat_obj[["data_source"]] <- metadata$source[1]
   
-  filename <- paste0(study$study_id, ".rds")
+  # showWarnings = FALSE avoids warnings 
+  # if the directory has already been created
+  dir.create("rds_outs", showWarnings = FALSE)
+  filename <- paste0("rds_outs/", study$study_id, "_raw_counts.rds")
   print(paste("Saving to", filename))
   saveRDS(object = seurat_obj, file = filename)
   
@@ -91,10 +94,18 @@ plot_qc <- function(seurat_object,
   }
 
   # Common theme for our plots
-  plot_theme <- theme(
-    axis.title = element_text(size = 22),
-    axis.text = element_text(size = 21)
-  )
+  if (save_to_file)
+    {
+    plot_theme <- theme(
+      axis.title = element_text(size = 22),
+      axis.text = element_text(size = 21))
+    }  
+  else
+    {
+    plot_theme <- theme(
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 11))
+    }
 
   # Calculate how many points we'll discard
   qc_data %>%
@@ -106,6 +117,7 @@ plot_qc <- function(seurat_object,
   perc_reject <- format(n_reject / nrow(qc_data) * 100, digits = 2, nsmall = 2)
   
   if (save_to_file)
+    {
     # showWarnings = FALSE avoids warnings 
     # if the directory has already been created
     dir.create("QC_plots", showWarnings = FALSE)
@@ -113,6 +125,7 @@ plot_qc <- function(seurat_object,
         width = 1500, height = 1500, 
         pointsize = 25,
         title = main_title)
+    }
 
   #### Histograms ####
 
@@ -269,12 +282,46 @@ plot_qc <- function(seurat_object,
 }
 
 seurat_objects <- datasets %>% 
+  filter(study_id != "Ho2020M") %>% 
   group_by(study_id) %>% # Group by study (M/F have different IDs, so are separated)
   group_map(~ load_data(.x, .y)) # Apply the load_data function to each group
 
 for (i in 1:length(seurat_objects))
    {
    plot_qc(seurat_objects[[i]],
-   main_title = paste(seurat_objects[[i]]$orig.ident[1], "QC"),
-   save_to_file = FALSE)
-   }
+           main_title = paste(seurat_objects[[i]]$orig.ident[1], "QC"),
+           save_to_file = TRUE)
+    }
+
+
+# Optional filtering on genes/cell
+
+# What % of cells would we discard by further filtering on genes/cell?
+# 
+# nfeat <- lapply(seurat_objects, function(x){
+#               data.frame(nFeatures = x$nFeature_RNA, 
+#                          dataset = x$orig.ident[1])
+#         })
+# nfeat <- do.call("rbind", nfeat)
+# 
+# nfeat %>% 
+#   group_by(dataset) %>% 
+#   summarise(num_cells = length(nFeatures),
+#             perc_less_50 = sum(nFeatures < 50)/sum(nFeatures>0)*100,
+#             perc_less_100 = sum(nFeatures < 100)/sum(nFeatures>0)*100,
+#             perc_less_200 = sum(nFeatures < 200)/sum(nFeatures>0)*100,
+#             perc_less_500 = sum(nFeatures < 500)/sum(nFeatures>0)*100)
+# 
+# seurat_objects <- lapply(seurat_objects, function(x)
+#   {
+#   x %>% 
+#     subset(nFeature_RNA > 100)
+#   })
+# 
+# # Re-plot QC
+# for (i in 1:length(seurat_objects))
+#   {
+#   plot_qc(seurat_objects[[i]],
+#           main_title = paste(seurat_objects[[i]]$orig.ident[1], "QC"),
+#           save_to_file = TRUE)
+#   }
