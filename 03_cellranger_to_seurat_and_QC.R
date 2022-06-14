@@ -36,10 +36,27 @@ load_data <- function(metadata) {
   return(seurat_obj)
 }
 
-plot_qc <- function(seurat_object, save_to_file = FALSE,
+plot_qc <- function(seurat_object,
                     min_pct_mito = NA, max_pct_mito = NA,
                     min_features = NA, max_features = NA,
-                    min_counts = NA, max_counts = NA) {
+                    min_counts = NA, max_counts = NA,
+                    main_title = "QC plots",
+                    save_to_file = FALSE) {
+  #' Plots QC plots for the data
+  #' This creates a 3x3 matrix of plots including
+  #' Histograms of counts/cell, genes/cell, % mitochondrial genes
+  #' Rank plots of the above
+  #' Scatter plots of the combinations of these features
+  #' @param seurat_object: The Seurat object
+  #' @param min_pct_mito: Minimum percentage of mitochondrial genes
+  #' @param max_pct_mito: Maximum percentage of mitochondrial genes
+  #' @param min_features: Minimum number of features
+  #' @param max_features: Maximum number of features
+  #' @param min_counts: Minimum number of counts
+  #' @param max_counts: Maximum number of counts
+  #' @param main_title: Title of the plot
+  #' @param save_to_file: Whether to save the plot to file (default: FALSE)
+
   qc_data <- data.frame(
     percent_mt = seurat_object[["percent_mt"]],
     nCount_RNA = seurat_object[["nCount_RNA"]],
@@ -68,8 +85,8 @@ plot_qc <- function(seurat_object, save_to_file = FALSE,
 
   # Common theme for our plots
   plot_theme <- theme(
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11)
+    axis.title = element_text(size = 22),
+    axis.text = element_text(size = 21)
   )
 
   # Calculate how many points we'll discard
@@ -81,18 +98,20 @@ plot_qc <- function(seurat_object, save_to_file = FALSE,
 
   perc_reject <- format(n_reject / nrow(qc_data) * 100, digits = 2, nsmall = 2)
   
+  if (save_to_file)
+    # showWarnings = FALSE avoids warnings 
+    # if the directory has already been created
+    dir.create("QC_plots", showWarnings = FALSE)
+    png(paste0("QC_plots/", main_title, ".png"),
+        width = 1500, height = 1500, 
+        pointsize = 25,
+        title = main_title)
+
   #### Histograms ####
 
   p1 <- ggplot(qc_data, aes(x = nCount_RNA)) +
     geom_histogram(
-      binwidth = 500,
-      aes(fill = nCount_RNA >= min_counts &
-        nCount_RNA <= max_counts)
-    ) +
-    scale_fill_manual(
-      values = c(rgb(0.8, 0.1, 0.1), rgb(0.3, 0.3, 0.3)),
-      guide = "none"
-    ) +
+      binwidth = 500) +
     scale_y_log10() +
     xlab("Reads/cell") +
     ylab("Count") +
@@ -115,14 +134,7 @@ plot_qc <- function(seurat_object, save_to_file = FALSE,
 
   p2 <- ggplot(qc_data, aes(x = nFeature_RNA)) +
     geom_histogram(
-      binwidth = 100,
-      aes(fill = nFeature_RNA >= min_features &
-        nFeature_RNA <= max_features)
-    ) +
-    scale_fill_manual(
-      values = c(rgb(0.8, 0.1, 0.1), rgb(0.3, 0.3, 0.3)),
-      guide = "none"
-    ) +
+      binwidth = 100) +
     scale_y_log10() +
     xlab("Genes/cell") +
     ylab("Count") +
@@ -144,14 +156,7 @@ plot_qc <- function(seurat_object, save_to_file = FALSE,
 
   p3 <- ggplot(qc_data, aes(x = percent_mt)) +
     geom_histogram(
-      binwidth = 1,
-      aes(fill = percent_mt >= min_pct_mito &
-        percent_mt <= max_pct_mito)
-    ) +
-    scale_fill_manual(
-      values = c(rgb(0.8, 0.1, 0.1), rgb(0.3, 0.3, 0.3)),
-      guide = "none"
-    ) +
+      binwidth = 1) +
     scale_y_log10() +
     xlab("% mitochondrial genes") +
     ylab("Count") +
@@ -248,20 +253,21 @@ plot_qc <- function(seurat_object, save_to_file = FALSE,
   grid.arrange(p1, p2, p3, 
                p4, p5, p6,
                p7, p8, p9,
-    ncol = 3, nrow = 3
+    ncol = 3, nrow = 3,
+    top = main_title
   )
+  
+  if (save_to_file)
+    dev.off()
 }
 
-# seurat_object <- load_data(datasets[3,])
-plot_qc(seurat_object,
-  min_counts = 500,
-  min_features = 200
-)
-
-#
-# # tiff(filename = paste0("QC plots", project_name, "pre-filtering", sep=" - "),
-# # width = 800, height = 800, compression = "lzwm")
-#
-# ggarrange(p1, p2, p3, ncol = 2, nrow = 2) +
-#   ggtitle(paste("QC plots", project_name, "pre-filtering", sep = " - "))
-# # dev.off()
+for (i in 8:nrow(datasets))
+  {
+  seurat_object <- load_data(datasets[i,])
+  plot_qc(seurat_object,
+    min_counts = 500,
+    min_features = 200,
+    main_title = paste(datasets[i,]$id, "QC"),
+    save_to_file = TRUE
+  )
+}
