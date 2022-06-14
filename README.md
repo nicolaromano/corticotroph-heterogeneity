@@ -59,3 +59,7 @@ Aggregates the counts from the aligned data using Cell Ranger.
 For example
 
     02_aggregate_counts.sh SRR12345 /home/pitdatasets/Example2022 /home/cellranger/
+
+### `03_cellranger_to_seurat_and_QC.R`
+
+Imports data into R, and plots QC metrics. We use data as filtered by Cellranger - no further filtering is performed.
