@@ -1,13 +1,45 @@
-id,pmid,author,year,title,cr_output,source,species,strain,sex,stage,age_wk
-RufZamoiski2021F,33976139,Ruf-Zamojski F,2021,Single nucleus multi-omics regulatory landscape of the murine pituitary,Ruf_Zamojsky2021/Ruf_Zamojsky2021AggrF/outs/count/filtered_feature_bc_matrix/,PRJNA637894,Mouse,C57BL/6,F,Mixed,11
-RufZamoiski2021M,33976139,Ruf-Zamojski F,2021,Single nucleus multi-omics regulatory landscape of the murine pituitary,Ruf_Zamojsky2021/Ruf_Zamojsky2021AggrM/outs/count/filtered_feature_bc_matrix/,PRJNA637894,Mouse,C57BL/6,M,NA,11
-Lopez2021,33571131,Lopez JP,2021,Single-cell molecular profiling of all three components of the HPA axis reveals adrenal ABCB1 as a regulator of stress adaptation,Lopez2021/SRR13081817/outs/raw_feature_bc_matrix/,PRJNA679294,Mouse,C57BL/6N,M,NA,10
-Allensworth2021,33373440,Allensworth-James M,2021,Control of the Anterior Pituitary Cell Lineage Regulator POU1F1 by the Stem Cell Determinant Musashi,Allensworth2021/Allensworth2021Aggr/outs/count/filtered_feature_bc_matrix/,PRJNA641361,Mouse,FVB.129P,F,Diestrous,8
-Vennekens2021,34161279,Vennekens A,2021,"Interleukin-6 is an activator of pituitary stem cells upon local damage, a competence quenched in the aging gland",Vennekens2021/Vennekens2021Aggr/outs/count/filtered_feature_bc_matrix/,E-MTAB-10021,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
-Ho2020F,32193873,Ho Y,2020,Single-cell transcriptomic analysis of adult mouse pituitary reveals sexual dimorphism and physiologic demand-induced cellular plasticity,Ho2020/SRR11268104/outs/raw_feature_bc_matrix/,PRJNA611520,Mouse,CD1,F,Mixed,8
-Ho2020M,32193873,Ho Y,2020,Single-cell transcriptomic analysis of adult mouse pituitary reveals sexual dimorphism and physiologic demand-induced cellular plasticity,Ho2020/SRR11268105/outs/raw_feature_bc_matrix/,PRJNA611520,Mouse,CD1,M,NA,8
-Mayran2019,31444346,Mayran A,2019,Pioneer and nonpioneer factor cooperation drives lineage specific chromatin opening,Mayran2019/SRR8487461/outs/raw_feature_bc_matrix/,PRJNA517137,Mouse,C57BL/6N,M,NA,16
-Cheung2018,30335147,Cheung LYM,2018,Single-Cell RNA Sequencing Reveals Novel Markers of Male Pituitary Stem Cells and Hormone-Producing Cell Types,Cheung2018/Cheung2018Aggr/outs/count/filtered_feature_bc_matrix/,PRJNA493013,Mouse,C57BL/6 ,M,NA,7
-Kucka2021,35058881,Kučka M,2021,Calcium-Prolactin Secretion Coupling in Rat Pituitary Lactotrophs Is Controlled by PI4-Kinase Alpha,Kucka2021/Kucka2021Aggr/outs/count/filtered_feature_bc_matrix/,PRJNA763992,Rat,SD,F,Mixed,10
-Fletcher2019F,31620083,Fletcher PA,2019,Cell Type- and Sex-Dependent Transcriptome Profiles of Rat Anterior Pituitary Cells,Fletcher2019/Fletcher2019AggrF/outs/count/filtered_feature_bc_matrix/,PRJNA546549,Rat,SD,F,Diestrous,6
-Fletcher2019M,31620083,Fletcher PA,2019,Cell Type- and Sex-Dependent Transcriptome Profiles of Rat Anterior Pituitary Cells,Fletcher2019/Fletcher2019AggrM/outs/count/filtered_feature_bc_matrix/,PRJNA546549,Rat,SD,M,NA,8
+study_id,cr_output,source_project,source,species,strain,sex,stage,age_wk
+RufZamoiski2021F,Ruf_Zamojsky2021/SRR11945363/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945363,Mouse,C57BL/6,F,Mixed,11
+RufZamoiski2021F,Ruf_Zamojsky2021/SRR11945364/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945364,Mouse,C57BL/6,F,Mixed,11
+RufZamoiski2021F,Ruf_Zamojsky2021/SRR11945365/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945365,Mouse,C57BL/6,F,Mixed,11
+RufZamoiski2021F,Ruf_Zamojsky2021/SRR11945366/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945366,Mouse,C57BL/6,F,Mixed,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945354/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945354,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945355/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945355,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945356/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945356,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945357/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945357,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945358/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945358,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945359/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945359,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945360/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945360,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945361/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945361,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945362/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945362,Mouse,C57BL/6,M,NA,11
+RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945363/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945363,Mouse,C57BL/6,M,NA,11
+Lopez2021,Lopez2021/SRR13081817/outs/filtered_feature_bc_matrix/,PRJNA679294,SRR13081817,Mouse,C57BL/6N,M,NA,10
+Allensworth2021,Allensworth2021/SRR12074650/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074650,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074651/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074651,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074652/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074652,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074653/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074653,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074654/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074654,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074655/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074655,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074656/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074656,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021,Allensworth2021/SRR12074657/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074657,Mouse,FVB.129P,F,Diestrous,8
+Vennekens2021,Vennekens2021/scrEXT036_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT036,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
+Vennekens2021,Vennekens2021/scrEXT149_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT149,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
+Ho2020F,Ho2020/SRR11268104/outs/filtered_feature_bc_matrix/,PRJNA611520,SRR11268104,Mouse,CD1,F,Mixed,8
+Ho2020M,Ho2020/SRR11268105/outs/filtered_feature_bc_matrix/,PRJNA611520,SRR11268105,Mouse,CD1,M,NA,8
+Mayran2019,Mayran2019/SRR8487461/outs/filtered_feature_bc_matrix/,PRJNA517137,SRR8487461,Mouse,C57BL/6N,M,NA,16
+Cheung2018,Cheung2018/SRR7898909/outs/filtered_feature_bc_matrix,PRJNA493013,SRR7898909,Mouse,C57BL/6 ,M,NA,7
+Cheung2018,Cheung2018/SRR7898910/outs/filtered_feature_bc_matrix,PRJNA493013,SRR7898910,Mouse,C57BL/6 ,M,NA,7
+Kucka2021,Kucka2021/SRR15926823_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926823,Rat,SD,F,Mixed,10
+Kucka2021,Kucka2021/SRR15926823_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926823,Rat,SD,F,Mixed,10
+Kucka2021,Kucka2021/SRR15926825_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926825,Rat,SD,F,Mixed,10
+Kucka2021,Kucka2021/SRR15926825_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926825,Rat,SD,F,Mixed,10
+Kucka2021,Kucka2021/SRR15926826_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926826,Rat,SD,F,Mixed,10
+Kucka2021,Kucka2021/SRR15926826_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926826,Rat,SD,F,Mixed,10
+Fletcher2019F,Fletcher2019/SRR9203724/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203724,Rat,SD,F,Diestrous,6
+Fletcher2019F,Fletcher2019/SRR9203725/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203725,Rat,SD,F,Diestrous,6
+Fletcher2019F,Fletcher2019/SRR9203726/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203726,Rat,SD,F,Diestrous,6
+Fletcher2019F,Fletcher2019/SRR9203727/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203727,Rat,SD,F,Diestrous,6
+Fletcher2019M,Fletcher2019/SRR9203728/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203728,Rat,SD,M,NA,8
+Fletcher2019M,Fletcher2019/SRR9203729/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203729,Rat,SD,M,NA,8
+Fletcher2019M,Fletcher2019/SRR9203730/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203730,Rat,SD,M,NA,8
+Fletcher2019M,Fletcher2019/SRR9203731/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203731,Rat,SD,M,NA,8
