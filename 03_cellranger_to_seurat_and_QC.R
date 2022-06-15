@@ -282,7 +282,6 @@ plot_qc <- function(seurat_object,
 }
 
 seurat_objects <- datasets %>% 
-  filter(study_id != "Ho2020M") %>% 
   group_by(study_id) %>% # Group by study (M/F have different IDs, so are separated)
   group_map(~ load_data(.x, .y)) # Apply the load_data function to each group
 
