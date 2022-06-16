@@ -209,35 +209,20 @@ for (i in 1:length(seurat_objects))
   )
 }
 
+# Scale with SCT -> PCA -> UMAP
+sapply(seurat_objects, function(f)
+  {
+  print(paste("Reading", f))
+  seuratobj <- readRDS(f)
+  seuratobj %>% 
+    SCTransform %>% 
+    FindVariableFeatures %>% 
+    RunPCA %>% 
+    RunUMAP(dims=1:20) -> seuratobj
+  
+  outfile <- sub(pattern = "raw_counts", replacement = "SCT_clustered", x = f)
+  saveRDS(seuratobj, file=outfile)
+  
+  return(seuratobj)
+  })
 
-# Optional filtering on genes/cell
-
-# What % of cells would we discard by further filtering on genes/cell?
-#
-# nfeat <- lapply(seurat_objects, function(x){
-#               data.frame(nFeatures = x$nFeature_RNA,
-#                          dataset = x$orig.ident[1])
-#         })
-# nfeat <- do.call("rbind", nfeat)
-#
-# nfeat %>%
-#   group_by(dataset) %>%
-#   summarise(num_cells = length(nFeatures),
-#             perc_less_50 = sum(nFeatures < 50)/sum(nFeatures>0)*100,
-#             perc_less_100 = sum(nFeatures < 100)/sum(nFeatures>0)*100,
-#             perc_less_200 = sum(nFeatures < 200)/sum(nFeatures>0)*100,
-#             perc_less_500 = sum(nFeatures < 500)/sum(nFeatures>0)*100)
-#
-# seurat_objects <- lapply(seurat_objects, function(x)
-#   {
-#   x %>%
-#     subset(nFeature_RNA > 100)
-#   })
-#
-# # Re-plot QC
-# for (i in 1:length(seurat_objects))
-#   {
-#   plot_qc(seurat_objects[[i]],
-#           main_title = paste(seurat_objects[[i]]$orig.ident[1], "QC"),
-#           save_to_file = TRUE)
-#   }
