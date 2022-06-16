@@ -220,7 +220,7 @@ sapply(seurat_objects, function(f)
     RunPCA %>% 
     RunUMAP(dims=1:20) -> seuratobj
   
-  outfile <- sub(pattern = "raw_counts", replacement = "SCT_clustered", x = f)
+  outfile <- sub(pattern = "raw_counts", replacement = "SCT", x = f)
   saveRDS(seuratobj, file=outfile)
   
   return(seuratobj)
