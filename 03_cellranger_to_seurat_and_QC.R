@@ -9,12 +9,21 @@ library(here)
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
 
-load_data <- function(metadata, study, min_genes_cell = 0) {
-  #' Loads data from CellRanger output, adds metadata and saves
+load_data <- function(metadata, study, 
+                      min_quantile_genes_cell = 0.05,
+                      min_quantile_counts_cell = 0.05,
+                      max_quantile_pct_mt = 0.95,
+                      min_pct_mt_genes = 0.1) {
+  #' Loads data from CellRanger output, adds metadata, filters and saves
   #' the resulting Seurat object in an RDS file in the rds_outs folder
   #' @param metadata: the metadata for the datasets
   #' @param study: the ID of the study we are loading
-  #' @param min_genes_cell: the minimum number of genes per cell (default 0)
+  #' @param min_quantile_genes_cell, min_quantile_counts_cell, 
+  #' max_quantile_pct_mt: the quantiles to be used for filtering
+  #' Cells with genes/counts below the genes/counts quantiles, that
+  #' are above the max_quantile_pct_mt are removed.
+  #' Cells below min_pct_mt_genes are also removed.
+  #' @param min_pct_mt_genes: the minimum percentage of mitochondrial genes
   #' @return: a Seurat object with the data and metadata
   matrix10x_list <- apply(metadata, 1, function(row) {
     input_cellranger_dir <- row["cr_output"]
@@ -34,21 +43,32 @@ load_data <- function(metadata, study, min_genes_cell = 0) {
   # Load data into Seurat
   seurat_obj <- CreateSeuratObject(matrix10x, project = study$study_id)
 
-  # Filter cells with less than min_genes_cell genes
-  if (min_genes_cell > 0) {
-    seurat_obj <- subset(seurat_obj, nFeature_RNA >= min_genes_cell)
-  }
-
   # Add metadata
-  seurat_obj[["percent_mt"]] <- PercentageFeatureSet(seurat_obj,
-    pattern = "^mt-"
-  )
+  if (metadata$species[1] == "Mouse")
+    seurat_obj[["percent_mt"]] <- PercentageFeatureSet(seurat_obj,
+                                                       pattern = "^mt-")
+  else
+    seurat_obj[["percent_mt"]] <- PercentageFeatureSet(seurat_obj,
+                                                       pattern = "^Mt-")
   seurat_obj[["species"]] <- metadata$species[1]
   seurat_obj[["strain"]] <- metadata$strain[1]
   seurat_obj[["sex"]] <- metadata$sex[1]
   seurat_obj[["stage"]] <- metadata$stage[1]
   seurat_obj[["age_wk"]] <- metadata$age_wk[1]
   seurat_obj[["data_source"]] <- metadata$source[1]
+
+  # Filtering cells
+  low_features = quantile(seurat_obj$nFeature_RNA, min_quantile_genes_cell)
+  low_counts = quantile(seurat_obj$nCount_RNA, min_quantile_counts_cell)
+  high_mt = quantile(seurat_obj$percent_mt, max_quantile_pct_mt)
+  low_mt = min_pct_mt_genes
+  
+  seurat_obj <- subset(seurat_obj, 
+                       nFeature_RNA >= low_features &
+                         nCount_RNA >= low_counts &
+                         percent_mt < high_mt)
+  
+  seurat_obj <- subset(seurat_obj, percent_mt >= low_mt)
 
   # showWarnings = FALSE avoids warnings
   # if the directory has already been created
@@ -199,7 +219,11 @@ seurat_objects <- datasets %>%
   # Group by study (M/F have different IDs, so are separated)
   group_by(study_id) %>%
   # Apply the load_data function to each group
-  group_map(~ load_data(.x, .y, min_genes_cell = 100))
+  group_map(~ load_data(.x, .y, 
+                        min_quantile_genes_cell = 0.05, 
+                        min_quantile_counts_cell = 0.05,
+                        max_quantile_pct_mt = 0.95,
+                        min_pct_mt_genes = 0.1))
 
 for (i in 1:length(seurat_objects))
 {
@@ -210,19 +234,16 @@ for (i in 1:length(seurat_objects))
 }
 
 # Scale with SCT -> PCA -> UMAP
-sapply(seurat_objects, function(f)
+sapply(seurat_objects, function(s)
   {
-  print(paste("Reading", f))
-  seuratobj <- readRDS(f)
-  seuratobj %>% 
+  s %>% 
     SCTransform %>% 
     FindVariableFeatures %>% 
     RunPCA %>% 
     RunUMAP(dims=1:20) -> seuratobj
   
-  outfile <- sub(pattern = "raw_counts", replacement = "SCT", x = f)
+  outfile <- paste0(s$orig.ident[1], "_SCT.rds")
   saveRDS(seuratobj, file=outfile)
   
   return(seuratobj)
   })
-
