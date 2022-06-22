@@ -55,25 +55,75 @@ show_markers <- function(seurat_obj, hormonal = TRUE) {
     ylab(expression(UMAP[2]))
 }
 
-plot_features_histo <- function(seurat_obj, feature, log_y_axis = TRUE) {
+plot_features_histo <- function(seurat_obj, feature, find_threshold = TRUE,
+                                log_y_axis = TRUE) {
+  if (!feature %in% rownames(seurat_obj)) # Feature does not exist
+    {
+    p <- ggplot() +
+      ggtitle(paste(seurat_obj$orig.ident[1], "- gene not found"))
+    
+    return(p)
+    }
+  
   expr <- data.frame(expr = GetAssayData(seurat_obj)[feature, ])
 
+  p <- ggplot(expr, aes(x = expr)) +
+    geom_histogram(binwidth = 0.1) +
+    xlim(0, 10) +
+    xlab(paste(feature, "expression")) +
+    ggtitle(seurat_obj$orig.ident[1])
+    
   if (log_y_axis) {
-    ggplot(expr, aes(x = expr)) +
-      geom_histogram(binwidth = 0.1) +
-      scale_y_log10()
-  } else {
-    ggplot(expr, aes(x = expr)) +
-      geom_histogram(binwidth = 0.1)
+      p <- p + scale_y_log10()
+  } 
+  
+  if (find_threshold)
+    {
+    thr <- otsu_thresh(expr$expr)
+    p <- p + geom_vline(xintercept = thr, col = "red", lty = "dashed")
+    }
+  
+  p
+}
+
+otsu_thresh <- function(values, levels = 100)
+  {
+  #' A simple implementation of Otsu's threshold
+  #' Adapted from EBImage::otsu
+  #' @param values: an array of values
+  #' @param levels: the number of levels to consider
+  #' @return : the Otsu's threshold for the values
+
+  range <- c(0, max(values))
+  breaks <- seq(range[1], range[2], length.out = levels + 1)
+  
+  h <- hist(values, breaks = breaks, plot = FALSE)
+  counts <- as.double(h$counts)
+  mids <- as.double(h$mids)
+  len <- length(counts)
+  w1 <- cumsum(counts)
+  w2 <- w1[len] + counts - w1
+  cm <- counts * mids
+  m1 <- cumsum(cm)
+  m2 <- m1[len] + cm - m1
+  var <- w1 * w2 * (m2/w2 - m1/w1)^2
+  maxi <- which(var == max(var, na.rm = TRUE))
+  
+  return((mids[maxi[1]] + mids[maxi[length(maxi)]])/2)
   }
-}
-
-type_cells <- function(seurat_obj) {
+  
+type_cells_thr <- function(seurat_obj) {
   # TODO add other cell types
+  # We call corticotrophs cells that 
 }
 
-pomc_hist <- lapply(seurat_objects, plot_features_histo, "Pomc")
-marrangeGrob(pomc_hist, ncol = 4, nrow = 3)
+pomc_hist <- lapply(seurat_objects, plot_features_histo, "Pomc", 
+                    find_threshold = TRUE, log_y_axis = TRUE)
+do.call("grid.arrange", c(pomc_hist, ncol = 4, nrow = 3))
+
+pax7_hist <- lapply(seurat_objects, plot_features_histo, "Pax7", 
+                    find_threshold = TRUE, log_y_axis = TRUE)
+do.call("grid.arrange", c(pax7_hist, ncol = 4, nrow = 3))
 
 seurat_obj <- seurat_objects[[3]]
 # Try different resolutions and use the elbow method to find the "optimal one"
