@@ -20,9 +20,8 @@ load_data <- function(metadata, study,
   #' @param study: the ID of the study we are loading
   #' @param min_quantile_genes_cell, min_quantile_counts_cell, 
   #' max_quantile_pct_mt: the quantiles to be used for filtering
-  #' Cells with genes/counts below the genes/counts quantiles, that
-  #' are above the max_quantile_pct_mt are removed.
-  #' Cells below min_pct_mt_genes are also removed.
+  #' Cells with genes/counts below the genes/counts quantiles, those that
+  #' are above the max_quantile_pct_mt or below min_pct_mt_genes are also removed.
   #' @param min_pct_mt_genes: the minimum percentage of mitochondrial genes
   #' @return: a Seurat object with the data and metadata
   matrix10x_list <- apply(metadata, 1, function(row) {
@@ -65,10 +64,9 @@ load_data <- function(metadata, study,
   
   seurat_obj <- subset(seurat_obj, 
                        nFeature_RNA >= low_features &
-                         nCount_RNA >= low_counts &
-                         percent_mt < high_mt)
+                         nCount_RNA >= low_counts)
   
-  seurat_obj <- subset(seurat_obj, percent_mt >= low_mt)
+  seurat_obj <- subset(seurat_obj, percent_mt < high_mt & percent_mt >= low_mt)
 
   # showWarnings = FALSE avoids warnings
   # if the directory has already been created
@@ -222,7 +220,7 @@ seurat_objects <- datasets %>%
   group_map(~ load_data(.x, .y, 
                         min_quantile_genes_cell = 0.05, 
                         min_quantile_counts_cell = 0.05,
-                        max_quantile_pct_mt = 0.95,
+                        max_quantile_pct_mt = 0.9,
                         min_pct_mt_genes = 0.1))
 
 for (i in 1:length(seurat_objects))
@@ -233,8 +231,15 @@ for (i in 1:length(seurat_objects))
   )
 }
 
+# Print number of cells
+num_cells <- data.frame(dataset = sapply(seurat_objects, function(s){
+                                    as.character(s$orig.ident[1])}),
+                        cells = sapply(seurat_objects, ncol))
+
+num_cells
+
 # Scale with SCT -> PCA -> UMAP
-sapply(seurat_objects, function(s)
+seurat_objects_SCT <- sapply(seurat_objects, function(s)
   {
   s %>% 
     SCTransform %>% 
