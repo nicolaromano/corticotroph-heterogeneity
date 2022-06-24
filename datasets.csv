@@ -13,28 +13,28 @@ RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945360/outs/filtered_feature_bc_matrix,PR
 RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945361/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945361,Mouse,C57BL/6,M,NA,11
 RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945362/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945362,Mouse,C57BL/6,M,NA,11
 RufZamoiski2021M,Ruf_Zamojsky2021/SRR11945363/outs/filtered_feature_bc_matrix,PRJNA637894,SRR11945363,Mouse,C57BL/6,M,NA,11
-Lopez2021,Lopez2021/SRR13081817/outs/filtered_feature_bc_matrix/,PRJNA679294,SRR13081817,Mouse,C57BL/6N,M,NA,10
-Allensworth2021,Allensworth2021/SRR12074650/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074650,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074651/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074651,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074652/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074652,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074653/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074653,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074654/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074654,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074655/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074655,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074656/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074656,Mouse,FVB.129P,F,Diestrous,8
-Allensworth2021,Allensworth2021/SRR12074657/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074657,Mouse,FVB.129P,F,Diestrous,8
-Vennekens2021,Vennekens2021/scrEXT036_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT036,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
-Vennekens2021,Vennekens2021/scrEXT149_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT149,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
+Lopez2021M,Lopez2021/SRR13081817/outs/filtered_feature_bc_matrix/,PRJNA679294,SRR13081817,Mouse,C57BL/6N,M,NA,10
+Allensworth2021F,Allensworth2021/SRR12074650/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074650,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074651/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074651,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074652/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074652,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074653/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074653,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074654/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074654,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074655/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074655,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074656/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074656,Mouse,FVB.129P,F,Diestrous,8
+Allensworth2021F,Allensworth2021/SRR12074657/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074657,Mouse,FVB.129P,F,Diestrous,8
+Vennekens2021M,Vennekens2021/scrEXT036_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT036,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
+Vennekens2021M,Vennekens2021/scrEXT149_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT149,Mouse,GH+/+ R26iDTR/+ ,M,NA,10
 Ho2020F,Ho2020/SRR11268104/outs/filtered_feature_bc_matrix/,PRJNA611520,SRR11268104,Mouse,CD1,F,Mixed,8
 Ho2020M,Ho2020/SRR11268105/outs/filtered_feature_bc_matrix/,PRJNA611520,SRR11268105,Mouse,CD1,M,NA,8
-Mayran2019,Mayran2019/SRR8487461/outs/filtered_feature_bc_matrix/,PRJNA517137,SRR8487461,Mouse,C57BL/6N,M,NA,16
-Cheung2018,Cheung2018/SRR7898909/outs/filtered_feature_bc_matrix,PRJNA493013,SRR7898909,Mouse,C57BL/6 ,M,NA,7
-Cheung2018,Cheung2018/SRR7898910/outs/filtered_feature_bc_matrix,PRJNA493013,SRR7898910,Mouse,C57BL/6 ,M,NA,7
-Kucka2021,Kucka2021/SRR15926823_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926823,Rat,SD,F,Mixed,10
-Kucka2021,Kucka2021/SRR15926823_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926823,Rat,SD,F,Mixed,10
-Kucka2021,Kucka2021/SRR15926825_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926825,Rat,SD,F,Mixed,10
-Kucka2021,Kucka2021/SRR15926825_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926825,Rat,SD,F,Mixed,10
-Kucka2021,Kucka2021/SRR15926826_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926826,Rat,SD,F,Mixed,10
-Kucka2021,Kucka2021/SRR15926826_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926826,Rat,SD,F,Mixed,10
+Mayran2019M,Mayran2019/SRR8487461/outs/filtered_feature_bc_matrix/,PRJNA517137,SRR8487461,Mouse,C57BL/6N,M,NA,16
+Cheung2018M,Cheung2018/SRR7898909/outs/filtered_feature_bc_matrix,PRJNA493013,SRR7898909,Mouse,C57BL/6 ,M,NA,7
+Cheung2018M,Cheung2018/SRR7898910/outs/filtered_feature_bc_matrix,PRJNA493013,SRR7898910,Mouse,C57BL/6 ,M,NA,7
+Kucka2021F,Kucka2021/SRR15926823_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926823,Rat,SD,F,Mixed,10
+Kucka2021F,Kucka2021/SRR15926823_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926823,Rat,SD,F,Mixed,10
+Kucka2021F,Kucka2021/SRR15926825_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926825,Rat,SD,F,Mixed,10
+Kucka2021F,Kucka2021/SRR15926825_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926825,Rat,SD,F,Mixed,10
+Kucka2021F,Kucka2021/SRR15926826_a/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926826,Rat,SD,F,Mixed,10
+Kucka2021F,Kucka2021/SRR15926826_b/outs/filtered_feature_bc_matrix,PRJNA763992,SRR15926826,Rat,SD,F,Mixed,10
 Fletcher2019F,Fletcher2019/SRR9203724/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203724,Rat,SD,F,Diestrous,6
 Fletcher2019F,Fletcher2019/SRR9203725/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203725,Rat,SD,F,Diestrous,6
 Fletcher2019F,Fletcher2019/SRR9203726/outs/filtered_feature_bc_matrix,PRJNA546549,SRR9203726,Rat,SD,F,Diestrous,6
