@@ -5,6 +5,8 @@ library(grid)
 library(gridExtra)
 library(pbapply)
 
+set.seed(12345)
+
 #### Various functions ####
 show_markers <- function(seurat_obj, hormonal = TRUE) {
   #' Plots [non]-hormonal features for the given dataset
@@ -192,19 +194,18 @@ resolutions <- c(0.5, # Allensworth 2021
                  0.3, 0.3, # Ruf Zamoiski 2019 F/M
                  0.5) # Vennekens 2021
 
-pomc_clusters <- list(8:9, # Allensworth 2021
-                      c(6, 13), # Cheung 2018
-                      3, c(3,9), # Fletcher 2019 F/M
-                      c(4, 6, 8), c(4, 6, 7), # Ho 2020 F/M
-                      c(7, 22, 23), # Kucka 2021
-                      c(6, 9), # Lopez 2021
-                      c(4, 5, 12), # Mayran 2019
-                      c(4, 5, 19), c(2, 4, 17), # Ruf Zamoiski 2019 F/M
-                      5) # Vennekens 2021
+pomc_clusters <- list(c(9,11), # Allensworth 2021
+                      c(7, 14), # Cheung 2018
+                      4, c(2,10), # Fletcher 2019 F/M
+                      c(3, 4, 8), c(3, 4, 9), # Ho 2020 F/M
+                      c(7, 21, 23), # Kucka 2021
+                      c(3, 4), # Lopez 2021
+                      c(1, 3, 16), # Mayran 2019
+                      c(4, 7, 15), c(4, 7, 17), # Ruf Zamoiski 2019 F/M
+                      4) # Vennekens 2021
 
 seurat_objects_pomc <- sapply(seq_along(seurat_objects), function(i) {
   seurat_obj <- seurat_objects[[i]]
-
   get_pomc_cells(seurat_obj, resolution = resolutions[i], 
                          pomc_clusters = pomc_clusters[[i]],
                  save_rds = TRUE)
@@ -299,6 +300,17 @@ n_cells <- data.frame(dataset = sapply(seurat_objects_pomc,
                       num_cells = sapply(seurat_objects, ncol))
 
 n_cells %>% 
+  remove_rownames %>% 
   mutate(perc_cort = round(num_cort/num_cells * 100, 2),
-         perc_melano = round(num_melano/num_cells * 100, 2)) -> n_cells
+         perc_melano = round(num_melano/num_cells * 100, 2),
+         sex = str_sub(dataset, -1, -1)) -> n_cells
 n_cells
+
+ggplot(n_cells, aes(sex, perc_cort)) +
+  geom_boxplot() +
+  geom_jitter(width = .1) +
+  ylim(0, 15) +
+  ylab("% corticotrophs") +
+  xlab("Sex") +
+  theme(axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12))
