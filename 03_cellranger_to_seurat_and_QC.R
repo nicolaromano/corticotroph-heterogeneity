@@ -5,6 +5,7 @@ library(tidyverse)
 library(ggplot2)
 library(gridExtra) # To arrange plots
 library(here)
+library(pbapply)
 
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
@@ -247,7 +248,7 @@ seurat_objects_SCT <- sapply(seurat_objects, function(s)
     RunPCA %>% 
     RunUMAP(dims=1:20) -> seuratobj
   
-  outfile <- paste0(s$orig.ident[1], "_SCT.rds")
+  outfile <- paste0("rds_outs/", s$orig.ident[1], "_SCT.rds")
   saveRDS(seuratobj, file=outfile)
   
   return(seuratobj)
