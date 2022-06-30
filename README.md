@@ -62,4 +62,8 @@ For example
 
 ### `03_cellranger_to_seurat_and_QC.R`
 
-Imports data into R, and plots QC metrics. We use data as filtered by Cellranger - no further filtering is performed.
+Imports data into R, and plots QC metrics. We use data as filtered by Cellranger to remove empty droplets then do some further filtering. This file will output RDS files containing raw counts and SCT-transformed data
+
+### `04_cell_typing.R`
+
+Clusters data, then filters them to only get POMC-expressing clusters (saved to RDS); these are further divided into melanotrophs and corticotrophs (saved to separate RDS files) by looking at the expression of Pcsk2 and Pax7.
