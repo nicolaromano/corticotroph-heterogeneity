@@ -1,5 +1,6 @@
 library(Seurat)
 library(ggplot2)
+library(gridExtra)
 library(tidyverse)
 library(pbapply)
 library(clustree)
@@ -10,6 +11,8 @@ datasets <- read.csv("datasets.csv")
 filenames <- dir("rds_outs/", pattern = "M_corticotrophs.rds")
 filenames <- paste0("rds_outs/", filenames)
 
+# Ho 2020 has only a handful of cells - we'are not considering it
+filenames <- filenames[-grep("Ho2020", filenames)]
 seurat_corticotrophs <- pblapply(filenames, readRDS)
 
 ##### CLUSTERING QUALITY ASSESSMENT #####
@@ -69,18 +72,43 @@ elbowMethod <- function(obj, resolutions = seq(0, 2, 0.1))
     # Works best with uniformly spaced (and not too many) resolutions
     scale_x_continuous(breaks = seq(min(resolutions), max(resolutions), 
                                     length.out = length(resolutions))) + 
+    ggtitle(obj$orig.ident[1]) +
     theme(
       axis.title = element_text(size = 16),
       axis.text = element_text(size = 14)
     )
   }
 
-i <- 5
 
-obj <- seurat_corticotrophs[[i]]
+elbow_plots <- lapply(seurat_corticotrophs, function(obj)
+  {
+  obj <- obj %>% 
+    RunUMAP(dims = 1:20) %>% 
+    FindNeighbors
 
-obj <- obj %>% 
-  RunUMAP(dims = 1:20) %>% 
-  FindNeighbors
+  elbowMethod(obj, resolutions = seq(0.1, 1.5, 0.2))
+  })
 
-elbowMethod(obj, resolutions = seq(0.1, 1.5, 0.2))
+do.call("grid.arrange", c(elbow_plots, ncol=3))
+
+# These were manually chosen
+resolutions <- c(0.3, 0.3, 0.5, 0.5, 0.3, 0.3)
+
+seurat_corticotrophs <- lapply(seq_along(seurat_corticotrophs), function(i) {
+  obj <- seurat_corticotrophs[[i]]
+  obj <- obj %>% 
+    RunUMAP(dims = 1:20) %>% 
+    FindNeighbors %>% 
+    FindClusters(resolution = resolutions[i])
+  
+  return(obj)
+  })
+
+cort_plots <- lapply(seurat_corticotrophs, function(obj){
+  DimPlot(obj) +
+    xlab(expression(UMAP[1])) +
+    ylab(expression(UMAP[2])) +
+    ggtitle(obj$orig.ident[1])
+})  
+
+do.call("grid.arrange", cort_plots)
