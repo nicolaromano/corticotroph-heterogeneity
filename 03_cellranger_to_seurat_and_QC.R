@@ -113,8 +113,8 @@ plot_qc <- function(seurat_object,
   if (save_to_file) {
     # showWarnings = FALSE avoids warnings
     # if the directory has already been created
-    dir.create("QC_plots", showWarnings = FALSE)
-    png(paste0("QC_plots/", main_title, ".png"),
+    dir.create("plots/QC_plots", showWarnings = FALSE)
+    png(paste0("plots/QC_plots/", main_title, ".png"),
       width = 1500, height = 1500,
       pointsize = 25,
       title = main_title
