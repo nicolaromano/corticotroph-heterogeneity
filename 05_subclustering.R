@@ -3,7 +3,8 @@ library(ggplot2)
 library(gridExtra)
 library(tidyverse)
 library(pbapply)
-library(clustree)
+library(pheatmap)
+
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
@@ -111,4 +112,60 @@ cort_plots <- lapply(seurat_corticotrophs, function(obj){
     ggtitle(obj$orig.ident[1])
 })  
 
+png("plots/corticotrophs_all_datasets.png", width = 800, height = 1200)
 do.call("grid.arrange", cort_plots)
+dev.off()
+
+# Save to RDS
+pblapply(seurat_corticotrophs, function(obj){
+  saveRDS(obj, file = paste0("rds_outs/", obj$orig.ident[1], "_subclustered.rds"))
+  })
+
+##### Find marker genes #####
+i <- 4
+obj <- seurat_corticotrophs[[i]]
+markers <- FindAllMarkers(obj, logfc.threshold = 0.25, min.pct = 0.1, 
+                          only.pos = TRUE)
+markers %>% 
+  subset(p_val_adj < 0.05) %>% 
+  group_by(cluster) %>%
+  arrange(-p_val_adj) %>% 
+  select(gene) %>% 
+  top_n(50) -> markers_filtered
+  
+expr <- as.matrix(GetAssayData(obj)[markers$gene,])
+expr_cor <- cor(t(expr))
+expr_rnd_cor <- cor(matrix(sample(expr), ncol = nrow(expr), nrow = ncol(expr)))
+genenames <- make.unique(colnames(expr_cor))
+colnames(expr_cor) <- genenames
+rownames(expr_cor) <- genenames
+
+colnames(expr_rnd_cor) <- genenames
+rownames(expr_rnd_cor) <- genenames
+
+clusters <- data.frame(cluster = markers$cluster)
+rownames(clusters) <- genenames
+
+pheatmap(expr_cor, show_rownames = FALSE, show_colnames = FALSE, 
+         annotation_row = clusters, 
+         na_col = "white",
+         cluster_rows = FALSE, cluster_cols = FALSE)
+
+pheatmap(expr_rnd_cor, show_rownames = FALSE, show_colnames = FALSE, 
+         annotation_row = clusters, 
+         # annotation_col = clusters,
+         cluster_rows = FALSE, cluster_cols = FALSE)
+
+mean_cor <- markers_filtered %>% 
+  group_by(cluster) %>% 
+  group_map(function(genes, cluster){
+    genes <- unlist(genes)
+    other_genes <- markers_filtered$gene[!markers_filtered$gene %in% genes]
+    list(real = mean(expr_cor[genes,genes], na.rm = TRUE),
+         rnd = mean(expr_rnd_cor[genes,genes], na.rm = TRUE))
+    })
+
+mean_cor <- matrix(unlist(mean_cor), ncol = 2)
+colnames(mean_cor) <- c("Real", "Random")
+
+boxplot(mean_cor)
