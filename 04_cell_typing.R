@@ -155,8 +155,7 @@ get_pomc_cells <- function(seurat_obj, resolution = 0.6,
 
 datasets <- read.csv("datasets.csv")
 
-filenames <- dir("rds_outs/", pattern = "SCT.rds")
-filenames <- paste0("rds_outs/", filenames)
+filenames <- dir("rds_outs", pattern = "SCT.rds", full.names = TRUE)
 
 # Read all datasets
 seurat_objects <- pblapply(filenames, function(f)

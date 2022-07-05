@@ -9,8 +9,9 @@ library(pheatmap)
 datasets <- read.csv("datasets.csv")
 
 # Read only male files
-filenames <- dir("rds_outs/", pattern = "M_corticotrophs.rds")
-filenames <- paste0("rds_outs/", filenames)
+filenames <- dir("rds_outs", pattern = "M_corticotrophs.rds", 
+                 full.names = TRUE)
+
 
 # Ho 2020 has only a handful of cells - we'are not considering it
 filenames <- filenames[-grep("Ho2020", filenames)]

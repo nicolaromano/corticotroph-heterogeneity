@@ -8,7 +8,8 @@ library(pheatmap)
 datasets <- read.csv("datasets.csv")
 
 # Read only male files
-filenames <- dir("rds_outs", pattern = "M_subclustered.rds", full.names = TRUE)
+filenames <- dir("rds_outs", pattern = "M_subclustered.rds", 
+                 full.names = TRUE)
 
 seurat_corticotrophs <- pblapply(filenames, readRDS)
 
