@@ -5,6 +5,7 @@ library(tidyverse)
 library(pbapply)
 library(pheatmap)
 library(gridExtra)
+library(nlme)
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
@@ -241,7 +242,7 @@ get_marker_correlation <- function(reference_id,
       do.call("grid.arrange", c(corr_plots_rnd_within, ncol=3))
     } # if
 
-    return (corr_matrices)
+    return (list(markers = markers_filtered, corr = corr_matrices))
   }
 
 get_average_correlations <- function(reference_id, do_plot = TRUE)
@@ -251,10 +252,12 @@ get_average_correlations <- function(reference_id, do_plot = TRUE)
   #' @param reference_id: the id of the reference dataset
   #' @param do_plot: whether to do plots, defaults to TRUE
   #' @return a dataframe with the average correlation values
-  corr_matr <- get_marker_correlation(reference_id = reference_id, 
-                                      do_plot = do_plot)
-  corr_matr_original <- corr_matr
-  # corr_matr <- corr_matr_original
+  res <- get_marker_correlation(reference_id = reference_id, 
+                                do_plot = do_plot)
+
+  markers <- res$markers
+  corr_matr <- res$corr
+  
   list_names <- names(corr_matr)
   corr_matr <- lapply(seq_along(corr_matr), function(i)
     {
@@ -277,13 +280,13 @@ get_average_correlations <- function(reference_id, do_plot = TRUE)
     else
       m$group = "between"
     
-    m$mean_cor <- markers_filtered %>%
+    m$mean_cor <- markers %>%
        group_by(cluster) %>% 
        group_map(function(genes, cluster){
            genes <- unlist(genes$gene)
            # Ensure we haven't dropped any gene
            genes <- genes[genes %in% rownames(m$cor)]
-           other_genes <- markers_filtered$gene[!markers_filtered$gene %in% genes]
+           other_genes <- markers$gene[!markers$gene %in% genes]
            other_genes <- other_genes[other_genes %in% rownames(m$cor)]
            
            list(real_within = mean(m$cor[genes,genes], na.rm = TRUE),
@@ -367,3 +370,23 @@ all_avg_corr %>%
     theme(axis.text = element_text(size = 11),
           strip.text = element_text(size = 12)) +
     facet_wrap(~Dataset1)
+
+ggplot(all_avg_corr, aes(Group, Correlation)) +
+  geom_boxplot(outlier.shape = NA, aes(fill = SameDataset), 
+               position = position_dodge2(preserve = "single")) +
+  scale_fill_manual(values = c("#86A93F", "#B56492"), name = "Same dataset") +
+  geom_point(aes(col = SameDataset), 
+             position = position_jitterdodge(jitter.width = 0.1)) +
+  scale_color_manual(values = c("#253700", "#6F1749"), name = "Same dataset") +
+  scale_x_discrete(labels = label_wrap(10)) +
+  geom_hline(yintercept = 0, lty = "dotted") +
+  ylim(c(-0.1, 0.3)) +
+  theme(axis.text = element_text(size = 11),
+        strip.text = element_text(size = 12)) +
+  facet_wrap(~Dataset1)
+
+all_avg_corr %>% 
+  drop_na() -> all_avg_corr_nona
+
+model <- lme(Correlation ~ Group + SameDataset, random = ~ 1 | Dataset1, data = all_avg_corr_nona)
+summary(model)
