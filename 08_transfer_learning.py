@@ -2,205 +2,215 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import pandas as pd
-import numpy as np
-from tqdm import tqdm
-from typing import List, Tuple
-from tensorflow import keras
-import wandb
-from wandb.keras import WandbCallback
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
-from multiprocessing.sharedctypes import Value
 import argparse
-
+from multiprocessing.sharedctypes import Value
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+# import KFold from scikit-learn
+from sklearn.model_selection import KFold
+from wandb.keras import WandbCallback
+import wandb
+from tensorflow import keras
+from typing import List, Tuple
+from tqdm import tqdm
+import numpy as np
+import pandas as pd
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epochs", type=int, default=50,
-                    help="Number of epochs to train")
-parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
-parser.add_argument("--lr", type=float, default=0.001, help="Learning rate")
+                    help="Number of epochs to train", required=True)
+parser.add_argument("--batch_size", type=int, default=32,
+                    help="Batch size", required=True)
+parser.add_argument("--lr", type=float, default=0.001,
+                    help="Learning rate", required=True)
 parser.add_argument("--dropout", type=float, default=0.5,
-                    help="Dropout rate (for all layers)")
+                    help="Dropout rate (for all layers)", required=True)
 parser.add_argument("--layers", type=int, default=3,
-                    help="Number of hidden layers")
+                    help="Number of hidden layers", required=True)
 parser.add_argument("--units", type=int, nargs='+',
-                    default=[512, 256, 32], help="Number of units")
+                    help="Number of units", required=True)
 parser.add_argument("--ref_dataset", type=int,
                     default=0, help="Reference dataset")
 
 args = parser.parse_args()
 
+if args.units is None:
+    args.units = [2**(args.layers + 5 - i) for i in range(args.layers)]
+
 # Check that we have the correct number of units for the number of layers
 if len(args.units) != args.layers:
     raise ValueError("Number of units must be equal to number of layers")
 
-datasets = pd.read_csv("datasets.csv")
 
-if args.ref_dataset not in datasets["study_id"]:
-    raise ValueError(
-        f"Dataset not found.\nThese are the available datasets: {datasets['study_id'].unique()}")
+class cell_labeler():
+    def __init__(self, epochs: int, batch_size: int, lr: float, dropout: float, layers: int, units: List[int],
+                 ref_dataset: int):
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.lr = lr
+        self.dropout = dropout
+        self.layers = layers
+        self.units = units
+        self.ref_dataset = ref_dataset
 
-study_id = datasets["study_id"][args.ref_dataset]
-print(f"Using dataset {study_id} as reference")
+        datasets = pd.read_csv("datasets.csv")
 
-wandb.init(project="scRNA-seq-classification",
-           config={"batch_size": args.batch_size,
-                   "epochs": args.epochs,
-                   "lr": args.lr,
-                   "dropout": args.dropout,
-                   "layers": args.layers,
-                   "units": args.units,
-                   "ref_dataset": datasets["study_id"][args.ref_dataset]})
+        if self.ref_dataset not in datasets["study_id"]:
+            raise ValueError(
+                f"Dataset not found.\nThese are the available datasets: {datasets['study_id'].unique()}")
 
-wandb.log({"accuracy": 0.0, "loss": 0.0})
+        study_id = datasets["study_id"][self.ref_dataset]
 
-# Find all csv.gz files in the expr_matrices directory
-filenames_expr = [f for f in os.listdir(
-    "expr_matrices") if f.endswith("M.csv.gz")]
-filenames_clusters = [f for f in os.listdir(
-    "expr_matrices") if f.endswith("M_clusters.csv")]
+        wandb.init(project="scRNA-seq-classification",
+                config={"batch_size": self.batch_size,
+                        "epochs": self.epochs,
+                        "lr": self.lr,
+                        "dropout": self.dropout,
+                        "layers": self.layers,
+                        "units": self.units,
+                        "ref_dataset": datasets["study_id"][self.ref_dataset]})
 
-print("Reading expression matrices...")
-expr = [pd.read_csv(f"expr_matrices/{f}") for f in tqdm(filenames_expr)]
+        wandb.log({"accuracy": 0.0, "loss": 0.0})
 
-# Now intersect the gene ids
-common_genes = []
-for item in expr:
-    item.rename(columns={item.columns[0]: "gene_id"}, inplace=True)
-    item.set_index("gene_id", inplace=True)
-    if len(common_genes) == 0:
-        common_genes = item.index
-    else:
-        common_genes = common_genes.intersection(item.index)
+        filename_expr = f"expr_matrices/{study_id}.csv.gz"
+        filename_labels = f"expr_matrices/{study_id}_clusters.csv"
 
-print(f"Training on {len(common_genes)} genes, common to all datasets.")
+        self.expr = pd.read_csv(filename_expr, index_col=0)
+        self.clusters = pd.read_csv(filename_labels)
 
-for i in range(len(expr)):
-    expr[i] = expr[i].loc[common_genes]
-    # Convert to Numpy array and transpose
-    expr[i] = expr[i].values.T
+    def build_model(self) -> None:
+        """
+        Build a multi-class MLP classifier.
+        """
 
-print("Reading clusters...")
-clusters = [pd.read_csv(f"expr_matrices/{f}")
-            for f in tqdm(filenames_clusters)]
+        # Now build our MLP
+        self.model = keras.Sequential()
+        self.model.add(keras.layers.InputLayer(
+            input_shape=(self.expr.shape[1],)))
 
+        for i in range(self.layers):
+            self.model.add(keras.layers.Dense(
+                self.units[i], activation="relu", name=f"dense_{i}"))
+            self.model.add(keras.layers.Dropout(
+                self.dropout, name=f"dropout_{i}"))
 
-def build_model(n_clusters: int, n_layers: int = 3, 
-                n_nodes: List[int] = [512, 256, 16], 
-                learning_rate = 0.001) -> keras.Model:
-    """
-    Build a 3-layer multi-class MLP classifier.
+        # Output layer
+        # Note the +1 to take into account the "other" class
+        self.n_clusters = self.clusters.unique().shape[0] + 1
+        self.model.add(keras.layers.Dense(self.n_clusters,
+                       activation="softmax", name="output"))
 
-    param: n_clusters (int) - the number of clusters (possible classes)
-    param: n_layers (int) - the number of hidden layers
-    param: n_nodes (List[int]) - the number of nodes in each hidden layer
+        self.model.compile(optimizer=keras.optimizers.Adam(lr=self.lr),
+                    loss="categorical_crossentropy", metrics=["accuracy"])
 
-    return: model (keras.Model) - the model    
-    """
+    def prepare_training_data(self, n_augment: int, perc_shuffle_genes_aug: float) -> None:
+        """
+        Prepare the training data for the MLP. Generates a training and test set.
 
-    # Now build our MLP
-    model = keras.Sequential()
-    model.add(keras.layers.InputLayer(input_shape=(len(common_genes))))
-    model.add(keras.layers.Dense(512, activation="relu",
-              kernel_regularizer=keras.regularizers.l1(0.001), name="dense_1"))
-    model.add(keras.layers.Dense(256, activation="relu",
-              kernel_regularizer=keras.regularizers.l1(0.001), name="hidden_2"))
-    model.add(keras.layers.Dense(32, activation="relu",
-              kernel_regularizer=keras.regularizers.l1(0.001), name="hidden_3"))
-    # Output layer
-    # Note the +1 to take into account the "other" class
-    model.add(keras.layers.Dense(n_clusters + 1,
-              activation="softmax", name="output"))
+        param n_augment: Number of augmented data points to generate
+        param perc_shuffle_genes_aug: Percentage of genes to shuffle in the augmented data
+        """
 
-    model.compile(optimizer=keras.optimizers.Adam(lr=learning_rate),
-                  loss="categorical_crossentropy", metrics=["accuracy"])
-    # model.summary()
+        # We split into training (90%) and test (10%) data
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
+            self.expr, self.clusters, test_size=0.1, random_state=42)
 
-    return model
+        # Scale the data with MinMaxScaler
+        self.scaler = MinMaxScaler()
+        self.x_train = self.scaler.fit_transform(self.x_train)
+        self.x_test = self.scaler.transform(self.x_test)
 
-def prepare_training_data(expr: List, clusters: List, dataset_id: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Prepare the training data for the MLP.
+        x_train_aug, y_train_aug = self.get_augmented_samples(
+            n_augment=500, perc_shuffle_genes_aug=0.01)
+        x_train_aug = self.scaler.transform(x_train_aug)
 
-    param: expr (list) - the expression matrices
-    param: clusters (list) - the list of cluster identities
-    param: dataset_id (int) - the id of the dataset we are using as reference
-    return: x_train (np.array) - the training data
-    return: y_train (np.array) - the training labels
-    """
+        self.x_train = np.vstack([self.x_train, x_train_aug])
+        self.y_train = np.vstack([self.y_train, y_train_aug])
 
-    # We will use the expression matrices as the training data
-    # The labels will be the cluster labels
+        # One-hot encode labels
+        self.y_train = keras.utils.to_categorical(
+            self.y_train, num_classes=self.n_clusters)
+        self.y_test = keras.utils.to_categorical(
+            self.y_test, num_classes=self.n_clusters)
 
-    # We get the expression matrix and labels for the dataset we are using as reference...
-    expr = expr[dataset_id]
-    clusters = clusters[dataset_id]["Cluster"].values
-    # ... and split into training and test data
-    x_train, x_test, y_train, y_test = train_test_split(expr, clusters, test_size=0.1, random_state=42)
+    def get_augmented_samples(self, n: int = 1, perc_shuffle_genes: float = 0.01) -> Tuple[np.array, np.array]:
+        """
+        Creates augmented samples from the training data.
 
-    # Scale the data with MinMaxScaler
-    scaler = MinMaxScaler()
-    x_train = scaler.fit_transform(x_train)
-    x_test = scaler.transform(x_test)
+        param: n (int) - the number of augmented samples to create. Default is 1.
+        param: perc_shuffle_genes (float) - the percentage of genes to shuffle (per cell). Default is 0.01.
+        return: x_train_aug, y_train_aug (np.array, np.array) - the augmented training data
+        """
 
-    # One-hot encode labels
-    y_train = keras.utils.to_categorical(y_train, num_classes=len(np.unique(clusters)) + 1)
-    y_test = keras.utils.to_categorical(y_test, num_classes=len(np.unique(clusters)) + 1)
+        # Get a list of cluster labels
+        y_train_aug = np.random.choice(
+            np.unique(np.argmax(self.y_train, axis=1)), size=n)
 
-    return (x_train, y_train, x_test, y_test)
+        # Shuffle the data on a per-cluster/per-gene basis
 
-def get_augmented_samples(x_train: np.array, y_train: np.array, n: int = 1, perc_shuffle_genes: float = 0.01) -> Tuple[np.array, np.array]:
-    """
-    Creates augmented samples from the training data.
+        # Split x_train by cluster
+        x_by_cluster = [self.x_train[np.where(
+            np.argmax(self.y_train, axis=1) == i)] for i in range(self.n_clusters - 1)]
 
-    param: x_train (np.array) - the training data
-    param: y_train (np.array) - the training labels
-    param: n (int) - the number of augmented samples to create. Default is 1.
-    param: perc_shuffle_genes (float) - the percentage of genes to shuffle (per cell). Default is 0.01.
-    return: x_train_aug, y_train_aug (np.array, np.array) - the augmented training data
-    """
+        for x in x_by_cluster:
+            genes = np.random.choice(x.shape[1], int(
+                perc_shuffle_genes * x.shape[1]), replace=False)
 
-    # Get a list of cluster labels
-    y_train_aug = np.random.choice(np.unique(np.argmax(y_train, axis=1)), size = n)
+            # Randomly swaps the values of the cells gene-wise
+            for g in genes:
+                x[:, g] = np.random.permutation(x[:, g])
 
-    # Shuffle the data on a per-cluster/per-gene basis
+        # Pick shuffled data corresponding to the cluster labels
+        x_train_aug = np.vstack([x_by_cluster[i][np.random.randint(
+            0, x_by_cluster[i].shape[0]), :] for i in y_train_aug])
 
-    # Split x_train by cluster
-    x_by_cluster = [x_train[np.where(np.argmax(y_train, axis=1)==i)] for i in range(y_train.shape[1] - 1)]
+        # One-hot encode labels
+        y_train_aug = keras.utils.to_categorical(
+            y_train_aug, num_classes=self.n_clusters)
 
-    for x in x_by_cluster:
-        genes = np.random.choice(x.shape[1], int(
-            perc_shuffle_genes * x.shape[1]), replace=False)
+        return (x_train_aug, y_train_aug)
 
-        # Randomly swaps the values of the cells gene-wise
-        for g in genes:
-            x[:, g] = np.random.permutation(x[:, g])
+    def train_model(self) -> None:
+        """
+        Train the MLP model.
+        """
 
-    # Pick shuffled data corresponding to the cluster labels    
-    x_train_aug = np.vstack([x_by_cluster[i][np.random.randint(0, x_by_cluster[i].shape[0]), :] for i in y_train_aug])
+        # Do 5-fold cross-validation
+        kf = KFold(n_splits=5, shuffle=True)        
+        
+        val_acc = []
+        for train_index, test_index in kf.split(self.x_train):
+            self.build_model()
+            self.prepare_training_data(n_augment=500, perc_shuffle_genes_aug=0.01)
 
-    # One-hot encode labels
-    y_train_aug = keras.utils.to_categorical(y_train_aug, num_classes=y_train.shape[1])
-    
-    return (x_train_aug, y_train_aug)
+            self.model.fit(self.x_train[train_index], self.y_train[train_index],
+                           epochs=self.epochs, batch_size=self.batch_size,
+                           validation_data=(self.x_train[test_index], self.y_train[test_index]))
+            # Get validation accuracy
+            val_acc.append(self.model.evaluate(self.x_train[test_index], self.y_train[test_index])[1])
+        
+        print(f"Validation accuracy: {np.mean(val_acc)}")
 
-ref_dataset = 0
+    def evaluate_model(self) -> float:
+        """
+        Evaluate the model.
 
-dataset_name = filenames_expr[ref_dataset].split(".")[0]
-print(f"Using dataset {dataset_name} as reference")
+        return: accuracy (float) - the accuracy of the model
+        """
 
-# Update in W&B
-wandb.config.dataset_name = dataset_name
+        # Evaluate the model, return accuracy
+        return (self.model.evaluate(self.x_test, self.y_test)[2])
 
-model  = build_model(len(clusters[ref_dataset]["Cluster"].unique()))
-x_train, y_train, x_test, y_test = prepare_training_data(expr, clusters, ref_dataset)
-x_train_aug, y_train_aug = get_augmented_samples(x_train, y_train, n=500, perc_shuffle_genes=0.01)
+labeller = cell_labeler(epochs=args.epochs,
+                        batch_size=args.batch_size,
+                        lr=args.lr,
+                        dropout=args.dropout,
+                        layers=args.layers,
+                        units=args.units,
+                        ref_dataset=args.ref_dataset)
 
-x_train = np.vstack([x_train, x_train_aug])
-y_train = np.vstack([y_train, y_train_aug])
+labeller.train_model()
+labeller.evaluate_model()
 
-print(model.summary())
-
-history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(x_test, y_test), callbacks=[WandbCallback()])
+wandb.finish()
