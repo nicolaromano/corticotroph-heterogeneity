@@ -1,12 +1,8 @@
 # Silence Tensorflow warnings
-from gc import callbacks
 import os
-
-from yaml import parse
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import argparse
-from multiprocessing.sharedctypes import Value
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -15,7 +11,6 @@ from wandb.keras import WandbCallback
 import wandb
 from tensorflow import keras
 from typing import List, Tuple
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
@@ -50,7 +45,8 @@ if args.units is not None and len(args.units) != args.layers:
 
 class cell_labeler():
     def __init__(self, epochs: int, batch_size: int, lr: float, dropout: float, layers: int, 
-                units: List[int], dataset: str, run_name: None) -> None:
+                units: List[int], reg_rate: float, reg_type: str,
+                dataset: str, run_name: None) -> None:
         """
         Initialize the cell_labeler class.
 
@@ -60,6 +56,8 @@ class cell_labeler():
         param dropout: float - Dropout rate
         param layers: int - Number of hidden layers
         param units: List[int] - Number of units in each hidden layer
+        param reg_rate: float - Regularization rate
+        param reg_type: str - Type of regularization. One of l1, l2 (default), l1_l2
         param dataset: str - Id of the dataset used to train the model
         param run_name: str - Name of the run. If None (default), a random name is generated.
         """
@@ -73,8 +71,8 @@ class cell_labeler():
         self.dropout = dropout
         self.layers = layers
         self.units = units
-        self.reg_rate = args.reg_rate
-        self.reg_type = args.reg_type
+        self.reg_rate = reg_rate
+        self.reg_type = reg_type
         self.dataset = dataset
 
         self.model = None
@@ -179,36 +177,42 @@ class cell_labeler():
         self.y_train = np.vstack([self.y_train, y_train_aug])
 
 
-    def __get_augmented_samples(self, n: int = 1, perc_shuffle_genes: float = 0.01) -> Tuple[np.array, np.array]:
+    def __get_augmented_samples(self, n: int = 1, perc_shuffle_genes: float = 0.01, other_class: bool = False) -> Tuple[np.array, np.array]:
         """
         Creates augmented samples from the training data.
 
         param: n (int) - the number of augmented samples to create. Default is 1.
         param: perc_shuffle_genes (float) - the percentage of genes to shuffle (per cell). Default is 0.01.
+        param: other_class (bool) - if True, the augmented samples will be created with the "other" class. Default is False.
         return: x_train_aug, y_train_aug (np.array, np.array) - the augmented training data
         """
         # Get a list of cluster labels
         y_train_aug = np.random.choice(np.unique(np.argmax(self.y_train, axis=1)), size=n)
-        # Shuffle the data on a per-cluster/per-gene basis
-        # Split x_train by cluster
-        x_by_cluster = [self.x_train[np.where(
-            np.argmax(self.y_train, axis=1) == i)] for i in range(self.n_clusters - 1)]
 
-        for x in x_by_cluster:
-            genes = np.random.choice(x.shape[1], int(
-                perc_shuffle_genes * x.shape[1]), replace=False)
+        if other_class:
+            # TODO: fill this
+            pass
+        else:
+            # Shuffle the data on a per-cluster/per-gene basis
+            # Split x_train by cluster
+            x_by_cluster = [self.x_train[np.where(
+                np.argmax(self.y_train, axis=1) == i)] for i in range(self.n_clusters - 1)]
 
-            # Randomly swaps the values of the cells gene-wise
-            for g in genes:
-                x[:, g] = np.random.permutation(x[:, g])
+            for x in x_by_cluster:
+                genes = np.random.choice(x.shape[1], int(
+                    perc_shuffle_genes * x.shape[1]), replace=False)
 
-        # Pick shuffled data corresponding to the cluster labels
-        x_train_aug = np.vstack([x_by_cluster[i][np.random.randint(
-            0, x_by_cluster[i].shape[0]), :] for i in y_train_aug])
+                # Randomly swaps the values of the cells gene-wise
+                for g in genes:
+                    x[:, g] = np.random.permutation(x[:, g])
 
-        # One-hot encode labels
-        y_train_aug = keras.utils.to_categorical(
-            y_train_aug, num_classes=self.n_clusters)
+            # Pick shuffled data corresponding to the cluster labels
+            x_train_aug = np.vstack([x_by_cluster[i][np.random.randint(
+                0, x_by_cluster[i].shape[0]), :] for i in y_train_aug])
+
+            # One-hot encode labels
+            y_train_aug = keras.utils.to_categorical(
+                y_train_aug, num_classes=self.n_clusters)
 
         return (x_train_aug, y_train_aug)
 
@@ -222,13 +226,13 @@ class cell_labeler():
         
         val_acc = []
 
-        self.__prepare_training_data(n_augment=500, perc_shuffle_genes_aug=0.01)
+        self.__prepare_training_data(n_augment=500, perc_shuffle_genes_aug=0.005)
 
         for train_index, test_index in kf.split(self.x_train):
             self.__build_model()
 
-            # TODO add early stopping and checkpointing
-            model_callbacks = []
+            # TODO add early stopping?
+            model_callbacks = [keras.callbacks.ModelCheckpoint(f"best_models/{self.dataset}_weights.h5", monitor="val_accuracy", save_best_only=True)]
 
             if (args.WB_log):
                 model_callbacks.append(WandbCallback(save_model=False))
@@ -264,17 +268,20 @@ class cell_labeler():
         
         return (test_loss, test_accuracy)
 
-labeller = cell_labeler(epochs=args.epochs,
-                        batch_size=args.batch_size,
-                        lr=args.lr,
-                        dropout=args.dropout,
-                        layers=args.layers,
-                        units=args.units,
-                        dataset=args.dataset,
-                        run_name=f"confusion_mtx_{args.dataset}")
+for reg_rate in [0.001, 0.005, 0.01, 0.05, 0.1]:
+    labeller = cell_labeler(epochs=args.epochs,
+                            batch_size=args.batch_size,
+                            lr=args.lr,
+                            reg_rate=reg_rate,
+                            reg_type=args.reg_type,
+                            dropout=args.dropout,
+                            layers=args.layers,
+                            units=args.units,
+                            dataset=args.dataset,
+                            run_name=f"Cheung_reg_{args.reg_type}_{reg_rate}")
 
-labeller.train_model()
-labeller.evaluate_model()
+    labeller.train_model()
+    labeller.evaluate_model()
 
-if (args.WB_log):
-    wandb.finish()
+    if (args.WB_log):
+        wandb.finish()
