@@ -1,10 +1,10 @@
 library(Seurat)
 library(ggplot2)
+library(gridExtra)
 library(scales)
 library(tidyverse)
 library(pbapply)
 library(pheatmap)
-library(gridExtra)
 library(nlme)
 
 # Load corticotrophs
@@ -15,6 +15,14 @@ filenames <- dir("rds_outs", pattern = "M_subclustered.rds",
                  full.names = TRUE)
 
 seurat_corticotrophs <- pblapply(filenames, readRDS)
+
+prettify_df_name <- function(name)
+  {
+  name = as.character(name)
+  name <- substr(name, 1, nchar(name)-1) # Remove sex
+  paste(substr(name, 1, nchar(name)-4), # Author
+        substr(name, nchar(name)-3, nchar(name))) # Year
+  }
 
 get_marker_correlation <- function(reference_id,
                                     corr_type = "pearson",
@@ -138,12 +146,18 @@ get_marker_correlation <- function(reference_id,
         dataset_names <- unlist(dataset_names)
         main_title <- paste("Markers from", dataset_names[2], "\ndata from", 
                             dataset_names[1])
-        br <- seq(-0.5, 1, 0.01)
+
+        # from the pheatmap help page:
+        # br: a sequence of numbers that covers the range of values in mat 
+        # **and is one element longer than color vector**. 
+        # Used for mapping values to colors. 
+        br <- seq(-0.4, 0.4, length.out=257)
         anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
         
         p <- pheatmap(m$cor, show_rownames = FALSE, show_colnames = FALSE, 
                  annotation_row = clusters,
                  annotation_col = clusters, 
+                 color = hcl.colors(256, "PRGn"),
                  na_col = "white",
                  cluster_rows = FALSE, cluster_cols = FALSE, 
                  gaps_row = gaps, gaps_col = gaps,
@@ -157,7 +171,20 @@ get_marker_correlation <- function(reference_id,
         
         return(p$gtable)
         })
-      do.call("grid.arrange", c(corr_plots, ncol=3))
+
+      # Make an heatmat with the same color scale
+      ph <- pheatmap(cor(matrix(rnorm(100), ncol=10), 
+                   matrix(rnorm(100), ncol=10)), 
+               color = hcl.colors(256, "PRGn"),
+               breaks = seq(-0.3, 0.3, length.out=257),
+               silent = TRUE)
+      # Grab the legend
+      leg <- ph$gtable$grobs[[4]]
+
+      # Append it to the plot list
+      corr_plots_with_leg <- append(corr_plots, list(leg), after = 3)
+      do.call("grid.arrange", c(corr_plots_with_leg, 
+                                list(ncol=4, widths = c(1, 1, 1, 0.3)), top=""))
       
       # Do the same, but for the randomly shuffled data.
       # We select a random run (from the n_rnd that we ran) to show
@@ -385,6 +412,7 @@ ggplot(all_avg_corr, aes(Group, Correlation)) +
         strip.text = element_text(size = 12)) +
   facet_wrap(~Dataset1)
 
+write.csv(all_avg_corr, file = "all_average_correlations.csv", row.names = FALSE)
 all_avg_corr %>% 
   drop_na() -> all_avg_corr_nona
 
