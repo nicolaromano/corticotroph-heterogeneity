@@ -1,10 +1,12 @@
 library(Seurat)
 library(ggplot2)
 library(cowplot)
+library(RColorBrewer)
 library(grid)
 library(gridExtra)
 library(dplyr)
 library(pbapply)
+library(igraph)
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
@@ -111,3 +113,97 @@ leg <- get_legend(g)
 leg$layout[2,]$b = 2
 pl_list$legend <- leg
 do.call("grid.arrange", c(pl_list, ncol=4))
+
+##### Similarity graph ######
+
+
+format_dataset_name <- function(name)
+  {
+  # Go from Xxxxx20xx-n to Xn
+  paste0(substr(name, 1, 1), substr(name, nchar(name), nchar(name)))
+  }
+
+plot_similarity_graph <- function(min_pct, node_palette = NA, 
+                                  edge_palette = NA,
+                                  label_color = "black") {
+  #' Plots a graph, connecting subcluster with at least `min_pct`
+  #' markers in common
+  #' @param min_pct: The minimum percentage of markers in common
+  #' @param node_palette: The palette for the nodes - NA for default (Set2)
+  #' @param edge_palette: The palette for the edges - NA for default (Accent)
+  #' @param label_color: The colour for the labels - default is black
+  
+  common_markers %>% 
+    mutate(From = paste(Dataset1_name, Cluster1, sep = "-"),
+           To = paste(Dataset2_name, Cluster2, sep = "-")) %>% 
+    mutate(From = format_dataset_name(From),
+           To = format_dataset_name(To)) %>% 
+    select(c(From, To, Percentage)) %>% 
+    filter(Percentage >= min_pct) -> markers_nodes
+  
+  # We find all of the combinations of dataset name and subcluster number
+  datasets <- unique(c(paste(common_markers$Dataset1_name, 
+                           common_markers$Cluster1, sep="-"),
+                     paste(common_markers$Dataset2_name, 
+                             common_markers$Cluster2, sep="-")))
+  # Simplify the naming (for graphical purposes) and sort alphabetically
+  datasets <- sort(format_dataset_name(datasets), decreasing = TRUE)
+
+  # Now create a graph using the subcluster as vertices and connecting those 
+  # with >= 10% shared markers
+  network <- graph_from_data_frame(d = markers_nodes, vertices = datasets,
+                                   directed = FALSE)
+  
+  # Create a layout for our network
+
+  data.frame(FullName = datasets) %>% 
+    mutate(Dataset = substr(FullName, 1, 1),
+           SubCluster = substr(FullName, 2, 2)) %>% 
+    group_split(Dataset) -> nodes_by_group
+
+  # Find communities
+  wc <- walktrap.community(network)
+  node_comm <- membership(wc)
+  
+  if (is.na(node_palette))
+    node_palette <- brewer.pal(length(unique(substr(datasets, 1, 1))), "Set2")
+
+  if (is.na(edge_palette))
+    edge_palette <- brewer.pal(sum(sapply(communities(wc), length) > 1), "Accent")
+  
+  # We put the nodes from the same datasets in a circle, then put
+  # each dataset on a larger circle
+  out_radius <- 5
+  in_radius <- 1
+  
+  layout <- sapply(seq_along(nodes_by_group), function(i){
+    l <- in_radius * layout.circle(subgraph(network, nodes_by_group[[i]]$FullName))
+    l[,1] = l[,1] + out_radius * sin(2 * pi * i / length(nodes_by_group))
+    l[,2] = l[,2] + out_radius * cos(2 * pi * i / length(nodes_by_group))
+    
+    l
+    })
+  
+  # Combine all of the sub-layouts into a big layout!
+  layout <- do.call("rbind", rev(layout))
+
+  # Define colors for the nodes and edges, based on the dataset of origin
+  node_colors <- node_palette[as.integer(factor(substr(V(network)$name, 1, 1)))]
+  edge_colors <- edge_palette[membership(wc)[get.edgelist(network)[,1]]]
+  
+  # Finally plot the graph
+  plot(network,
+       vertex.color = node_colors,
+       edge.width = E(network)$Percentage/5, # Edge width
+       edge.curved = 0.3,
+       edge.color = edge_colors,
+       vertex.label.family="Arial",
+       vertex.label.color=label_color,
+       layout = layout)
+       # layout = layout.fruchterman.reingold)
+  }
+
+
+plot_similarity_graph(10, node_palette <- c("#F16745", "#FFC65D", "#7BC8A4", 
+                                              "#4CC3D9", "#93648D", "#808070"),
+                      label_color = rep(c("black", "white", "black"), c(12, 9, 9)))
