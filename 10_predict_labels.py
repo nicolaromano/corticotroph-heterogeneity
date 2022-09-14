@@ -29,6 +29,9 @@ real_clusters = pd.read_csv(filename_labels, index_col=0)
 
 predicted_clusters = np.argmax(model.predict(expr), axis=1)
 
+out_filename = f"expr_matrices/clusters_{args.target_dataset}_predicted_from_{args.ref_dataset}.csv"
+pred_df = pd.DataFrame(predicted_clusters, columns=["Cluster"], index=real_clusters.index).to_csv(out_filename)
+
 cm = confusion_matrix(y_true=real_clusters, y_pred=predicted_clusters, normalize="true")
 
 sns.heatmap(cm)
