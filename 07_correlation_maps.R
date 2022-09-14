@@ -144,8 +144,8 @@ get_marker_correlation <- function(reference_id,
         
         dataset_names <- strsplit(names(corr_matrices[i]), split = "_vs_")
         dataset_names <- unlist(dataset_names)
-        main_title <- paste("Markers from", dataset_names[2], "\ndata from", 
-                            dataset_names[1])
+        main_title <- paste("Markers from", prettify_df_name(dataset_names[2]), 
+                            "\ndata from", prettify_df_name(dataset_names[1]))
 
         # from the pheatmap help page:
         # br: a sequence of numbers that covers the range of values in mat 
@@ -227,8 +227,11 @@ get_marker_correlation <- function(reference_id,
         
         return(p$gtable)
       })
-      do.call("grid.arrange", c(corr_plots_rnd, ncol=3))
 
+      corr_plots_rnd_with_leg <- append(corr_plots_rnd, list(leg), after = 3)
+      do.call("grid.arrange", c(corr_plots_rnd_with_leg, 
+                                list(ncol=4, widths = c(1, 1, 1, 0.3)), top=""))
+      
       corr_plots_rnd_within <- lapply(seq_along(corr_matrices), function(i)
       {
         m = corr_matrices[[i]]
@@ -266,7 +269,10 @@ get_marker_correlation <- function(reference_id,
         
         return(p$gtable)
       })
-      do.call("grid.arrange", c(corr_plots_rnd_within, ncol=3))
+      
+      corr_plots_rnd_within_with_leg <- append(corr_plots_rnd_within, list(leg), after = 3)
+      do.call("grid.arrange", c(corr_plots_rnd_within_with_leg, 
+                                list(ncol=4, widths = c(1, 1, 1, 0.3)), top=""))
     } # if
 
     return (list(markers = markers_filtered, corr = corr_matrices))
