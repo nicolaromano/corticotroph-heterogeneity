@@ -9,9 +9,10 @@ library(pheatmap)
 datasets <- read.csv("datasets.csv")
 
 # Read only male files
-filenames <- dir("rds_outs", pattern = "M_corticotrophs.rds", 
-                 full.names = TRUE)
-
+filenames <- dir("rds_outs",
+  pattern = "M_corticotrophs.rds",
+  full.names = TRUE
+)
 
 # Ho 2020 has only a handful of cells - we'are not considering it
 filenames <- filenames[-grep("Ho2020", filenames)]
@@ -22,102 +23,97 @@ seurat_corticotrophs <- pblapply(filenames, readRDS)
 ### Elbow method ###
 # We look at the "elbow" in a plot of resolution vs WSS
 # (Within-Cluster-Sum of Squared Errors)
-elbowMethod <- function(obj, resolutions = seq(0, 2, 0.1))
-  {
+elbow_method <- function(obj, 
+  resolutions = seq(0, 1, 0.1) {
   #' Calculated the WSS at various clustering resolutions
   #' This performs clustering on the data at various resolutions
   #' @param obj: the Seurat object
-  #' @param resol: the resolutions to test (default is seq(0, 2, 0.1))
-  WSS <- NULL
+  #' @param resolutions: the resolutions to test (default is seq(0, 2, 0.1))
+  wss <- NULL
   for (resol in resolutions)
-    {
+  {
+    print(paste("Clustering at resolution", resol))
     # The results of this clustering get stored in:
-    # 1) obj$seurat_clusters (which is a shortcut for obj@metadata$seurat_clusters)
+    # 1) obj$seurat_clusters (which is a shortcut for 
+    #    obj@metadata$seurat_clusters)
     # 2) obj$SCT_snn_res.xxx where xxx is the resolution
-    # 1) is more convenient to use in this function, but mind that it gets
-    # overwritten every time FindClusters is run!
+    # Option 1) is more convenient to use in this function, 
+    # but mind that it gets overwritten every time FindClusters is run!
     obj <- FindClusters(obj, resolution = resol)
-    
-    # Get UMAP coordinates
-    umap_coords <- data.frame(obj@reductions$umap@cell.embeddings)
-    
-    # Find the centroids of each cluster
-    umap_coords %>% 
-      group_by(cluster = obj$seurat_clusters) %>% 
-      summarise(UMAP_1 = mean(UMAP_1),
-                UMAP_2 = mean(UMAP_2)) %>% 
-      ungroup() -> centroids
-    centroids$cluster <- as.integer(centroids$cluster)
-    # Find the Within-Cluster-Sum of Squared Errors (WSS) 
-    # This is the sum of the squared distance of each point 
-    # in a cluster to its centroid
-    umap_coords <- umap_coords %>% 
-      mutate(cluster = as.integer(obj$seurat_clusters))
-    
-    res <- sum(apply(umap_coords, 1, function(row)
-    {
-      dist(rbind(row[1:2], centroids[centroids$cluster == row[3], 2:3])) ^ 2
-    }))
-    
-    WSS <- rbind(WSS, c(resol = resol, 
-                        WSS = res, 
-                        n_clusters = length(levels(obj$seurat_clusters))))
+
+    # Find the WSS
+    res <- data.frame(center = colMeans(GetAssayData(obj))) %>% 
+      rownames_to_column("cell") %>% 
+      # Add the cluster ID
+      mutate(cluster = obj$seurat_clusters) %>%
+      # Calculate the WSS for each cluster
+      group_by(cluster)  %>% 
+      summarise(wss = sum((center - mean(center))^2)) %>%
+      ungroup()
+
+    # Append to results
+    wss <- rbind(wss, c(
+      resol = resol,
+      wss = mean(res$wss),
+      n_clusters = length(levels(obj$seurat_clusters))
+    ))
   }
-  
-  WSS <- data.frame(WSS)
-  
-  ggplot(WSS, aes(x = resol, y = WSS)) +
+
+  wss <- data.frame(wss)
+
+  ggplot(wss, aes(x = resol, y = wss)) +
     geom_line() +
     geom_point() +
     geom_text(aes(label = n_clusters), vjust = -1) +
     xlab("Resolution") +
     # Works best with uniformly spaced (and not too many) resolutions
-    scale_x_continuous(breaks = seq(min(resolutions), max(resolutions), 
-                                    length.out = length(resolutions))) + 
+    scale_x_continuous(breaks = seq(min(resolutions), max(resolutions),
+      length.out = length(resolutions)
+    )) +
     ggtitle(obj$orig.ident[1]) +
+    theme_minimal() +
     theme(
       axis.title = element_text(size = 16),
-      axis.text = element_text(size = 14)
+      axis.text = element_text(size = 14),
+      axis.text.x = element_text(angle = 90)
     )
-  }
+}
 
+elbow_plots <- lapply(seurat_corticotrophs, function(obj) {
+  obj <- obj %>%
+    RunUMAP(dims = 1:20) %>%
+    FindNeighbors()
 
-elbow_plots <- lapply(seurat_corticotrophs, function(obj)
-  {
-  obj <- obj %>% 
-    RunUMAP(dims = 1:20) %>% 
-    FindNeighbors
+  elbow_method(obj, resolutions = seq(0.1, 1.5, 0.1))
+})
 
-  elbowMethod(obj, resolutions = seq(0.1, 1.5, 0.2))
-  })
-
-do.call("grid.arrange", c(elbow_plots, ncol=3))
+do.call("grid.arrange", c(elbow_plots, ncol = 3))
 
 # These were manually chosen
 resolutions <- c(0.3, 0.3, 0.5, 0.5, 0.3, 0.3)
 
 seurat_corticotrophs <- lapply(seq_along(seurat_corticotrophs), function(i) {
   obj <- seurat_corticotrophs[[i]]
-  obj <- obj %>% 
-    RunUMAP(dims = 1:20) %>% 
-    FindNeighbors %>% 
+  obj <- obj %>%
+    RunUMAP(dims = 1:20) %>%
+    FindNeighbors() %>%
     FindClusters(resolution = resolutions[i])
-  
-  return(obj)
-  })
 
-cort_plots <- lapply(seurat_corticotrophs, function(obj){
+  return(obj)
+})
+
+cort_plots <- lapply(seurat_corticotrophs, function(obj) {
   DimPlot(obj) +
     xlab(expression(UMAP[1])) +
     ylab(expression(UMAP[2])) +
     ggtitle(obj$orig.ident[1])
-})  
+})
 
 png("plots/corticotrophs_all_datasets.png", width = 800, height = 1200)
 do.call("grid.arrange", cort_plots)
 dev.off()
 
 # Save to RDS
-pblapply(seurat_corticotrophs, function(obj){
+pblapply(seurat_corticotrophs, function(obj) {
   saveRDS(obj, file = paste0("rds_outs/", obj$orig.ident[1], "_subclustered.rds"))
-  })
+})
