@@ -4,7 +4,6 @@ library(gridExtra)
 library(tidyverse)
 library(pbapply)
 library(pheatmap)
-library(parallel)
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
