@@ -8,9 +8,15 @@ library(pheatmap)
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
-# Read only male files
+# Data to process ("M" or "F")
+data_to_process <- "F"
+
+# This is very heavy to compute, so this is a switch to turn it off if already computed
+calculate_elbow_plots <- FALSE
+
+# Read only M or F files
 filenames <- dir("rds_outs",
-  pattern = "M_corticotrophs.rds",
+  pattern = paste0(data_to_process, "_corticotrophs.rds"),
   full.names = TRUE
 )
 
@@ -69,8 +75,9 @@ elbow_method <- function(obj, resolutions = seq(0, 1, 0.1),
         replace = FALSE
       ), seed = NULL]
       # Run clustering
-      sub_obj <- quietly(FindNeighbors)(sub_obj)$result
-      sub_obj <- quietly(FindClusters)(sub_obj, resolution = resol)
+      sub_obj <- sub_obj %>% 
+        FindNeighbors() %>% 
+        FindClusters(resolution = resol)
 
       # Find the WSS
       res <- data.frame(center = colMeans(GetAssayData(sub_obj))) %>%
@@ -129,27 +136,33 @@ elbow_method <- function(obj, resolutions = seq(0, 1, 0.1),
     )
 }
 
-# This is very slow (~50 minutes) 
-# Running it sequencially using mclapply takes <10 minutes
-# however often fails...
-start_time <- Sys.time()
-elbow_plots <- lapply(seurat_corticotrophs, function(obj) {
-  obj <- obj %>%
-    RunUMAP(dims = 1:20) %>%
-    elbow_method(resolutions = seq(0.1, 1.5, 0.1),
-    n_shuffle = 100, subsampling = 0.6)
-}, mc.cores = detectCores())
-end_time <- Sys.time()
-print(end_time - start_time)
+if calculate_elbow_plots
+  {
+  # This is very slow (~50 minutes) 
+  # Could be parallelised but mclapply fails for some obscure reason...
+  start_time <- Sys.time()
+  elbow_plots <- lapply(seurat_corticotrophs, function(obj) {
+    obj <- obj %>%
+      RunUMAP(dims = 1:20) %>%
+      elbow_method(resolutions = seq(0.1, 1.5, 0.1),
+      n_shuffle = 100, subsampling = 0.6)
+  })
+  end_time <- Sys.time()
+  print(end_time - start_time)
 
-do.call("grid.arrange", c(elbow_plots, ncol = 3))
+  do.call("grid.arrange", c(elbow_plots, ncol = 3))
+    
 
-png("plots/elbow_plots.png", width = 1600, height = 1200)
-do.call("grid.arrange", c(elbow_plots, ncol = 3))
-dev.off()
+  png(paste0("plots/elbow_plots", data_to_process, ".png"), width = 1600, height = 1200)
+  do.call("grid.arrange", c(elbow_plots, ncol = 3))
+  dev.off()
+  }
 
-# These were manually chosen
-resolutions <- c(0.4, 0.3, 0.5, 0.3, 0.5, 0.4)
+# These were manually chosen based on the elbow plots
+if data_to_process == "M"
+  resolutions <- c(0.4, 0.3, 0.5, 0.3, 0.5, 0.4)
+else if data_to_process == "F"
+  resolutions <- c(0.4, 0.3, 0.4, 0.5)
 
 seurat_corticotrophs <- lapply(seq_along(seurat_corticotrophs), function(i) {
   obj <- seurat_corticotrophs[[i]]
