@@ -136,7 +136,7 @@ elbow_method <- function(obj, resolutions = seq(0, 1, 0.1),
     )
 }
 
-if calculate_elbow_plots
+if(calculate_elbow_plots)
   {
   # This is very slow (~50 minutes) 
   # Could be parallelised but mclapply fails for some obscure reason...
@@ -183,7 +183,8 @@ cort_plots <- lapply(seurat_corticotrophs, function(obj) {
 
 do.call("grid.arrange", cort_plots)
 
-png("plots/corticotrophs_all_datasets.png", width = 800, height = 1200)
+png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"), 
+  width = 800, height = 1200)
 do.call("grid.arrange", cort_plots)
 dev.off()
 
