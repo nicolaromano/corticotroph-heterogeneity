@@ -11,9 +11,12 @@ library(igraph)
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
+# Data to process ("M" or "F")
+data_to_process <- "M"
+
 # Read only male files
 filenames <- dir("rds_outs",
-  pattern = "M_subclustered.rds",
+  pattern = paste0(data_to_process, "_subclustered.rds"),
   full.names = TRUE
 )
 
@@ -121,24 +124,26 @@ g <- ggplot(data.frame(x = 8, y = 0), aes(x, y)) +
 leg <- get_legend(g)
 leg$layout[2, ]$b <- 2
 pl_list$legend <- leg
+
+png(paste0("plots/perc_common_markers_", data_to_process, ".png"),
+  width = 7, height = 7, units = "in", res = 300
+)
 do.call("grid.arrange", c(pl_list, ncol = 4))
-
+dev.off()
 ##### Similarity graph ######
-
 
 format_dataset_name <- function(name) {
   # Go from Xxxxx20xx-n to Xn
   paste0(substr(name, 1, 1), substr(name, nchar(name), nchar(name)))
 }
 
-plot_similarity_graph <- function(min_pct, node_palette = NA,
-                                  edge_palette = NA,
-                                  label_color = "black") {
+plot_similarity_graph <- function(min_pct, node_palette = NULL,
+                                  label_color = "black",
+                                  out_radius = 5, in_radius = 1) {
   #' Plots a graph, connecting subcluster with at least `min_pct`
   #' markers in common
   #' @param min_pct: The minimum percentage of markers in common
-  #' @param node_palette: The palette for the nodes - NA for default (Set2)
-  #' @param edge_palette: The palette for the edges - NA for default (Accent)
+  #' @param node_palette: The palette for the nodes - NULL for default (Set2)
   #' @param label_color: The colour for the labels - default is black
 
   common_markers %>%
@@ -168,7 +173,7 @@ plot_similarity_graph <- function(min_pct, node_palette = NA,
   datasets <- sort(format_dataset_name(datasets), decreasing = TRUE)
 
   # Now create a graph using the subcluster as vertices and connecting those
-  # with >= 10% shared markers
+  # with >= min_pct% shared markers
   network <- graph_from_data_frame(
     d = markers_nodes, vertices = datasets,
     directed = FALSE
@@ -184,21 +189,24 @@ plot_similarity_graph <- function(min_pct, node_palette = NA,
     group_split(Dataset) -> nodes_by_group
 
   # Find communities
-  wc <- walktrap.community(network)
+  wc <- walktrap.community(network, steps = 100)
   node_comm <- membership(wc)
+  nodes_per_comm <- table(node_comm)
 
-  if (is.na(node_palette)) {
+  if (!length(node_palette)) {
     node_palette <- brewer.pal(length(unique(substr(datasets, 1, 1))), "Set2")
   }
 
-  if (is.na(edge_palette)) {
-    edge_palette <- brewer.pal(sum(sapply(communities(wc), length) > 1), "Accent")
-  }
+  node_colors <- node_palette[node_comm]
+  # Communities with a single node are white
+  node_colors[nodes_per_comm[node_comm] == 1] <- "white"
+
+  # if (!length(edge_palette)) {
+  #   edge_palette <- brewer.pal(sum(sapply(communities(wc), length) > 1), "Accent")
+  # }
 
   # We put the nodes from the same datasets in a circle, then put
   # each dataset on a larger circle
-  out_radius <- 5
-  in_radius <- 1
 
   layout <- sapply(seq_along(nodes_by_group), function(i) {
     l <- in_radius * layout.circle(subgraph(network, nodes_by_group[[i]]$FullName))
@@ -212,26 +220,51 @@ plot_similarity_graph <- function(min_pct, node_palette = NA,
   layout <- do.call("rbind", rev(layout))
 
   # Define colors for the nodes and edges, based on the dataset of origin
-  node_colors <- node_palette[as.integer(factor(substr(V(network)$name, 1, 1)))]
-  edge_colors <- edge_palette[membership(wc)[get.edgelist(network)[, 1]]]
+  # node_colors <- node_palette[as.integer(factor(substr(V(network)$name, 1, 1)))]
+  node_colors <- node_colors
+  # edge_colors <- node_palette[membership(wc)[get.edgelist(network)[, 1]]]
 
   # Finally plot the graph
   plot(network,
     vertex.color = node_colors,
     edge.width = E(network)$Percentage / 5, # Edge width
     edge.curved = 0.3,
-    edge.color = edge_colors,
+    edge.color = rgb(0, 0, 0, 0.2),
     vertex.label.family = "Arial",
     vertex.label.color = label_color,
-    layout = layout
+    layout = layout,
+    # layout = layout.fruchterman.reingold
+    main = paste0("Clusters with >= ", min_pct, "% common markers")
   )
-  # layout = layout.fruchterman.reingold)
 }
 
+for (thr in c(10, 15, 20)) {
+  if (data_to_process == "M")
+    {
+    out_radius <- 5
+    in_radius <- 1
+    }
+  else
+    {
+    out_radius <- 5
+    in_radius <- 1.5
+    }
 
-plot_similarity_graph(10, node_palette <- c(
-  "#F16745", "#FFC65D", "#7BC8A4",
-  "#4CC3D9", "#93648D", "#808070"
-),
-label_color = rep(c("black", "white", "black"), c(12, 9, 9))
+  png(paste0("plots/graph_common_clusters_thr", thr, "_", data_to_process, ".png"),
+    width = 7, height = 7, units = "in", res = 300
+  )
+  plot_similarity_graph(thr, out_radius = out_radius, in_radius = in_radius)
+  dev.off()
+}
+
+png(paste0("plots/graph_common_clusters_thr", data_to_process, ".png"),
+  width = 7, height = 7, units = "in", res = 300
 )
+network <- plot_similarity_graph(20,
+  node_palette = c(
+    "#F16745", "#FFC65D", "#7BC8A4",
+    "#4CC3D9", "#93648D", "#808070"
+  ),
+  label_color = "black"
+)
+dev.off()
