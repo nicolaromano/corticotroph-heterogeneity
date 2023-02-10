@@ -158,11 +158,7 @@ datasets <- read.csv("datasets.csv")
 filenames <- dir("rds_outs", pattern = "SCT.rds", full.names = TRUE)
 
 # Read all datasets
-seurat_objects <- pblapply(filenames, function(f)
-{
-  seuratobj <- readRDS(f)
-  return(seuratobj)
-})
+seurat_objects <- pblapply(filenames, readRDS)
 
 # PCA elbow plots
 plots <- lapply(seurat_objects, function(s) {
@@ -305,11 +301,17 @@ n_cells %>%
          sex = str_sub(dataset, -1, -1)) -> n_cells
 n_cells
 
+png("plots/percent_corticotrophs.png", 
+  width = 6, height = 4, units = "in", res = 200)
+
 ggplot(n_cells, aes(sex, perc_cort)) +
-  geom_boxplot() +
-  geom_jitter(width = .1) +
+  geom_boxplot(width = 0.5) +
+  geom_jitter(width = 0.1) +
   ylim(0, 15) +
   ylab("% corticotrophs") +
   xlab("Sex") +
-  theme(axis.title = element_text(size = 14),
+  theme_bw() +
+  theme(axis.title = element_text(size = 13),
         axis.text = element_text(size = 12))
+
+dev.off()
