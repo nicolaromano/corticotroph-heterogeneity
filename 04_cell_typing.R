@@ -160,6 +160,9 @@ filenames <- dir("rds_outs", pattern = "SCT.rds", full.names = TRUE)
 # Read all datasets
 seurat_objects <- pblapply(filenames, readRDS)
 
+# We can use this to explore the datasets
+# show_markers(seurat_objects[[1]])
+
 # PCA elbow plots
 plots <- lapply(seurat_objects, function(s) {
   p <- ElbowPlot(s, 30)
@@ -186,7 +189,7 @@ resolutions <- c(0.5, # Allensworth 2021
                  0.5, # Kucka 2021
                  0.5, # Lopez 2021
                  0.5, # Mayran 2019
-                 0.3, 0.3, # Ruf Zamoiski 2019 F/M
+                 0.3, 0.3, # Ruf Zamojski 2019 F/M
                  0.5) # Vennekens 2021
 
 pomc_clusters <- list(c(9,11), # Allensworth 2021
@@ -196,7 +199,7 @@ pomc_clusters <- list(c(9,11), # Allensworth 2021
                       c(7, 21, 23), # Kucka 2021
                       c(3, 4), # Lopez 2021
                       c(1, 3, 16), # Mayran 2019
-                      c(4, 7, 15), c(4, 7, 17), # Ruf Zamoiski 2019 F/M
+                      c(4, 7, 15), c(4, 7, 17), # Ruf Zamojski 2019 F/M
                       4) # Vennekens 2021
 
 seurat_objects_pomc <- sapply(seq_along(seurat_objects), function(i) {
