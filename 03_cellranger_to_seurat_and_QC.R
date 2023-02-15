@@ -46,25 +46,33 @@ load_data <- function(metadata, study) {
       pattern = "^Mt-"
     )
   }
+
   seurat_obj[["species"]] <- metadata$species[1]
   seurat_obj[["strain"]] <- metadata$strain[1]
   seurat_obj[["sex"]] <- metadata$sex[1]
   seurat_obj[["stage"]] <- metadata$stage[1]
   seurat_obj[["age_wk"]] <- metadata$age_wk[1]
   seurat_obj[["data_source"]] <- metadata$source[1]
+  seurat_obj[["author"]] <- metadata$author[1]
+  seurat_obj[["year"]] <- metadata$year[1]
 
   # Filtering cells
 
   # We use a relatively loose filtering here.
-  # Filter anything greater than 75th percentile + 3 * SD for counts and features
-  # Filter anything with <100 genes or <300 counts
+  # Filter anything greater than 75th percentile + 3 * SD for counts and features,
+  # anything below 25th percentile - 3 * SD for counts and features (or 300 and 100 respectively, whichever is higher),
   # and anything with >80% mitochondrial genes
-  low_counts <- 300
+  low_counts <- max(500, quantile(seurat_obj$nCount_RNA, 0.25) - 3 * sd(seurat_obj$nCount_RNA))
   high_counts <- quantile(seurat_obj$nCount_RNA, 0.75) + 3 * sd(seurat_obj$nCount_RNA)
-  low_features <- 100
+  low_features <- max(300, quantile(seurat_obj$nCount_RNA, 0.25) - 3 * sd(seurat_obj$nCount_RNA))
   high_features <- quantile(seurat_obj$nFeature_RNA, 0.75) + 3 * sd(seurat_obj$nFeature_RNA)
   low_mt <- 0
-  high_mt <- 80
+  high_mt <- 70
+
+  print("Filtering cells with:")
+  print(paste("Counts:", low_counts, high_counts))
+  print(paste("Features:", low_features, high_features))
+  print(paste("Mitochondrial genes:", low_mt, high_mt))
 
   print(paste("Loaded", ncol(seurat_obj), "cells"))
 
@@ -74,12 +82,12 @@ load_data <- function(metadata, study) {
   lim_mt <- c(0, max(seurat_obj$percent_mt) * 1.1)
 
   plot_qc(seurat_obj,
-    main_title = paste(seurat_obj$orig.ident[1], "QC_pre_filtering"),
+    main_title = paste(seurat_obj$author, seurat_obj$year, seurat_obj$sex, "QC pre-filtering"),
     save_to_file = TRUE,
     lim_counts = lim_counts,
     lim_features = lim_features,
     lim_mt = lim_mt
-  ) 
+  )
 
   seurat_obj <- subset(
     seurat_obj,
@@ -91,7 +99,7 @@ load_data <- function(metadata, study) {
   print(paste("Filtered to", ncol(seurat_obj), "cells"))
 
   plot_qc(seurat_obj,
-    main_title = paste(seurat_obj$orig.ident[1], "QC_post_filtering"),
+    main_title = paste(seurat_obj$author, seurat_obj$year, seurat_obj$sex, "QC post-filtering"),
     save_to_file = TRUE,
     lim_counts = lim_counts,
     lim_features = lim_features,
@@ -113,7 +121,7 @@ plot_qc <- function(seurat_object,
                     save_to_file = FALSE,
                     lim_features = NULL,
                     lim_counts = NULL,
-                    lim_mt = NULL) {                    
+                    lim_mt = NULL) {
   #' Plots QC plots for the data
   #' This creates a 3x3 matrix of plots including
   #' Histograms of counts/cell, genes/cell, % mitochondrial genes
@@ -123,7 +131,7 @@ plot_qc <- function(seurat_object,
   #' @param main_title: Title of the plot
   #' @param save_to_file: Whether to save the plot to file (default: FALSE)
   #' @param lim_features: axis limits for the genes/cell plot. If NULL, the limits are automatically calculated
-  #' @param lim_counts: axis limits for the counts/cell plot. If NULL, the limits are automatically calculated  
+  #' @param lim_counts: axis limits for the counts/cell plot. If NULL, the limits are automatically calculated
   #' @param lim_mt: axis limits for the % mitochondrial genes plot. If NULL, the limits are automatically calculated
 
   qc_data <- data.frame(
@@ -236,7 +244,7 @@ plot_qc <- function(seurat_object,
     xlab("% mitochondrial genes") +
     ylab("Reads/cell") +
     plot_theme
-  
+
   if (!is.null(lim_mt)) {
     p7 <- p7 + xlim(lim_mt)
   }
@@ -256,7 +264,7 @@ plot_qc <- function(seurat_object,
   if (!is.null(lim_features)) {
     p8 <- p8 + ylim(lim_features)
   }
-  
+
   p9 <- ggplot(qc_data, aes(x = nCount_RNA, y = nFeature_RNA)) +
     geom_point(size = pt_size, col = rgb(0, 0, 0, 0.3)) +
     xlab("Reads/cell") +
@@ -295,17 +303,158 @@ seurat_objects <- datasets %>%
 #   pblapply(readRDS)
 
 # Print number of cells
-num_cells <- data.frame(
-  dataset = sapply(seurat_objects, function(s) {
-    as.character(s$orig.ident[1])
-  }),
-  cells = sapply(seurat_objects, ncol)
-)
+cell_num <- data.frame(
+  cells = sapply(seurat_objects, function(s) {
+    ncol(s)
+  })
+) %>%
+  mutate(reported = c(18301, 13663, 3334, 3562, 1340, 1440, 15876, 9879, 9269, 21648, 10311, 7977)) %>%
+  mutate(author = sapply(seurat_objects, function(s) {
+    s$author[1]
+  })) %>%
+  mutate(sex = sapply(seurat_objects, function(s) {
+    s$sex[1]
+  })) %>%
+  mutate(year = sapply(seurat_objects, function(s) {
+    s$year[1]
+  })) %>%
+  mutate(perc_reported = round(cells / reported * 100, 2))
 
-num_cells
+p1 <- ggplot(
+  cell_num %>% filter(sex == "M"),
+  aes(x = author, y = perc_reported)
+) +
+  geom_col(width = 0.8) +
+  geom_hline(yintercept = 100, linetype = "dashed", color = "red") +
+  ylab("Cells\n(% published num)") +
+  xlab("") +
+  ggtitle("Males") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 13),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  )
+
+p2 <- ggplot(
+  cell_num %>% filter(sex == "F"),
+  aes(x = author, y = perc_reported)
+) +
+  geom_col(width = 0.8) +
+  geom_hline(yintercept = 100, linetype = "dashed", color = "red") +
+  ylab("Cells\n(% published num)") +
+  xlab("") +
+  ggtitle("Females") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  )
+
+png("plots/cell_number_perc_reported.png", width = 1000, height = 500)
+grid.arrange(p1, p2, ncol = 2)
+dev.off()
+
+p1 <- cell_num %>%
+  filter(sex == "M") %>%
+  ggplot(aes(x = author, y = cells)) +
+  geom_col() +
+  ylim(0, max(cell_num$cells)) +
+  ylab("Cells") +
+  xlab("") +
+  ggtitle("Males") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  )
+
+p2 <- cell_num %>%
+  filter(sex == "F") %>%
+  ggplot(aes(x = author, y = cells)) +
+  geom_col() +
+  ylim(0, max(cell_num$cells)) +
+  ylab("Cells") +
+  xlab("") +
+  ggtitle("Females") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  )
+
+png("plots/cell_number.png", width = 1000, height = 500)
+grid.arrange(p1, p2, ncol = 2)
+dev.off()
+
+# Plot QC for all studies
+all_qc_data <- data.frame(
+  counts = sapply(
+    seurat_objects,
+    function(s) {
+      s$nCount_RNA
+    }
+  ) %>% unlist(),
+  genes = sapply(seurat_objects, function(s) {
+    s$nFeature_RNA
+  }) %>% unlist(),
+  mt_perc = sapply(seurat_objects, function(s) {
+    s$percent_mt
+  }) %>% unlist(),
+  dataset = sapply(seurat_objects, function(s) {
+    paste(s$author, s$year, "-", s$sex)
+  }) %>% unlist()
+)  %>% 
+  arrange(dataset)
+
+p1 <- ggplot(all_qc_data, aes(x = dataset, y = genes)) +
+  geom_boxplot(outlier.size = 0.3) +
+  xlab("") +
+  ylab("Genes / cell") +
+  ggtitle("Genes / cell") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  ) 
+
+p2 <- ggplot(all_qc_data, aes(x = dataset, y = counts)) +
+  geom_boxplot(outlier.size = 0.3) +
+  xlab("") +
+  ylab("Counts / cell") +
+  ggtitle("Counts / cell") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  ) 
+
+p3 <- ggplot(all_qc_data, aes(x = dataset, y = mt_perc)) +
+  geom_boxplot(outlier.size = 0.3) +
+  xlab("") +
+  ylab("% mitochondrial genes") +
+  ylim(0, 100) +
+  ggtitle("% mitochondrial genes") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16)
+  ) 
+
+png("plots/all_qc.png", width = 1500, height = 500)
+grid.arrange(p1, p2, p3, ncol = 3)
+dev.off()
 
 # Scale with SCT -> PCA -> UMAP
 seurat_objects_SCT <- sapply(seurat_objects, function(s) {
+  print(paste("Processing", s$author[1], s$year[1], "-", s$sex[1]))
+
   s %>%
     SCTransform() %>%
     FindVariableFeatures() %>%
