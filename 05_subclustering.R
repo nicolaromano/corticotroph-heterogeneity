@@ -156,7 +156,7 @@ elbow_method <- function(obj, resolutions = seq(0, 1, 0.1),
 if (calculate_elbow_plots) {
   resolutions <- seq(0.1, 1.5, 0.1)
 
-  # This is quite slow (~30 minutes)
+  # This is quite slow (~7 minutes using 16 cores)
   start_time <- Sys.time()
   elbow_plot_data <- lapply(seurat_corticotrophs, function(obj) {
     obj <- obj %>%
@@ -253,7 +253,7 @@ cort_plots <- lapply(seurat_corticotrophs, function(obj) {
 png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
   width = 800, height = 1200
 )
-do.call("grid.arrange", cort_plots, ncol = 3)
+do.call("grid.arrange", c(cort_plots, ncol = 3))
 dev.off()
 
 # Save to RDS
