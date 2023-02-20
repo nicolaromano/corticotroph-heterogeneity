@@ -14,8 +14,6 @@ load_data <- function(metadata, study) {
   #' the resulting Seurat object in an RDS file in the rds_outs folder
   #' @param metadata: the metadata for the datasets
   #' @param study: the ID of the study we are loading
-  #' Parameters for filtering. Cells are filtered if they have less than min_quantile_xxx or min_xxx, whichever is higher.
-  #' Similarly for max_quantile_xxx and max_xxx.
   #' @return: a Seurat object with the data and metadata
 
   matrix10x_list <- apply(metadata, 1, function(row) {
