@@ -115,7 +115,7 @@ type_cells_thr <- function(seurat_obj) {
   #' @param seurat_obj: the Seurat object
   #' @return: a plot of the cell types
   #' TODO: add other cell types
-  
+
   expr <- GetAssayData(seurat_obj)["Pomc", ]
   thr <- otsu_thresh(expr)
 
@@ -169,7 +169,8 @@ get_pomc_cells <- function(seurat_obj, resolution = 0.6,
   p3 <- VlnPlot(seurat_obj, features = "Pomc") + NoLegend()
 
   png(paste0("plots/Pomc_plots/", seurat_obj$orig.ident[1], "_all_pit_Pomc.png"),
-    width = 10, height = 10, units = "in", res = 300)
+    width = 10, height = 10, units = "in", res = 300
+  )
   # Arrange with p1 and p2 on top, side by side, and p3 on the bottom
   grid.arrange(p1, p2, p3, ncol = 2, layout_matrix = rbind(c(1, 2), c(3, 3)))
 
@@ -223,7 +224,8 @@ pomc_cells <- lapply(seurat_objects, type_cells_thr)
 png("plots/pomc_cells.png", width = 15, height = 10, units = "in", res = 300)
 do.call("grid.arrange", c(pomc_cells,
   top = "POMC+ cells",
-  ncol = 4))
+  ncol = 4
+))
 dev.off()
 
 #### CLUSTERING ####
@@ -259,6 +261,8 @@ seurat_objects_pomc <- sapply(seq_along(seurat_objects), function(i) {
   get_pomc_cells(seurat_obj,
     resolution = resolutions[i],
     pomc_clusters = pomc_clusters[[i]],
+    # Set this to a small number (0.1-0.2) while determining the resolution 
+    # and to 1 when actually plotting the final results
     reduce_plot = 1,
     # Set this to FALSE while determining the resolution and
     # pomc_clusters, then set it to TRUE to save the RDS files
@@ -298,8 +302,10 @@ melano_plots <- lapply(seurat_objects_pomc, function(seurat_obj) {
 })
 
 png("plots/melanotrophs.png", width = 800, height = 800)
-do.call("grid.arrange", c(melano_plots, nrow = 3,
-top = "Melanotrophs (Pcsk2+ or Pax7+)"))
+do.call("grid.arrange", c(melano_plots,
+  nrow = 3,
+  top = "Melanotrophs (Pcsk2+ or Pax7+)"
+))
 dev.off()
 
 threshold <- 0.1
@@ -331,6 +337,19 @@ corticotrophs <- pbsapply(seurat_objects_pomc, function(seurat_obj) {
 
   return(cortico)
 })
+
+# Can load processed files here directly, if needed
+# melanotrophs <- pbsapply(dir(
+#   path = "rds_outs/",
+#   pattern = paste0(data_to_process, "_melanotrophs.rds"),
+#   full.names = TRUE
+# ), readRDS)
+
+# corticotrophs <- pbsapply(dir(
+#   path = "rds_outs/",
+#   pattern = paste0(data_to_process, "_corticotrophs.rds"),
+#   full.names = TRUE
+# ), readRDS)
 
 p <- lapply(melanotrophs, function(s) {
   p <- FeaturePlot(s, "Pcsk2") +
