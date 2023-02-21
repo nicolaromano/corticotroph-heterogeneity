@@ -12,7 +12,7 @@ library(igraph)
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 
 # Read only male files
 filenames <- dir("rds_outs",
@@ -61,8 +61,16 @@ for (d1 in 1:(length(seurat_corticotrophs) - 1)) {
           cl1, cl2
         )
         res <- data.frame(
-          Dataset1_name = seurat_corticotrophs[[d1]]$orig.ident[1],
-          Dataset2_name = seurat_corticotrophs[[d2]]$orig.ident[1],
+          Dataset1_name = paste(
+            seurat_corticotrophs[[d1]]$author[1],
+            seurat_corticotrophs[[d1]]$year[1], "-",
+            seurat_corticotrophs[[d1]]$sex[1]
+          ),
+          Dataset2_name = paste(
+            seurat_corticotrophs[[d2]]$author[1],
+            seurat_corticotrophs[[d2]]$year[1], "-",
+            seurat_corticotrophs[[d2]]$sex[1]
+          ),
           Dataset1 = d1, Dataset2 = d2,
           Cluster1 = cl1, Cluster2 = cl2,
           Percentage = perc
@@ -79,15 +87,6 @@ rownames(common_markers) <- NULL
 ggplot(common_markers, aes(y = Percentage)) +
   geom_boxplot()
 
-prettify_df_name <- function(name) {
-  name <- as.character(name)
-  name <- substr(name, 1, nchar(name) - 1) # Remove sex
-  paste(
-    substr(name, 1, nchar(name) - 4), # Author
-    substr(name, nchar(name) - 3, nchar(name))
-  ) # Year
-}
-
 # Get all of the possible combinations of datasets
 pl_list <- apply(unique(common_markers[, c("Dataset1", "Dataset2")]), 1, function(d1d2) {
   common_markers %>%
@@ -99,8 +98,8 @@ pl_list <- apply(unique(common_markers[, c("Dataset1", "Dataset2")]), 1, functio
     geom_point(aes(size = Percentage, col = Percentage > 10)) +
     scale_size(breaks = c(10, 20, 30), limits = c(0, 30)) +
     scale_color_manual(values = c(rgb(0, 0, 0, 0.2), rgb(0.6, 0.6, 0.8))) +
-    xlab(prettify_df_name(sub_markers$Dataset1_name[1])) +
-    ylab(prettify_df_name(sub_markers$Dataset2_name[1])) +
+    xlab(sub_markers$Dataset1_name[1]) +
+    ylab(sub_markers$Dataset2_name[1]) +
     theme_minimal() +
     theme(
       axis.title = element_text(size = 10),
@@ -126,10 +125,16 @@ leg <- get_legend(g)
 leg$layout[2, ]$b <- 2
 pl_list$legend <- leg
 
+if (data_to_process == "F") {
+  width <- 9
+} else {
+  width <- 8
+}
+
 png(paste0("plots/perc_common_markers_", data_to_process, ".png"),
-  width = 7, height = 7, units = "in", res = 300
+  width = width, height = 7, units = "in", res = 300
 )
-do.call("grid.arrange", c(pl_list, ncol = 4))
+grid.arrange(grobs = pl_list, ncol = 4)
 dev.off()
 ##### Similarity graph ######
 
@@ -246,7 +251,7 @@ for (thr in c(10, 15, 20)) {
     in_radius <- 1.5
   }
 
-png(paste0("plots/graph_common_clusters_thr", thr, "_", data_to_process, ".png"),
+  png(paste0("plots/graph_common_clusters_thr", thr, "_", data_to_process, ".png"),
     width = 7, height = 7, units = "in", res = 300
   )
   get_similarity_graph(thr,
@@ -259,13 +264,55 @@ png(paste0("plots/graph_common_clusters_thr", thr, "_", data_to_process, ".png")
   dev.off()
 }
 
-graph <- get_similarity_graph(15, do_plot = FALSE,
-  out_radius = out_radius, in_radius = in_radius,
-  node_palette = c(
+for (thr in c(10, 15, 20)) {
+  graph <- get_similarity_graph(thr,
+    do_plot = FALSE
+  )
+  memberships <- membership(walktrap.community(graph, steps = 100))
+
+  tb <- table(memberships)
+
+  community_palette <- c(
     "#F16745", "#FFC65D", "#7BC8A4",
     "#4CC3D9", "#93648D", "#808070"
-  ))
+  )
 
-membership(walktrap.community(graph, steps = 100))
+  comm_colors <- community_palette[sort(unique(memberships))]
+  comm_colors[tb == 1] <- "lightgrey"
+  names(comm_colors) <- names(tb)
 
-# Now plot the UMAP reductions, colouring by community
+  # Now plot the UMAP reductions, colouring by community
+  community_plots <- lapply(seurat_corticotrophs, function(s) {
+    # Get the first letter of the dataset name.
+    # This corresponds to the names of the graph nodes
+    graph_nodes_name <- substr(s$orig.ident[1], 1, 1)
+
+    # Add a column to the metadata with the community
+    s$community <- memberships[match(paste0(graph_nodes_name, Idents(s)), names(memberships))]
+    s$community <- factor(s$community, levels = sort(unique(memberships)))
+
+    palette <- comm_colors[unique(s$community)]
+
+    p <- DimPlot(s, group.by = "community") +
+      scale_color_manual(
+        name = "Community",
+        values = palette
+      ) +
+      ggtitle(paste(s$author[1], s$year[1], "-", s$sex[1])) +
+      theme(legend.position = "none")
+  })
+
+  png(paste0("plots/umap_common_clusters_thr", thr, "_", data_to_process, ".png"),
+    width = 7, height = 7, units = "in", res = 300
+  )
+
+  grid.arrange(
+    grobs = community_plots, ncol = 3,
+    top = textGrob(
+      paste("Cells with >= ", thr, "% common markers"),
+      gp = gpar(fontsize = 20)
+    )
+  )
+
+  dev.off()
+}
