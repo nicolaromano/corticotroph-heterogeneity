@@ -292,18 +292,23 @@ for (thr in c(10, 15, 20)) {
     "#4CC3D9", "#93648D", "#808070"
   )
 
+  # Assign a colour to each community.
   comm_colors <- community_palette[sort(unique(memberships))]
+  # Communities with a single node are grey
   comm_colors[tb == 1] <- "lightgrey"
   names(comm_colors) <- names(tb)
 
   for (i in seq_along(seurat_corticotrophs)) {
     # Add a column to the metadata with the community
-    seurat_corticotrophs[[i]][[paste0("marker_community_", thr)]] <-
-      memberships[match(paste0(
-        substr(seurat_corticotrophs[[i]]$author[1], 1, 1),
-        Idents(seurat_corticotrophs[[i]])
-      ), names(memberships))]
-    seurat_corticotrophs[[i]][[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]][[paste0("marker_community_", thr)]], levels = sort(unique(memberships)))
+    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <-
+      memberships[match(
+        paste0(
+          substr(seurat_corticotrophs[[i]]$author[1], 1, 1),
+          Idents(seurat_corticotrophs[[i]])
+        ),
+        names(memberships)
+      )]
+    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(unique(memberships)))
   }
 
   # Now plot the UMAP reductions, colouring by community
@@ -312,7 +317,7 @@ for (thr in c(10, 15, 20)) {
     # This corresponds to the names of the graph nodes
     graph_nodes_name <- substr(s$author[1], 1, 1)
 
-    palette <- comm_colors[unique(s$community)]
+    palette <- comm_colors
 
     p <- DimPlot(s, group.by = paste0("marker_community_", thr)) +
       scale_color_manual(
@@ -335,3 +340,8 @@ for (thr in c(10, 15, 20)) {
   )
   dev.off()
 }
+
+# Save the seurat objects back to disk
+pblapply(seurat_corticotrophs, function(s) {
+  saveRDS(s, paste0("rds_outs/", s$orig.ident[1], "_subclustered.rds"))
+})
