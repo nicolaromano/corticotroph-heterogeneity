@@ -1,5 +1,6 @@
 library(Seurat)
 library(ggplot2)
+library(grid)
 library(gridExtra)
 library(scales)
 library(tidyverse)
@@ -13,12 +14,20 @@ datasets <- read.csv("datasets.csv")
 # Data to process ("M" or "F")
 data_to_process <- "M"
 
+# Number of random swaps to perform
+num_swaps <- 100
+
 filenames <- dir("rds_outs",
   pattern = paste0(data_to_process, "_subclustered.rds"),
   full.names = TRUE
 )
 
 seurat_corticotrophs <- pblapply(filenames, readRDS)
+
+# Check if the plots/correlation_maps/ directory exists and create it if not
+if (!dir.exists("plots/correlation_maps")) {
+  dir.create("plots/correlation_maps")
+}
 
 get_marker_correlation <- function(reference_id,
                                    corr_type = "pearson",
@@ -53,7 +62,7 @@ get_marker_correlation <- function(reference_id,
   )
 
   markers %>%
-    # Get only significan markers
+    # Get only significant markers
     subset(p_val_adj < 0.05) %>%
     group_by(cluster) %>%
     # Arrange by p value
@@ -64,16 +73,16 @@ get_marker_correlation <- function(reference_id,
     arrange(-p_val_adj, .by_group = TRUE) %>%
     select(cluster, gene, p_val_adj) %>%
     # Get the top 50
-    top_n(n = 50, wt = p_val_adj) -> markers_filtered
+    top_n(n = 50, wt = -p_val_adj) -> markers_filtered
 
   corr_matrices <- lapply(seq_along(seurat_corticotrophs), function(i) {
     print(paste("PROCESSING", dataset_ids[i]))
     # Get the expression matrix, and filter it for the marker genes of the reference
     # (or at least the ones that are there!)
-    gene_filter <- intersect(markers_filtered$gene, rownames(seurat_corticotrophs[[i]]))
+    # gene_filter <- intersect(markers_filtered$gene, rownames(seurat_corticotrophs[[i]]))
 
     print("Calculating correlation")
-    expr <- as.matrix(GetAssayData(seurat_corticotrophs[[i]])[gene_filter, ])
+    expr <- as.matrix(GetAssayData(seurat_corticotrophs[[i]])[markers_filtered$gene, ])
     # Calculate the correlation matrix
     if (corr_type == "cosine") {
       # Cosine similarity
@@ -140,20 +149,13 @@ get_marker_correlation <- function(reference_id,
   names(corr_matrices) <- paste0(dataset_ids, "_vs_", dataset_ids[reference_id])
 
   if (do_plot) {
-    cluster_palette <- c(
-      "0" = "#f1c7dd", "1" = "#966eac", "2" = "#e3337e",
-      "3" = "#827775", "4" = "#7bcbc0", "5" = "#f05129",
-      "6" = "#b09977", "7" = "#b7cc94", "8" = "#f5bd42",
-      "9" = "#0b326b"
-    )
+    cluster_palette <- hue_pal()(length(unique(markers_filtered$cluster)))
+    names(cluster_palette) <- as.character(unique(markers_filtered$cluster))
     corr_plots <- lapply(seq_along(corr_matrices), function(i) {
       m <- corr_matrices[[i]]
       # We might miss some of the gene names in some of the correlation matrices
       # Getting gene names each time here helps avoiding mismatches
-      clusters <- data.frame(cluster = markers_filtered$cluster[match(
-        colnames(m$cor),
-        markers_filtered$gene
-      )])
+      clusters <- data.frame(cluster = markers_filtered$cluster)
       rownames(clusters) <- colnames(m$cor)
       clusters$cluster <- as.character(clusters$cluster)
 
@@ -172,7 +174,7 @@ get_marker_correlation <- function(reference_id,
       # br: a sequence of numbers that covers the range of values in mat
       # **and is one element longer than color vector**.
       # Used for mapping values to colors.
-      br <- seq(-0.4, 0.4, length.out = 257)
+      br <- seq(-0.5, 0.5, length.out = 257)
       anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
 
       p <- pheatmap(m$cor,
@@ -188,7 +190,7 @@ get_marker_correlation <- function(reference_id,
         border_color = NA,
         legend = FALSE,
         annotation_colors = anno_colors,
-        fontsize = 8,
+        fontsize = 10,
         silent = TRUE
       )
 
@@ -210,10 +212,19 @@ get_marker_correlation <- function(reference_id,
 
     # Append it to the plot list
     corr_plots_with_leg <- append(corr_plots, list(leg), after = 3)
-    do.call("grid.arrange", c(corr_plots_with_leg,
-      list(ncol = 4, widths = c(1, 1, 1, 0.3)),
-      top = ""
-    ))
+
+    png(paste0("plots/correlation_maps/heatmap_markers_", dataset_ids[reference_id], ".png"),
+      width = 15, height = 10, units = "in", res = 300
+    )
+
+    grid.arrange(
+      grobs = corr_plots_with_leg, ncol = 4,
+      widths = c(1, 1, 1, 0.3), top = textGrob(paste(
+        "Correlation of marker genes - Reference dataset:",
+        dataset_ids[reference_id]
+      ), gp = gpar(fontsize = 16, fontface = "bold"))
+    )
+    dev.off()
 
     # Do the same, but for the randomly shuffled data.
     # We select a random run (from the n_rnd that we ran) to show
@@ -223,10 +234,7 @@ get_marker_correlation <- function(reference_id,
       m <- corr_matrices[[i]]
       # We might miss some of the gene names in some of the correlation matrices
       # Getting gene names each time here helps avoiding mismatches
-      clusters <- data.frame(cluster = markers_filtered$cluster[match(
-        colnames(m$rnd_cor[[run_id]]),
-        markers_filtered$gene
-      )])
+      clusters <- data.frame(cluster = markers_filtered$cluster)
       rownames(clusters) <- colnames(m$rnd_cor[[run_id]])
       clusters$cluster <- as.character(clusters$cluster)
 
@@ -240,13 +248,14 @@ get_marker_correlation <- function(reference_id,
         "Markers from", dataset_names[2], "\ndata from",
         dataset_names[1], "(shuffled)"
       )
-      br <- seq(-0.5, 1, 0.01)
+      br <- seq(-0.5, 0.5, length.out = 257)
       anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
 
       p <- pheatmap(m$rnd_cor[[run_id]],
         show_rownames = FALSE, show_colnames = FALSE,
         annotation_row = clusters,
         annotation_col = clusters,
+        color = hcl.colors(256, "PRGn"),
         na_col = "white",
         cluster_rows = FALSE, cluster_cols = FALSE,
         gaps_row = gaps, gaps_col = gaps,
@@ -263,10 +272,18 @@ get_marker_correlation <- function(reference_id,
     })
 
     corr_plots_rnd_with_leg <- append(corr_plots_rnd, list(leg), after = 3)
-    do.call("grid.arrange", c(corr_plots_rnd_with_leg,
-      list(ncol = 4, widths = c(1, 1, 1, 0.3)),
-      top = ""
-    ))
+
+    png(paste0("plots/correlation_maps/heatmap_markers_rnd_", dataset_ids[reference_id], ".png"),
+      width = 15, height = 10, units = "in", res = 300
+    )
+    grid.arrange(
+      grobs = corr_plots_rnd_with_leg, ncol = 4,
+      widths = c(1, 1, 1, 0.3), top = textGrob(paste(
+        "Correlation of marker genes - Reference dataset:",
+        dataset_ids[reference_id], "(shuffled)"
+      ), gp = gpar(fontsize = 16, fontface = "bold"))
+    )
+    dev.off()
 
     corr_plots_rnd_within <- lapply(seq_along(corr_matrices), function(i) {
       m <- corr_matrices[[i]]
@@ -289,13 +306,14 @@ get_marker_correlation <- function(reference_id,
         "Markers from", dataset_names[2], "\ndata from",
         dataset_names[1], "(shuffled in clust)"
       )
-      br <- seq(-0.5, 1, 0.01)
+      br <- seq(-0.5, 0.5, length.out = 257)
       anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
 
       p <- pheatmap(m$rnd_within_cor[[run_id]],
         show_rownames = FALSE, show_colnames = FALSE,
         annotation_row = clusters,
         annotation_col = clusters,
+        color = hcl.colors(256, "PRGn"),
         na_col = "white",
         cluster_rows = FALSE, cluster_cols = FALSE,
         gaps_row = gaps, gaps_col = gaps,
@@ -313,14 +331,21 @@ get_marker_correlation <- function(reference_id,
 
     corr_plots_rnd_within_with_leg <- append(corr_plots_rnd_within, list(leg), after = 3)
 
-    grid.arrange(grobs = corr_plots_rnd_within_with_leg,
-      ncol = 4, widths = c(1, 1, 1, 0.3), top = "")
-  } # if
+    png(paste0("plots/correlation_maps/heatmap_markers_rnd_within_", dataset_ids[reference_id], ".png"),
+      width = 15, height = 10, units = "in", res = 300
+    )
+
+    grid.arrange(
+      grobs = corr_plots_rnd_within_with_leg,
+      ncol = 4, widths = c(1, 1, 1, 0.3), top = ""
+    )
+    dev.off()
+  } # End of if(do_plot)
 
   return(list(markers = markers_filtered, corr = corr_matrices))
 }
 
-get_average_correlations <- function(reference_id, do_plot = TRUE) {
+get_average_correlations <- function(reference_id, corr_type = "pearson", do_plot = TRUE) {
   #' Gets the average correlation matrix for within/between clusters
   #' and randomly shuffled matrices
   #' @param reference_id: the id of the reference dataset
@@ -328,7 +353,8 @@ get_average_correlations <- function(reference_id, do_plot = TRUE) {
   #' @return a dataframe with the average correlation values
   res <- get_marker_correlation(
     reference_id = reference_id,
-    corr_type = "cosine",
+    corr_type = corr_type,
+    n_rnd = num_swaps,
     do_plot = do_plot
   )
 
@@ -393,7 +419,7 @@ get_average_correlations <- function(reference_id, do_plot = TRUE) {
   )
 
   # Calculate average correlation
-  mean_cor <- sapply(corr_matr, function(m) {
+  mean_cor <- sapply(corr_matr, FUN = function(m) {
     mean_cor <- data.frame(
       Correlation = unlist(m$mean_cor),
       Group = factor(grp_names, levels = grp_names)
@@ -418,8 +444,9 @@ get_average_correlations <- function(reference_id, do_plot = TRUE) {
     subset(!(Group %in% c("Random shuffle", "Random shuffle within") & SameDataset == FALSE))
 
   if (do_plot) {
-    png(paste0("plots/all_avg_corr_", data_to_process, ".png"),
-      width = 15, height = 8, units = "in", res = 300)
+    png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".png"),
+      width = 15, height = 8, units = "in", res = 300
+    )
     ggplot(corr_matr_all, aes(Group, Correlation)) +
       geom_boxplot(outlier.shape = NA, aes(fill = SameDataset)) +
       scale_fill_manual(values = c("#86A93F", "#B56492"), name = "Same dataset") +
@@ -438,13 +465,16 @@ get_average_correlations <- function(reference_id, do_plot = TRUE) {
 }
 
 all_avg_corr <- sapply(1:length(seurat_corticotrophs),
-  FUN = get_average_correlations, do_plot = TRUE,
+  FUN = get_average_correlations, do_plot = TRUE, corr_type = "pearson",
   simplify = FALSE,
   USE.NAMES = TRUE
 )
 
 all_avg_corr <- do.call("rbind", all_avg_corr)
 
+png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".png"),
+  width = 15, height = 8, units = "in", res = 300
+)
 all_avg_corr %>%
   subset(Group %in% c("Within cluster", "Between clusters")) %>%
   ggplot(aes(Group, Correlation)) +
@@ -460,8 +490,9 @@ all_avg_corr %>%
     strip.text = element_text(size = 12)
   ) +
   facet_wrap(~Dataset1)
+dev.off()
 
-png(paste0("plots/all_avg_corr_", data_to_process, "with_shuffles.png"),
+png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, "_with_shuffles.png"),
   width = 15, height = 8, units = "in", res = 300
 )
 ggplot(all_avg_corr, aes(Group, Correlation)) +
