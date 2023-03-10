@@ -13,17 +13,33 @@ if (!dir.exists("expr_matrices")) {
   dir.create("expr_matrices")
 }
 
-print("Exporting corticotrophs expression matrices")
-
 pbsapply(seurat_obj_cort, function(obj) {
   outfile <- paste0("expr_matrices/", obj$orig.ident[1], ".csv")
 
-  write.csv(GetAssayData(obj), file = outfile, row.names = TRUE)
-  gzip(outfile, overwrite = TRUE)
+  print(paste(obj$author[1], obj$year[1], "-", obj$sex[1]))
+  print("---------------------------------")
 
+  print("Exporting expression matrix")
+  write.csv(GetAssayData(obj), file = outfile, row.names = TRUE)
+  # gzip(outfile, overwrite = TRUE)
+
+  print("Exporting cluster assignments")
   outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_clusters.csv")
-  write.csv(data.frame(Barcode = Cells(obj), Cluster = Idents(obj)),
-    outfile, row.names = FALSE, quote = FALSE
+  write.csv(
+    data.frame(
+      Barcode = Cells(obj),
+      Cluster = Idents(obj)
+    ),
+    outfile,
+    row.names = FALSE, quote = FALSE
+  )
+
+  print("Exporting UMAP coordinates")
+  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_umap.csv")
+  umap <- Embeddings(obj, reduction = "umap")
+  write.csv(data.frame(Barcode = Cells(obj), UMAP_1 = umap[, 1], UMAP_2 = umap[, 2]),
+    outfile,
+    row.names = FALSE, quote = FALSE
   )
 })
 
