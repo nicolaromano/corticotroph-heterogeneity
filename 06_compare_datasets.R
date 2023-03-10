@@ -12,7 +12,7 @@ library(igraph)
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "F"
+data_to_process <- "M"
 
 # Read only male files
 filenames <- dir("rds_outs",
@@ -84,8 +84,23 @@ for (d1 in 1:(length(seurat_corticotrophs) - 1)) {
 # Just to make the data frame prettier
 rownames(common_markers) <- NULL
 
+png("plots/percentage_common_markers.png",
+  width = 5, height = 10,
+  units = "in", res = 300
+)
 ggplot(common_markers, aes(y = Percentage)) +
-  geom_boxplot()
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(aes(x = 0), width = 0.1, size = 2) +
+  xlim(-0.7, 0.7) +
+  ylab("Percentage of common markers") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_text(size = 16),
+    axis.text.y = element_text(size = 14)
+  )
+dev.off()
 
 # Get all of the possible combinations of datasets
 pl_list <- apply(unique(common_markers[, c("Dataset1", "Dataset2")]), 1, function(d1d2) {
@@ -281,19 +296,25 @@ for (thr in c(10, 15, 20)) {
   comm_colors[tb == 1] <- "lightgrey"
   names(comm_colors) <- names(tb)
 
+  for (i in seq_along(seurat_corticotrophs)) {
+    # Add a column to the metadata with the community
+    seurat_corticotrophs[[i]][[paste0("marker_community_", thr)]] <-
+      memberships[match(paste0(
+        substr(seurat_corticotrophs[[i]]$author[1], 1, 1),
+        Idents(seurat_corticotrophs[[i]])
+      ), names(memberships))]
+    seurat_corticotrophs[[i]][[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]][[paste0("marker_community_", thr)]], levels = sort(unique(memberships)))
+  }
+
   # Now plot the UMAP reductions, colouring by community
   community_plots <- lapply(seurat_corticotrophs, function(s) {
     # Get the first letter of the dataset name.
     # This corresponds to the names of the graph nodes
-    graph_nodes_name <- substr(s$orig.ident[1], 1, 1)
-
-    # Add a column to the metadata with the community
-    s$community <- memberships[match(paste0(graph_nodes_name, Idents(s)), names(memberships))]
-    s$community <- factor(s$community, levels = sort(unique(memberships)))
+    graph_nodes_name <- substr(s$author[1], 1, 1)
 
     palette <- comm_colors[unique(s$community)]
 
-    p <- DimPlot(s, group.by = "community") +
+    p <- DimPlot(s, group.by = paste0("marker_community_", thr)) +
       scale_color_manual(
         name = "Community",
         values = palette
@@ -305,7 +326,6 @@ for (thr in c(10, 15, 20)) {
   png(paste0("plots/umap_common_clusters_thr", thr, "_", data_to_process, ".png"),
     width = 7, height = 7, units = "in", res = 300
   )
-
   grid.arrange(
     grobs = community_plots, ncol = 3,
     top = textGrob(
@@ -313,6 +333,5 @@ for (thr in c(10, 15, 20)) {
       gp = gpar(fontsize = 20)
     )
   )
-
   dev.off()
 }
