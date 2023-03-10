@@ -405,7 +405,7 @@ all_qc_data <- data.frame(
   dataset = sapply(seurat_objects, function(s) {
     paste(s$author, s$year, "-", s$sex)
   }) %>% unlist()
-)  %>% 
+) %>%
   arrange(dataset)
 
 p1 <- ggplot(all_qc_data, aes(x = dataset, y = genes)) +
@@ -418,7 +418,7 @@ p1 <- ggplot(all_qc_data, aes(x = dataset, y = genes)) +
     axis.text = element_text(size = 13),
     axis.title = element_text(size = 14),
     title = element_text(size = 16)
-  ) 
+  )
 
 p2 <- ggplot(all_qc_data, aes(x = dataset, y = counts)) +
   geom_boxplot(outlier.size = 0.3) +
@@ -430,7 +430,7 @@ p2 <- ggplot(all_qc_data, aes(x = dataset, y = counts)) +
     axis.text = element_text(size = 13),
     axis.title = element_text(size = 14),
     title = element_text(size = 16)
-  ) 
+  )
 
 p3 <- ggplot(all_qc_data, aes(x = dataset, y = mt_perc)) +
   geom_boxplot(outlier.size = 0.3) +
@@ -443,7 +443,7 @@ p3 <- ggplot(all_qc_data, aes(x = dataset, y = mt_perc)) +
     axis.text = element_text(size = 13),
     axis.title = element_text(size = 14),
     title = element_text(size = 16)
-  ) 
+  )
 
 png("plots/all_qc.png", width = 1500, height = 500)
 grid.arrange(p1, p2, p3, ncol = 3)
@@ -464,3 +464,75 @@ seurat_objects_SCT <- sapply(seurat_objects, function(s) {
 
   return(seuratobj)
 })
+
+# Load filed, if needed
+# filenames <- list.files("rds_outs/", pattern = "SCT.rds")
+# seurat_objects_SCT <- pblapply(filenames, readRDS)
+
+allQC <- lapply(seurat_objects_SCT, function(s) {
+  data.frame(
+    dataset = paste(s$author[1], s$year[1], "-", s$sex[1]),
+    sex = factor(s$sex[1], levels = c("M", "F")),
+    avg_gene_cell = mean(s$nFeature_RNA),
+    avg_counts_cell = mean(s$nCount_RNA),
+    avg_mt_perc = mean(s$percent_mt)
+  )
+})
+
+png("plots/qc_summary_all_datasets.png",
+  width = 15, height = 10,
+  units = "in", res = 300
+)
+do.call(rbind, allQC) %>%
+  pivot_longer(
+    cols = -c(dataset, sex),
+    names_to = "qc_feature",
+    values_to = "value"
+  ) %>%
+  # Rename feature names to be more readable
+  mutate(qc_feature = case_when(
+    qc_feature == "avg_gene_cell" ~ "Avg genes/cell",
+    qc_feature == "avg_counts_cell" ~ "Avg counts/cell",
+    qc_feature == "avg_mt_perc" ~ "Avg % mitochondrial genes"
+  )) %>%
+  # Reorder levels
+  mutate(qc_feature = factor(qc_feature, levels = c(
+    "Avg genes/cell",
+    "Avg counts/cell",
+    "Avg % mitochondrial genes"
+  ))) %>%
+  ggplot(aes(y = value)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(x = 0, y = value), size = 2) +
+  ylab("") +
+  xlab("") +
+  # Extend y scale to 0
+  scale_y_continuous(limits = c(0, NA)) +
+  xlim(-1, 1) +
+  facet_wrap(sex ~ qc_feature, scales = "free_y") +
+  theme(
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    title = element_text(size = 16),
+    strip.text = element_text(size = 15)
+  )
+dev.off()
+
+png("plots/umap_all_datasets.png",
+  width = 15, height = 10,
+  units = "in", res = 300
+)
+p <- lapply(seurat_objects_SCT, function(obj) {
+  DimPlot(obj, pt.size = 0.05, cols = "lightgray") +
+    xlab(expression(UMAP[1])) +
+    ylab(expression(UMAP[2])) +
+    ggtitle(paste(obj$author[1], obj$year[1], "-", obj$sex[1])) +
+    NoLegend() +
+    theme(
+      axis.text = element_text(size = 13),
+      axis.title = element_text(size = 14),
+      title = element_text(size = 15)
+    )
+})
+grid.arrange(grobs = p, ncol = 4)
+dev.off()
