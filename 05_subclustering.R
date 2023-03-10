@@ -239,7 +239,7 @@ seurat_corticotrophs <- lapply(
 )
 
 cort_plots <- lapply(seurat_corticotrophs, function(obj) {
-  DimPlot(obj, pt.size = 2) +
+  DimPlot(obj, pt.size = 1.5) +
     xlab(expression(UMAP[1])) +
     ylab(expression(UMAP[2])) +
     ggtitle(paste(obj$author[1], obj$year[1], "-", obj$sex[1])) +
@@ -251,8 +251,7 @@ cort_plots <- lapply(seurat_corticotrophs, function(obj) {
 })
 
 png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
-  width = 800, height = 1200
-)
+  width = 15, height = 10, units = "in", res = 300)
 do.call("grid.arrange", c(cort_plots, ncol = 3))
 dev.off()
 
