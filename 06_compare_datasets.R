@@ -4,7 +4,7 @@ library(cowplot)
 library(RColorBrewer)
 library(grid)
 library(gridExtra)
-library(dplyr)
+library(tidyverse)
 library(pbapply)
 library(igraph)
 
@@ -12,7 +12,7 @@ library(igraph)
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 
 # Read only male files
 filenames <- dir("rds_outs",
@@ -345,3 +345,63 @@ for (thr in c(10, 15, 20)) {
 pblapply(seurat_corticotrophs, function(s) {
   saveRDS(s, paste0("rds_outs/", s$orig.ident[1], "_subclustered.rds"))
 })
+
+plot_gene_rankings <- function(seurat_corticotrophs, reference_dataset, outfile = NULL) {
+  #' Plots the gene rankings for each dataset, using one
+  #' dataset as a reference.
+  #'
+  #' Params
+  #' ------
+  #' seurat_corticotrophs: A list of Seurat objects.
+  #' reference_dataset: The dataset to use as a reference (as an index in the list)
+  #' outfile: The file to save the plot to. If NULL, the plot is not saved.
+
+  # Get the gene rankings for each dataset
+  rankings <- lapply(seurat_corticotrophs, function(s) {
+    expr <- GetAssayData(s, slot = "data")
+    data.frame(
+      Dataset = paste(s$author[1], s$year[1], "-", s$sex[1]),
+      Gene = rownames(s),
+      Rank = rank(-rowMeans(expr)),
+      AvgExpr = rowMeans(expr)
+    ) %>%
+      arrange(Rank)
+  })
+
+  # Get the ranked gene name for the reference dataset
+  ref_rankings <- rankings[[reference_dataset]] %>%
+    arrange(Rank) %>%
+    pull(Gene)
+
+  # Now sort the rankings by the reference dataset
+  ranks <- lapply(rankings, function(r) {
+    r[ref_rankings, ]$Rank
+  })
+
+  if (!is.null(outfile)) {
+    png(outfile, width = 15, height = 10, units = "in", res = 300)
+  }
+
+  g <- do.call("rbind", rankings) %>%
+    as.data.frame() %>%
+    # Substitute the ranks with the ranks sorted by the reference dataset's order
+    mutate(Rank = Reduce(c, ranks)) %>%
+    ggplot(aes(x = Rank, AvgExpr)) +
+    geom_line() +
+    scale_y_log10() +
+    ylab("Average expression") +
+    facet_wrap(~Dataset) +
+    theme(
+      axis.title = element_text(size = 15),
+      axis.text = element_text(size = 14),
+      strip.text = element_text(size = 16)
+    )
+
+  print(g)
+
+  if (!is.null(outfile)) {
+    dev.off()
+  }
+}
+
+plot_gene_rankings(seurat_corticotrophs, 1, paste0("plots/gene_rankings_", data_to_process, ".png"))
