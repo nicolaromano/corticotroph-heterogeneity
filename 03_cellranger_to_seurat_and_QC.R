@@ -9,6 +9,9 @@ library(pbapply)
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
 
+# If you want to skip the initial steps and load the data from the RDS files,
+# just start from line 301
+
 load_data <- function(metadata, study) {
   #' Loads data from CellRanger output, adds metadata, filters and saves
   #' the resulting Seurat object in an RDS file in the rds_outs folder
@@ -296,9 +299,9 @@ seurat_objects <- datasets %>%
   group_map(~ load_data(.x, .y))
 
 # Optionally, load the raw counts directly from the RDS files
-# filenames <- list.files("rds_outs", pattern = "raw_counts.rds", full.names = TRUE)
-# seurat_objects <- filenames %>%
-#   pblapply(readRDS)
+filenames <- list.files("rds_outs", pattern = "raw_counts.rds", full.names = TRUE)
+seurat_objects <- filenames %>%
+   pblapply(readRDS)
 
 # Print number of cells
 cell_num <- data.frame(
@@ -313,10 +316,16 @@ cell_num <- data.frame(
   mutate(sex = sapply(seurat_objects, function(s) {
     s$sex[1]
   })) %>%
+  mutate(sex = factor(sex, levels = c("M", "F"))) %>% 
   mutate(year = sapply(seurat_objects, function(s) {
     s$year[1]
   })) %>%
   mutate(perc_reported = round(cells / reported * 100, 2))
+
+# Stats - is the ratio reported vs. published different from 1?
+# Does sex affect the ratio?
+model <- lm(I((cells / reported) - 1) ~ sex, data = cell_num)
+summary(model)
 
 p1 <- ggplot(
   cell_num %>% filter(sex == "M"),
