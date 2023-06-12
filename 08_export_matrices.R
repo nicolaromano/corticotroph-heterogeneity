@@ -14,14 +14,18 @@ if (!dir.exists("expr_matrices")) {
 }
 
 pbsapply(seurat_obj_cort, function(obj) {
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], ".csv")
 
   print(paste(obj$author[1], obj$year[1], "-", obj$sex[1]))
   print("---------------------------------")
 
   print("Exporting expression matrix")
+  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_expression.csv")
   write.csv(GetAssayData(obj), file = outfile, row.names = TRUE)
   # gzip(outfile, overwrite = TRUE)
+
+  print("Exporting raw counts")
+  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_counts.csv")
+  write.csv(GetAssayData(obj, slot = "counts"), file = outfile, row.names = TRUE)
 
   print("Exporting cluster assignments")
   outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_clusters.csv")
