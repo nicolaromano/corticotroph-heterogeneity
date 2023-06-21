@@ -21,7 +21,7 @@ filenames <- dir("rds_outs",
 )
 
 seurat_corticotrophs <- pblapply(filenames, readRDS)
-names(seurat_corticotrophs) <- gsub("(\\.rds|rds_outs/)", "", filenames)
+names(seurat_corticotrophs) <- gsub("(\\.rds|rds_outs/|_subclustered)", "", filenames)
 
 get_common_markers <- function(markers1, markers2, cluster1, cluster2) {
   #' Gets the percentage of marker genes in common between two
@@ -42,7 +42,21 @@ all_markers <- lapply(seurat_corticotrophs, function(d) {
     logfc.threshold = 0.25,
     min.pct = 0.2, only.pos = TRUE
   )
+
+  markers %>% 
+    filter(p_val_adj < 0.05)
 })
+
+# Save all markers to csv
+out_dir <- "markers"
+
+if (!dir.exists(out_dir)) {
+  dir.create(out_dir)
+}
+
+for (i in 1:length(all_markers)) {
+  write.csv(all_markers[[i]], file.path(out_dir, paste0(names(all_markers)[i], "_markers.csv")))
+}
 
 common_markers <- data.frame(
   Dataset1_name = character(),
