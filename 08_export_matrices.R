@@ -1,5 +1,5 @@
 library(Seurat)
-library(pbapply)
+library(Matrix)
 library(R.utils)
 
 filenames <- dir("rds_outs",
@@ -13,8 +13,7 @@ if (!dir.exists("expr_matrices")) {
   dir.create("expr_matrices")
 }
 
-pbsapply(seurat_obj_cort, function(obj) {
-
+sapply(seurat_obj_cort, function(obj) {
   print(paste(obj$author[1], obj$year[1], "-", obj$sex[1]))
   print("---------------------------------")
 
@@ -24,8 +23,10 @@ pbsapply(seurat_obj_cort, function(obj) {
   # gzip(outfile, overwrite = TRUE)
 
   print("Exporting raw counts")
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_counts.csv")
-  write.csv(GetAssayData(obj, slot = "counts"), file = outfile, row.names = TRUE)
+  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_counts")
+  counts_matrix <- GetAssayData(obj, assay = "RNA", slot = "counts")
+  write.csv(counts_matrix, file = paste0(outfile, ".csv"), row.names = TRUE)
+  writeMM(counts_matrix, file = paste0(outfile, ".mtx"))
 
   print("Exporting cluster assignments")
   outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_clusters.csv")
@@ -38,13 +39,23 @@ pbsapply(seurat_obj_cort, function(obj) {
     row.names = FALSE, quote = FALSE
   )
 
-  print("Exporting UMAP coordinates")
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_umap.csv")
+  print("Exporting dimension reductions (PCA and UMAP)")
+  outfile_pca <- paste0("expr_matrices/", obj$orig.ident[1], "_pca.csv")
+  outfile_umap <- paste0("expr_matrices/", obj$orig.ident[1], "_umap.csv")
+  pca <- Embeddings(obj, reduction = "pca")
   umap <- Embeddings(obj, reduction = "umap")
-  write.csv(data.frame(Barcode = Cells(obj), UMAP_1 = umap[, 1], UMAP_2 = umap[, 2]),
-    outfile,
+  write.csv(cbind(Barcode = Cells(obj), pca),
+    outfile_pca,
     row.names = FALSE, quote = FALSE
   )
+  write.csv(data.frame(Barcode = Cells(obj), UMAP_1 = umap[, 1], UMAP_2 = umap[, 2]),
+    outfile_umap,
+    row.names = FALSE, quote = FALSE
+  )
+
+  print("Exporting metadata")
+  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_metadata.csv")
+  write.csv(obj@meta.data, outfile, row.names = FALSE, quote = FALSE)
 })
 
 # # Get all SCT filenames
