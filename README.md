@@ -21,9 +21,24 @@ The scripts have been numbered sequentially to help navigate the repository.
 
 [05_subclustering.R](#05subclustering)
 
-[06_export_matrices.R](#06correlationmaps)
+[06_compare_datasets.R](#06comparedatasets)
 
-[07_export_matrices.R](#07exportmatrices)
+[07_correlation_maps.R](#07correlationmaps)
+
+[08_export_matrices.R](#08exportmatrices)
+
+[09_transfer_learning.py]()
+
+[10_predict_labels.py]()
+
+[11_prepare_velocity_analysis.R](#11preparevelo)
+
+[12_get_velocyto_loom.sh](#12getloom)
+
+[12b_scvelo.ipynb](#12bscvelo)
+
+
+---------------
 
 <a name="00downloaddata"></a>
 ### `00_download_data.sh`
@@ -75,20 +90,59 @@ For example
 Imports data into R, and plots QC metrics. We use data as filtered by Cellranger to remove empty droplets then do some further filtering. This file will output RDS files containing raw counts and SCT-transformed data
 
 <a name="04celltyping"></a>
+
 ### `04_cell_typing.R`
 
 Clusters data, then filters them to only get POMC-expressing clusters (saved to RDS); these are further divided into melanotrophs and corticotrophs (saved to separate RDS files) by looking at the expression of Pcsk2 and Pax7.
 
 <a name="05subclustering"></a>
+
 ### `05_subclustering.R`
 
 Finds subclusters in corticotrophs, saves the output to RDS
 
-<a name="06correlationmaps"></a>
-### `06_correlation_maps.R`
-Finds markers for each subcluster in each dataset, and plots correlation maps between the markers from each datasets on to the others. Plots intra-cluster and between-clusters metrics.
+<a name="06compare"></a>
 
-<a name="07exportmatrices"></a>
-### `07_export_matrices.R`
+### `06_compare_datasets.R`
+Finds markers for each subcluster in each dataset, and compares the % of common markers between datasets. From these, it creates a graph and finds the communities of most similar clusters between datasets.
 
-Exports the expression data and the assigned clusters to CSV files, to be used in Python for transfer learning.
+<a name="07correlationmaps"></a>
+
+### `07_correlation_maps.R`
+
+Plots correlation maps between the markers from each datasets on to the others. Plots intra-cluster and between-clusters metrics.
+
+<a name="08exportmatrices"></a>
+### `08_export_matrices.R`
+
+Exports the expression data, dimension reductions, metadata and the assigned clusters to CSV files, to be used in Python for transfer learning and later for velocity analysis.
+
+<a name="09transferlearning"></a>
+
+### `09_transfer_learning.py`
+
+TODO
+
+<a name="10predictlabels"></a>
+
+### `10_predict_labels.py`
+
+TODO
+
+<a name="11preparevelo"></a>
+
+### `11_prepare_velocity_analysis.R`
+
+Prepares the data for velocity analysis, by creating corticotrops-specific barcode files to feed to velocyto.
+
+<a name="12getloom"></a>
+
+### `12_get_velocyto_loom.sh`
+
+Runs velocyto on the data, and creates loom filea containing the spliced and unspliced matrices for all datasets.
+
+<a name="12bscvelo"></a>
+
+### `12b_scvelo.ipynb`
+
+Runs scvelo on the loom files, and plots the results.
