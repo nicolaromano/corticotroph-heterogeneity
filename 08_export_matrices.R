@@ -9,8 +9,10 @@ filenames <- dir("rds_outs",
 
 seurat_obj_cort <- pblapply(filenames, readRDS)
 
-if (!dir.exists("expr_matrices")) {
-  dir.create("expr_matrices")
+outdir <- "exported_matrices"
+
+if (!dir.exists(outdir)) {
+  dir.create(outdir)
 }
 
 sapply(seurat_obj_cort, function(obj) {
@@ -18,18 +20,18 @@ sapply(seurat_obj_cort, function(obj) {
   print("---------------------------------")
 
   print("Exporting expression matrix")
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_expression.csv")
+  outfile <- paste0(outdir, obj$orig.ident[1], "_expression.csv")
   write.csv(GetAssayData(obj), file = outfile, row.names = TRUE)
   # gzip(outfile, overwrite = TRUE)
 
   print("Exporting raw counts")
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_counts")
+  outfile <- paste0(outdir, obj$orig.ident[1], "_counts")
   counts_matrix <- GetAssayData(obj, assay = "RNA", slot = "counts")
   write.csv(counts_matrix, file = paste0(outfile, ".csv"), row.names = TRUE)
   writeMM(counts_matrix, file = paste0(outfile, ".mtx"))
 
   print("Exporting cluster assignments")
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_clusters.csv")
+  outfile <- paste0(outdir, obj$orig.ident[1], "_clusters.csv")
   write.csv(
     data.frame(
       Barcode = Cells(obj),
@@ -40,8 +42,8 @@ sapply(seurat_obj_cort, function(obj) {
   )
 
   print("Exporting dimension reductions (PCA and UMAP)")
-  outfile_pca <- paste0("expr_matrices/", obj$orig.ident[1], "_pca.csv")
-  outfile_umap <- paste0("expr_matrices/", obj$orig.ident[1], "_umap.csv")
+  outfile_pca <- paste0(outdir, obj$orig.ident[1], "_pca.csv")
+  outfile_umap <- paste0(outdir, obj$orig.ident[1], "_umap.csv")
   pca <- Embeddings(obj, reduction = "pca")
   umap <- Embeddings(obj, reduction = "umap")
   write.csv(cbind(Barcode = Cells(obj), pca),
@@ -54,7 +56,7 @@ sapply(seurat_obj_cort, function(obj) {
   )
 
   print("Exporting metadata")
-  outfile <- paste0("expr_matrices/", obj$orig.ident[1], "_metadata.csv")
+  outfile <- paste0(outdir, obj$orig.ident[1], "_metadata.csv")
   write.csv(obj@meta.data, outfile, row.names = FALSE, quote = FALSE)
 })
 
