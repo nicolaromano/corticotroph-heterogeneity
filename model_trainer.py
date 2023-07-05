@@ -13,7 +13,7 @@ from keras.regularizers import L1
 import tensorflow_addons as tfa
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 import random
 import os
 
@@ -189,7 +189,8 @@ class LabelTransferTrainer:
         """
 
         for name, model in self.models.items():
-            keras.utils.plot_model(model, to_file=os.path.join(self.output_dir, f"{name}_model.png"), show_shapes=True)
+            keras.utils.plot_model(model, to_file=os.path.join(
+                self.output_dir, f"{name}_model.png"), show_shapes=True)
 
     def _load_data(self, dataset: str, split: Tuple[float, float, float] = (0.8, 0.1, 0.1)) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -232,7 +233,7 @@ class LabelTransferTrainer:
                      dataset: str,
                      train_expr: pd.DataFrame, train_labels: pd.DataFrame,
                      val_expr: pd.DataFrame, val_labels: pd.DataFrame,
-                     epochs, batch_size) -> dict:
+                     epochs, batch_size) -> Tuple[keras.Sequential, dict]:
         """
         Trains a single model.
 
@@ -253,17 +254,44 @@ class LabelTransferTrainer:
 
         Returns
         -------
-        history.history : dict
-            The training history of the model.
+        (model, history) : Tuple[keras.Sequential, dict]
+            The trained model at the best epoch and the training history (full)
         """
         start_time = time.time()
         print(f"Training model {dataset} for {epochs} epochs...")
+
+        date = time.strftime("%Y%m%d-%H%M%S")
+        checkpoint = keras.callbacks.ModelCheckpoint(f"{self.output_dir}/{dataset}_best_{date}_ep_" +
+                                                     "{epoch:02d}-f1_{val_f1_score:.2f}.hdf5",
+                                                     monitor='val_f1_score',
+                                                     save_best_only=True,
+                                                     initial_value_threshold=0.5,
+                                                     mode='max')
 
         history = model.fit(train_expr, train_labels,
                             epochs=epochs,
                             batch_size=batch_size,
                             validation_data=(val_expr, val_labels),
-                            verbose=self.verbose)
+                            verbose=self.verbose,
+                            callbacks=[checkpoint])
+
+        # Find all the files in the output directory with the pattern
+        # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{val_f1_score:.2f}.hdf5"
+        filenames = [f for f in os.listdir(
+            self.output_dir) if f.startswith(f"{dataset}_best_")]
+
+        # Find the file with the highest F1 score
+        scores = [f.split('-')[2].split('_')[1] for f in filenames]
+        scores = [float(s[:-5]) for s in scores]
+
+        for i, f in enumerate(filenames):
+            if (scores[i] < max(scores)):
+                os.remove(os.path.join(self.output_dir, f))
+
+        # Load the best model
+        model = keras.models.load_model(
+            os.path.join(self.output_dir, filenames[np.argmax(scores)]),
+            custom_objects={'F1Score': tfa.metrics.F1Score})
 
         # Save history to file
         pd.DataFrame(history.history).to_csv(
@@ -275,7 +303,7 @@ class LabelTransferTrainer:
             print(
                 f"Training model {dataset} took {end_time - start_time} seconds.")
 
-        return history.history
+        return (model, history.history)
 
     def train_all_models(self) -> None:
         """
@@ -297,15 +325,15 @@ class LabelTransferTrainer:
             dataset = h['dataset']
 
             # Note: this is deterministic because we set the random seed
-            expr_train, expr_val, _, labels_train, labels_val, _ = self._load_data(
-                dataset)
+            expr_train, expr_val, _, labels_train, labels_val, _ = self._load_data(dataset)
 
             model = self.models[dataset]
 
-            self.training_histories[dataset] = self._train_model(model=model, dataset=dataset,
-                                                                 train_expr=expr_train, train_labels=labels_train,
-                                                                 val_expr=expr_val, val_labels=labels_val,
-                                                                 epochs=h['epochs'], batch_size=h['batch_size'])
+            # Train the model. This returns the trained model at the best epoch and the training history (full)
+            self.models[dataset], self.training_histories[dataset] = self._train_model(model=model, dataset=dataset,
+                                                                                       train_expr=expr_train, train_labels=labels_train,
+                                                                                       val_expr=expr_val, val_labels=labels_val,
+                                                                                       epochs=h['epochs'], batch_size=h['batch_size'])
 
     def train_single_model(self, dataset: str) -> dict:
         """
@@ -334,8 +362,8 @@ class LabelTransferTrainer:
         return self._train_model(model=self.models[dataset], dataset=dataset,
                                  train_expr=expr_train, train_labels=labels_train,
                                  val_expr=expr_val, val_labels=labels_val,
-                                 epochs=hyperparameters['epochs'].values[0],
-                                 batch_size=hyperparameters['batch_size'].values[0])
+                                 epochs=hyperparameters['epochs'],
+                                 batch_size=hyperparameters['batch_size'])
 
     def evaluate_models(self) -> dict:
         """
@@ -379,13 +407,12 @@ class LabelTransferTrainer:
             A dictionary with the metrics.
         """
 
-        
         h = self._get_hyperparameters(dataset)
 
         _, _, expr_test, _, _, labels_test = self._load_data(dataset)
 
         return self.models[dataset].evaluate(
-            expr_test, labels_test, batch_size=h['batch_size'].values[0])
+            expr_test, labels_test, batch_size=h['batch_size'])
 
     def _get_hyperparameters(self, dataset: str) -> pd.DataFrame:
         """
@@ -404,49 +431,79 @@ class LabelTransferTrainer:
 
         assert (dataset in self.hyperparams['dataset'].values)
 
-        return self.hyperparams[self.hyperparams['dataset'] == dataset]
+        return self.hyperparams[self.hyperparams['dataset'] == dataset].to_dict(orient='records')[0]
 
-    def test_lr_effect(self, dataset: str, lr_values: list = None, epochs: int = 10) -> dict:
+    def tune_hyperparam(self, dataset: str, hyperparam: str, values: list) -> dict:
         """
-        Tests the effect of the learning rate on the model performance.
-        This takes a single model and trains it with different learning rates.
+        Tests the effect of changing an hyperparameter on the performance of a single model
 
         Parameters
         ----------
 
         dataset : str
             The name of the dataset to use.
-        lr_values : list, optional, default = None
-            The learning rates to test. If None, the default values are used (0.001, 0.005, 0.01, 0.05, 0.1)
-        epochs : int, optional, default = 10
-            The number of epochs to train for.
+        hyperparam : str
+            The name of the hyperparameter to test. This should be one of the following:
+            learning_rate, num_nodes, reg_factor, bn_momentum, batch_size
+            
+        values : list
+            The values to test.
 
         Returns
         -------
 
-        The F1 score for each learning rate.
+        The F1 score for each value of the hyperparameter.
         """
+        
+        assert hyperparam in {
+            'learning_rate',
+            'num_nodes',
+            'reg_factor',
+            'bn_momentum',
+            'batch_size',
+        }
 
-        if lr_values is None:
-            lr_values = [0.001, 0.005, 0.01, 0.05, 0.1]
+        hyper = self._get_hyperparameters(dataset)
 
-        model = keras.models.clone_model(self.models[dataset])
-        hyperparameters = self._get_hyperparameters(dataset)
+        tune_res = {}
 
-        res = {}
-        for lr in lr_values:
+        # We're using k-fold cross validation to evaluate the models so we don't need a separate validation set
+        # because KFold will split the training set into training and validation sets
+        expr_train, _, expr_test, labels_train, _, labels_test = self._load_data(
+            dataset, split=(0.9, 0.0, 0.1))
+
+        for v in values:
             K.clear_session()
-            K.set_value(model.optimizer.lr, lr)
 
-            expr_train, expr_val, expr_test, labels_train, labels_val, labels_test = self._load_data(
-                dataset)
+            num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v
+            reg_factor = hyper['reg_factor'] if hyperparam != 'reg_factor' else v
+            bn_momentum = hyper['bn_momentum'] if hyperparam != 'bn_momentum' else v            
+            learning_rate = hyper['learning_rate'] if hyperparam != 'learning_rate' else v
+            batch_size = hyper['batch_size'] if hyperparam != 'batch_size' else v
+                
+            model = self._create_model(learning_rate=learning_rate,
+                                       num_nodes=num_nodes,
+                                       reg_factor=reg_factor,
+                                       bn_momentum=bn_momentum,
+                                       num_classes=hyper['num_classes'])
 
-            print(f"Training model {dataset} with learning rate {lr}.")
-            model.fit(expr_train, labels_train,
-                      validation_data=(expr_val, labels_val),
-                      epochs=epochs, batch_size=hyperparameters['batch_size'].values[0], verbose=False)
+            print(f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam} = {v}...")
 
-            res[lr] = model.evaluate(
-                expr_test, labels_test, batch_size=hyperparameters['batch_size'].values[0])[1]
+            kfold = KFold(n_splits=5, shuffle=True, random_state=self.random_seed)
+            for i, (train, val) in enumerate(kfold.split(expr_train, labels_train)):
+                print(f"Fold {i+1}...")
+                
+                expr_train, expr_val = expr_train[train], expr_train[val]
+                labels_train, labels_val = labels_train[train], labels_train[val]
+            
+                model.fit(expr_train, labels_train,
+                        validation_data=(expr_val, labels_val),
+                        epochs=hyper['epochs'], 
+                        batch_size=hyper['batch_size'], 
+                        verbose=False)
 
-        return res
+                tune_res[f"{v}_{i}"] = model.evaluate(
+                    expr_test, labels_test, batch_size=hyper['batch_size'])
+
+        return tune_res
+
