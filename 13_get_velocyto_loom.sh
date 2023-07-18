@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage:
-# bash 12_run_velocyto.sh <genome_path> <skip-existing>
+# bash 13_run_velocyto.sh <genome_path> <skip-existing>
 # genome_path: Path to the genome folder
 # The appropriate genome file can be generated following the instructions on the 10x website
 # https://support.10xgenomics.com/single-cell-gene-expression/software/release-notes/build#mm10_2020A
