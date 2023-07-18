@@ -22,8 +22,8 @@ Allensworth2021F,Allensworth,2021,Allensworth2021/SRR12074654/outs/filtered_feat
 Allensworth2021F,Allensworth,2021,Allensworth2021/SRR12074655/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074655,Mouse,FVB.129P,F,Diestrous,8,
 Allensworth2021F,Allensworth,2021,Allensworth2021/SRR12074656/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074656,Mouse,FVB.129P,F,Diestrous,8,
 Allensworth2021F,Allensworth,2021,Allensworth2021/SRR12074657/outs/filtered_feature_bc_matrix,PRJNA641361,SRR12074657,Mouse,FVB.129P,F,Diestrous,8,
-Vennekens2021M,Vennekens,2021,Vennekens2021/scrEXT036_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT036,Mouse,GH+/+,R26iDTR/+,M,NA,10
-Vennekens2021M,Vennekens,2021,Vennekens2021/scrEXT149_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT149,Mouse,GH+/+,R26iDTR/+,M,NA,10
+Vennekens2021M,Vennekens,2021,Vennekens2021/scrEXT036_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT036,Mouse,GH+/+ R26iDTR/+,M,NA,10
+Vennekens2021M,Vennekens,2021,Vennekens2021/scrEXT149_mm10/outs/filtered_feature_bc_matrix,E-MTAB-10021,scrEXT149,Mouse,GH+/+ R26iDTR/+,M,NA,10
 Ho2020F,Ho,2020,Ho2020/SRR11268104/outs/filtered_feature_bc_matrix/,PRJNA611520,SRR11268104,Mouse,CD1,F,Mixed,8,
 Ho2020M,Ho,2020,Ho2020/SRR11268105/outs/filtered_feature_bc_matrix/,PRJNA611520,SRR11268105,Mouse,CD1,M,NA,8,
 Mayran2019M,Mayran,2019,Mayran2019/SRR8487461/outs/filtered_feature_bc_matrix/,PRJNA517137,SRR8487461,Mouse,C57BL/6N,M,NA,16,
