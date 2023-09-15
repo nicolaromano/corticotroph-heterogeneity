@@ -7,6 +7,8 @@ library(pbapply)
 
 set.seed(12345)
 
+plot_out_type <- "pdf" # or "pdf" or "none"
+
 #### Various helper functions ####
 show_markers <- function(seurat_obj, hormonal = TRUE) {
   #' Plots [non]-hormonal features for the given dataset
@@ -35,8 +37,6 @@ show_markers <- function(seurat_obj, hormonal = TRUE) {
   }
 
   # Note combine = FALSE to return a list of plots
-  # Also note we use & instead of + to chain the commands
-  # to sum to all plots
   p <- FeaturePlot(seurat_obj, features, pt.size = 1, combine = FALSE)
 
   p <- lapply(p, function(x) {
@@ -168,13 +168,21 @@ get_pomc_cells <- function(seurat_obj, resolution = 0.6,
 
   p3 <- VlnPlot(seurat_obj, features = "Pomc") + NoLegend()
 
-  png(paste0("plots/Pomc_plots/", seurat_obj$orig.ident[1], "_all_pit_Pomc.png"),
-    width = 10, height = 10, units = "in", res = 300
-  )
+  if (plot_out_type == "png") {
+    png(paste0("plots/Pomc_plots/", seurat_obj$orig.ident[1], "_all_pit_Pomc.png"),
+      width = 10, height = 10, units = "in", res = 300
+    )
+  } else if (plot_out_type == "pdf") {
+    pdf(paste0("plots/Pomc_plots/", seurat_obj$orig.ident[1], "_all_pit_Pomc.pdf"),
+      width = 10, height = 10
+    )
+  }
   # Arrange with p1 and p2 on top, side by side, and p3 on the bottom
   grid.arrange(p1, p2, p3, ncol = 2, layout_matrix = rbind(c(1, 2), c(3, 3)))
 
-  dev.off()
+  if (plot_out_type != "none") {
+    dev.off()
+  }
 
   if (save_rds) {
     seurat_obj %>%
@@ -215,18 +223,34 @@ pomc_hist <- lapply(seurat_objects, plot_features_histo, "Pomc",
   find_threshold = TRUE, log_y_axis = TRUE
 )
 
-png("plots/pomc_hist.png", width = 15, height = 8, units = "in", res = 300)
+if (plot_out_type == "png") {
+  png("plots/pomc_hist.png", width = 15, height = 8, units = "in", res = 300)
+} else if (plot_out_type == "pdf") {
+  pdf("plots/pomc_hist.pdf", width = 15, height = 8)
+}
+
 do.call("grid.arrange", c(pomc_hist, ncol = 4, nrow = 3))
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 pomc_cells <- lapply(seurat_objects, type_cells_thr)
 
-png("plots/pomc_cells.png", width = 15, height = 10, units = "in", res = 300)
+if (plot_out_type == "png") {
+  png("plots/pomc_cells.png", width = 15, height = 10, units = "in", res = 300)
+} else if (plot_out_type == "pdf") {
+  pdf("plots/pomc_cells.pdf", width = 15, height = 10)
+}
+
 do.call("grid.arrange", c(pomc_cells,
   top = "POMC+ cells",
   ncol = 4
 ))
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 #### CLUSTERING ####
 
@@ -261,7 +285,7 @@ seurat_objects_pomc <- sapply(seq_along(seurat_objects), function(i) {
   get_pomc_cells(seurat_obj,
     resolution = resolutions[i],
     pomc_clusters = pomc_clusters[[i]],
-    # Set this to a small number (0.1-0.2) while determining the resolution 
+    # Set this to a small number (0.1-0.2) while determining the resolution
     # and to 1 when actually plotting the final results
     reduce_plot = 1,
     # Set this to FALSE while determining the resolution and
@@ -301,12 +325,20 @@ melano_plots <- lapply(seurat_objects_pomc, function(seurat_obj) {
   return(p)
 })
 
-png("plots/melanotrophs.png", width = 800, height = 800)
+if (plot_out_type == "png") {
+  png("plots/melanotrophs.png", width = 800, height = 800)
+} else if (plot_out_type == "pdf") {
+  pdf("plots/melanotrophs.pdf", width = 8, height = 8)
+}
+
 do.call("grid.arrange", c(melano_plots,
   nrow = 3,
   top = "Melanotrophs (Pcsk2+ or Pax7+)"
 ))
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 threshold <- 0.1
 
@@ -392,9 +424,11 @@ n_cells %>%
   ) -> n_cells
 n_cells
 
-png("plots/percent_corticotrophs.png",
-  width = 8, height = 8, units = "in", res = 200
-)
+if (plot_out_type == "png") {
+  png("plots/num_cells.png", width = 8, height = 8, units = "in", res = 200)
+} else if (plot_out_type == "pdf") {
+  pdf("plots/num_cells.pdf", width = 8, height = 8)
+}
 
 ggplot(n_cells, aes(sex, perc_cort)) +
   geom_boxplot(width = 0.5) +
@@ -407,4 +441,6 @@ ggplot(n_cells, aes(sex, perc_cort)) +
     axis.text = element_text(size = 14)
   )
 
-dev.off()
+if (plot_out_type != "none") {
+  dev.off()
+}

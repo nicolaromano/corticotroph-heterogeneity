@@ -6,6 +6,8 @@ library(ggplot2)
 library(gridExtra)
 library(pbapply)
 
+plot_out_type <- "pdf" # "png" or "pdf" or "none"
+
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
 
@@ -158,11 +160,19 @@ plot_qc <- function(seurat_object,
     # showWarnings = FALSE avoids warnings
     # if the directory has already been created
     dir.create("plots/QC_plots", showWarnings = FALSE)
-    png(paste0("plots/QC_plots/", main_title, ".png"),
-      width = 1500, height = 1500,
-      pointsize = 25,
-      title = main_title
-    )
+    if (plot_out_type == "pdf") {
+      pdf(paste0("plots/QC_plots/", main_title, ".pdf"),
+        width = 15, height = 15,
+        pointsize = 25,
+        title = main_title
+      )
+    } else if (plot_out_type == "png") {
+      png(paste0("plots/QC_plots/", main_title, ".png"),
+        width = 1500, height = 1500,
+        pointsize = 25,
+        title = main_title
+      )
+    }
   }
 
   #### Histograms ####
@@ -301,7 +311,7 @@ seurat_objects <- datasets %>%
 # Optionally, load the raw counts directly from the RDS files
 filenames <- list.files("rds_outs", pattern = "raw_counts.rds", full.names = TRUE)
 seurat_objects <- filenames %>%
-   pblapply(readRDS)
+  pblapply(readRDS)
 
 # Print number of cells
 cell_num <- data.frame(
@@ -316,7 +326,7 @@ cell_num <- data.frame(
   mutate(sex = sapply(seurat_objects, function(s) {
     s$sex[1]
   })) %>%
-  mutate(sex = factor(sex, levels = c("M", "F"))) %>% 
+  mutate(sex = factor(sex, levels = c("M", "F"))) %>%
   mutate(year = sapply(seurat_objects, function(s) {
     s$year[1]
   })) %>%
@@ -327,75 +337,65 @@ cell_num <- data.frame(
 model <- lm(I((cells / reported) - 1) ~ sex, data = cell_num)
 summary(model)
 
-p1 <- ggplot(
-  cell_num %>% filter(sex == "M"),
-  aes(x = author, y = perc_reported)
+if (plot_out_type == "pdf") {
+  pdf("plots/cell_number_perc_reported.pdf",
+    width = 10, height = 8
+  )
+} else if (plot_out_type == "png") {
+  png("plots/cell_number_perc_reported.png",
+    width = 1000, height = 500
+  )
+}
+
+ggplot(
+  cell_num, aes(
+    x = author, y = perc_reported,
+    fill = factor(sex, levels = c("F", "M"))
+  )
 ) +
-  geom_col(width = 0.8) +
+  geom_col(width = 0.8, position = position_dodge(preserve = "single")) +
   geom_hline(yintercept = 100, linetype = "dashed", color = "red") +
   ylab("Cells\n(% published num)") +
   xlab("") +
-  ggtitle("Males") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 13),
     axis.text = element_text(size = 13),
     axis.title = element_text(size = 14),
-    title = element_text(size = 16)
+    title = element_text(size = 16),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14)
   )
 
-p2 <- ggplot(
-  cell_num %>% filter(sex == "F"),
-  aes(x = author, y = perc_reported)
-) +
-  geom_col(width = 0.8) +
-  geom_hline(yintercept = 100, linetype = "dashed", color = "red") +
-  ylab("Cells\n(% published num)") +
-  xlab("") +
-  ggtitle("Females") +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16)
-  )
+if (plot_out_type != "none") {
+  dev.off()
+}
 
-png("plots/cell_number_perc_reported.png", width = 1000, height = 500)
-grid.arrange(p1, p2, ncol = 2)
-dev.off()
+if (plot_out_type == "pdf") {
+  pdf("plots/cell_number.pdf", width = 10, height = 8)
+} else if (plot_out_type == "png") {
+  png("plots/cell_number.png", width = 1000, height = 500)
+}
 
-p1 <- cell_num %>%
-  filter(sex == "M") %>%
-  ggplot(aes(x = author, y = cells)) +
-  geom_col() +
+ggplot(cell_num, aes(
+  x = author, y = cells,
+  fill = factor(sex, levels = c("F", "M"))
+)) +
+  geom_col(position = position_dodge(preserve = "single")) +
   ylim(0, max(cell_num$cells)) +
   ylab("Cells") +
   xlab("") +
-  ggtitle("Males") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.text = element_text(size = 13),
     axis.title = element_text(size = 14),
-    title = element_text(size = 16)
+    title = element_text(size = 16),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14)
   )
 
-p2 <- cell_num %>%
-  filter(sex == "F") %>%
-  ggplot(aes(x = author, y = cells)) +
-  geom_col() +
-  ylim(0, max(cell_num$cells)) +
-  ylab("Cells") +
-  xlab("") +
-  ggtitle("Females") +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16)
-  )
-
-png("plots/cell_number.png", width = 1000, height = 500)
-grid.arrange(p1, p2, ncol = 2)
-dev.off()
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 # Plot QC for all studies
 all_qc_data <- data.frame(
