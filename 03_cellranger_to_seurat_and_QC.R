@@ -1,4 +1,6 @@
-# Imports data into Seurat and performs quality controls
+##########################################################
+# Imports data into Seurat and performs quality controls #
+##########################################################
 
 library(Seurat)
 library(tidyverse)
@@ -7,6 +9,7 @@ library(gridExtra)
 library(pbapply)
 
 plot_out_type <- "pdf" # "png" or "pdf" or "none"
+load_CR_matrices <- FALSE # Set to TRUE to reload data from CellRanger output
 
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
@@ -301,17 +304,19 @@ plot_qc <- function(seurat_object,
   }
 }
 
-seurat_objects <- datasets %>%
-  # Group by study (M/F have different IDs, so are separated)
-  group_by(study_id) %>%
-  # Apply the load_data function to each group
-  # Filter with the default settings (see load_data function)
-  group_map(~ load_data(.x, .y))
-
-# Optionally, load the raw counts directly from the RDS files
-filenames <- list.files("rds_outs", pattern = "raw_counts.rds", full.names = TRUE)
-seurat_objects <- filenames %>%
-  pblapply(readRDS)
+if (load_CR_matrices) {
+  seurat_objects <- datasets %>%
+    # Group by study (M/F have different IDs, so are separated)
+    group_by(study_id) %>%
+    # Apply the load_data function to each group
+    # Filter with the default settings (see load_data function)
+    group_map(~ load_data(.x, .y))
+} else {
+  # Load the raw counts directly from the RDS files
+  filenames <- list.files("rds_outs", pattern = "raw_counts.rds", full.names = TRUE)
+  seurat_objects <- filenames %>%
+    pblapply(readRDS)
+}
 
 # Print number of cells
 cell_num <- data.frame(
@@ -354,16 +359,16 @@ ggplot(
   )
 ) +
   geom_col(width = 0.8, position = position_dodge(preserve = "single")) +
-  geom_hline(yintercept = 100, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 100, linetype = "dashed") +
   ylab("Cells\n(% published num)") +
   xlab("") +
+  scale_y_continuous(limits = c(0, 300), expand = c(0, 0)) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 13),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 18),
     legend.title = element_blank(),
-    legend.text = element_text(size = 14)
+    legend.text = element_text(size = 16)
   )
 
 if (plot_out_type != "none") {
@@ -377,20 +382,20 @@ if (plot_out_type == "pdf") {
 }
 
 ggplot(cell_num, aes(
-  x = author, y = cells,
+  x = author, y = cells / 1e3,
   fill = factor(sex, levels = c("F", "M"))
 )) +
   geom_col(position = position_dodge(preserve = "single")) +
   ylim(0, max(cell_num$cells)) +
-  ylab("Cells") +
+  ylab(expression("Cells (x " ~ 10^3 ~ ")")) +
   xlab("") +
+  scale_y_continuous(limits = c(0, 50), expand = c(0, 0)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16),
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 18),
     legend.title = element_blank(),
-    legend.text = element_text(size = 14)
+    legend.text = element_text(size = 16)
   )
 
 if (plot_out_type != "none") {
@@ -412,51 +417,70 @@ all_qc_data <- data.frame(
     s$percent_mt
   }) %>% unlist(),
   dataset = sapply(seurat_objects, function(s) {
-    paste(s$author, s$year, "-", s$sex)
+    s$author
+  }) %>% unlist(),
+  sex = sapply(seurat_objects, function(s) {
+    s$sex
   }) %>% unlist()
 ) %>%
   arrange(dataset)
 
-p1 <- ggplot(all_qc_data, aes(x = dataset, y = genes)) +
-  geom_boxplot(outlier.size = 0.3) +
+p1 <- ggplot(all_qc_data, aes(x = dataset, y = genes, fill = sex)) +
+  geom_violin(scale="width", width = 0.6, position = position_dodge(0.7)) +
   xlab("") +
   ylab("Genes / cell") +
   ggtitle("Genes / cell") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16)
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 18),
+    title = element_text(size = 18),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16),
+    legend.position = "bottom"
   )
 
-p2 <- ggplot(all_qc_data, aes(x = dataset, y = counts)) +
-  geom_boxplot(outlier.size = 0.3) +
+p2 <- ggplot(all_qc_data, aes(x = dataset, y = counts, fill = sex)) +
+  geom_violin(scale="width", width = 0.6, position = position_dodge(0.7)) +
   xlab("") +
   ylab("Counts / cell") +
   ggtitle("Counts / cell") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16)
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 18),
+    title = element_text(size = 18),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16),
+    legend.position = "bottom"
   )
 
-p3 <- ggplot(all_qc_data, aes(x = dataset, y = mt_perc)) +
-  geom_boxplot(outlier.size = 0.3) +
+p3 <- ggplot(all_qc_data, aes(x = dataset, y = mt_perc, fill = sex)) +
+  geom_violin(scale="width", width = 0.6, position = position_dodge(0.7)) +
   xlab("") +
   ylab("% mitochondrial genes") +
   ylim(0, 100) +
   ggtitle("% mitochondrial genes") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    title = element_text(size = 16)
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 18),
+    title = element_text(size = 18),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16),
+    legend.position = "bottom"
   )
 
-png("plots/all_qc.png", width = 1500, height = 500)
+if (plot_out_type == "pdf") {
+  pdf("plots/all_qc.pdf", width = 15, height = 5)
+} else if (plot_out_type == "png") {
+  png("plots/all_qc.png", width = 1500, height = 500)
+}
 grid.arrange(p1, p2, p3, ncol = 3)
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 # Scale with SCT -> PCA -> UMAP
 seurat_objects_SCT <- sapply(seurat_objects, function(s) {
@@ -488,10 +512,18 @@ allQC <- lapply(seurat_objects_SCT, function(s) {
   )
 })
 
-png("plots/qc_summary_all_datasets.png",
-  width = 15, height = 10,
-  units = "in", res = 300
-)
+if (plot_out_type == "pdf") {
+  pdf("plots/qc_summary_all_datasets.pdf",
+    width = 15, height = 10,
+    pointsize = 25
+  )
+} else if (plot_out_type == "png") {
+  png("plots/qc_summary_all_datasets.png",
+    width = 1500, height = 1000,
+    pointsize = 25
+  )
+}
+
 do.call(rbind, allQC) %>%
   pivot_longer(
     cols = -c(dataset, sex),
@@ -525,12 +557,22 @@ do.call(rbind, allQC) %>%
     title = element_text(size = 16),
     strip.text = element_text(size = 15)
   )
-dev.off()
 
+if (plot_out_type != "none") {
+  dev.off()
+}
+
+if (plot_out_type == "pdf") {
+  pdf("plots/umap_all_datasets.pdf",
+    width = 15, height = 10,
+    units = "in", res = 300
+  )
+} else if (plot_out_type == "png") {
 png("plots/umap_all_datasets.png",
   width = 15, height = 10,
   units = "in", res = 300
 )
+
 p <- lapply(seurat_objects_SCT, function(obj) {
   DimPlot(obj, pt.size = 0.05, cols = "lightgray") +
     xlab(expression(UMAP[1])) +
@@ -544,4 +586,7 @@ p <- lapply(seurat_objects_SCT, function(obj) {
     )
 })
 grid.arrange(grobs = p, ncol = 4)
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
