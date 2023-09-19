@@ -216,7 +216,17 @@ plots <- lapply(seurat_objects, function(s) {
     ggtitle(paste(s$author[1], s$year[1], "-", s$sex[1]))
 })
 
+if (plot_out_type == "png") {
+  png("plots/PCA_elbow_plots.png", width = 15, height = 8, units = "in", res = 300)
+} else if (plot_out_type == "pdf") {
+  pdf("plots/PCA_elbow_plots.pdf", width = 15, height = 8)
+}
+
 do.call("grid.arrange", c(plots, nrow = 4))
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 #### POMC HISTOGRAM #####
 pomc_hist <- lapply(seurat_objects, plot_features_histo, "Pomc",
@@ -373,13 +383,13 @@ corticotrophs <- pbsapply(seurat_objects_pomc, function(seurat_obj) {
 # Can load processed files here directly, if needed
 # melanotrophs <- pbsapply(dir(
 #   path = "rds_outs/",
-#   pattern = paste0(data_to_process, "_melanotrophs.rds"),
+#   pattern = "_melanotrophs.rds",
 #   full.names = TRUE
 # ), readRDS)
 
 # corticotrophs <- pbsapply(dir(
 #   path = "rds_outs/",
-#   pattern = paste0(data_to_process, "_corticotrophs.rds"),
+#   pattern = "_corticotrophs.rds",
 #   full.names = TRUE
 # ), readRDS)
 
@@ -430,15 +440,30 @@ if (plot_out_type == "png") {
   pdf("plots/num_cells.pdf", width = 8, height = 8)
 }
 
-ggplot(n_cells, aes(sex, perc_cort)) +
+n_cells %>%
+  pivot_longer(
+    cols = c("perc_cort", "perc_melano"),
+    names_to = "cell_type", values_to = "perc"
+  ) %>%
+  mutate(cell_type = factor(cell_type)) %>%
+  mutate(cell_type = ifelse(cell_type == "perc_cort",
+    "Corticotrophs", "Melanotrophs"
+  )) %>%
+  ggplot(aes(
+    x = sex, y = perc, fill = cell_type
+  )) +
   geom_boxplot(width = 0.5) +
-  geom_point(size = 3) +
-  ylim(0, 15) +
-  ylab("% corticotrophs") +
+  scale_fill_manual(
+    "",
+    values = c("white", "lightgray")
+  ) +
+  ylab("% cells") +
   xlab("Sex") +
+  scale_y_continuous(limits = c(0, 20), expand = c(0, 0)) +
   theme(
     axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14)
+    axis.text = element_text(size = 14),
+    legend.text = element_text(size = 16)
   )
 
 if (plot_out_type != "none") {
