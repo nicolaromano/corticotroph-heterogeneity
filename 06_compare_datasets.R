@@ -486,7 +486,7 @@ community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
 do.call("rbind", community_df) %>%
   write.csv(
     file.path(
-      markers_output_folder, paste0("communities_", perc_similarity, ".csv")
+      markers_output_folder, paste0("markers_communities_", perc_similarity, ".csv")
     ),
     row.names = FALSE
   )
