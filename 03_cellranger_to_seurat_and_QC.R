@@ -1,6 +1,7 @@
-##########################################################
-# Imports data into Seurat and performs quality controls #
-##########################################################
+# 03_cellranger_to_seurat_and_QC.R
+# Imports data into Seurat and performs quality controls
+# Inputs: CellRanger output folders
+# Outputs: RDS files with Seurat objects (rds_outs/dataset_SCT.rds), QC plots (plots/QC_plots)
 
 library(Seurat)
 library(tidyverse)
@@ -13,9 +14,6 @@ load_CR_matrices <- FALSE # Set to TRUE to reload data from CellRanger output
 
 # Read datasets paths and metadata
 datasets <- read.csv("datasets.csv")
-
-# If you want to skip the initial steps and load the data from the RDS files,
-# just start from line 301
 
 load_data <- function(metadata, study) {
   #' Loads data from CellRanger output, adds metadata, filters and saves
@@ -476,6 +474,7 @@ if (plot_out_type == "pdf") {
 } else if (plot_out_type == "png") {
   png("plots/all_qc.png", width = 1500, height = 500)
 }
+
 grid.arrange(p1, p2, p3, ncol = 3)
 
 if (plot_out_type != "none") {
@@ -499,7 +498,7 @@ seurat_objects_SCT <- sapply(seurat_objects, function(s) {
 })
 
 # Load filed, if needed
-# filenames <- list.files("rds_outs/", pattern = "SCT.rds")
+# filenames <- list.files("rds_outs/", pattern = "_SCT.rds")
 # seurat_objects_SCT <- pblapply(filenames, readRDS)
 
 allQC <- lapply(seurat_objects_SCT, function(s) {
