@@ -1,3 +1,6 @@
+# 04_cell_typing.R
+# Clusters data, then filters them to get corticotrophs (and melanotrophs)
+
 library(Seurat)
 library(tidyverse)
 library(ggplot2)
@@ -7,7 +10,7 @@ library(pbapply)
 
 set.seed(12345)
 
-plot_out_type <- "pdf" # or "pdf" or "none"
+plot_out_type <- "none" # or "pdf" or "none"
 
 #### Various helper functions ####
 show_markers <- function(seurat_obj, hormonal = TRUE) {
@@ -60,7 +63,10 @@ plot_features_histo <- function(seurat_obj, feature, find_threshold = TRUE,
   if (!feature %in% rownames(seurat_obj)) # Feature does not exist
     {
       p <- ggplot() +
-        ggtitle(paste(seurat_obj$author[1], seurat_obj$year[1], "-", seurat_obj$sex[1]), subtitle = "Not found")
+        ggtitle(paste(
+          seurat_obj$author[1], seurat_obj$year[1], "-",
+          seurat_obj$sex[1]
+        ), subtitle = "Not found")
 
       return(p)
     }
@@ -71,7 +77,10 @@ plot_features_histo <- function(seurat_obj, feature, find_threshold = TRUE,
     geom_histogram(binwidth = 0.1) +
     xlim(0, 10) +
     xlab(paste(feature, "expression")) +
-    ggtitle(paste(seurat_obj$author[1], seurat_obj$year[1], "-", seurat_obj$sex[1]))
+    ggtitle(paste(
+      seurat_obj$author[1],
+      seurat_obj$year[1], "-", seurat_obj$sex[1]
+    ))
 
   if (log_y_axis) {
     p <- p + scale_y_log10()
@@ -110,11 +119,10 @@ otsu_thresh <- function(values, levels = 100) {
   return((mids[maxi[1]] + mids[maxi[length(maxi)]]) / 2)
 }
 
-type_cells_thr <- function(seurat_obj) {
+type_pomc_cells <- function(seurat_obj) {
   #' Type cells based on a Otsu's threshold on the expression of a feature
   #' @param seurat_obj: the Seurat object
   #' @return: a plot of the cell types
-  #' TODO: add other cell types
 
   expr <- GetAssayData(seurat_obj)["Pomc", ]
   thr <- otsu_thresh(expr)
@@ -207,6 +215,10 @@ filenames <- dir("rds_outs", pattern = "SCT.rds", full.names = TRUE)
 # Read all datasets
 seurat_objects <- pblapply(filenames, readRDS)
 
+names(seurat_objects) <- sapply(seurat_objects, function(s) {
+  s$orig.ident[1]
+})
+
 # We can use this to explore the datasets
 # show_markers(seurat_objects[[2]])
 
@@ -245,7 +257,7 @@ if (plot_out_type != "none") {
   dev.off()
 }
 
-pomc_cells <- lapply(seurat_objects, type_cells_thr)
+pomc_cells <- lapply(seurat_objects, type_pomc_cells)
 
 if (plot_out_type == "png") {
   png("plots/pomc_cells.png", width = 15, height = 10, units = "in", res = 300)
@@ -310,6 +322,10 @@ seurat_objects_pomc <- sapply(seq_along(seurat_objects), function(i) {
 filenames <- dir(path = "rds_outs/", pattern = "pomc.rds")
 seurat_objects_pomc <- pbsapply(paste0("rds_outs/", filenames), readRDS)
 
+names(seurat_objects_pomc) <- sapply(seurat_objects_pomc, function(s) {
+  s$orig.ident[1]
+})
+
 pomc_plots <- lapply(seurat_objects_pomc, function(seurat_obj) {
   DimPlot(seurat_obj, label = TRUE) +
     ggtitle(paste(seurat_obj$author[1], seurat_obj$year[1], "-", seurat_obj$sex[1])) +
@@ -360,7 +376,10 @@ melanotrophs <- pbsapply(seurat_objects_pomc, function(seurat_obj) {
     melano <- subset(seurat_obj, Pcsk2 >= threshold)
   }
 
-  outfile <- paste0("rds_outs/", seurat_obj$orig.ident[1], "_melanotrophs.rds")
+  outfile <- paste0(
+    "rds_outs/",
+    seurat_obj$orig.ident[1], "_melanotrophs.rds"
+  )
   saveRDS(melano, outfile)
 
   return(melano)
@@ -374,7 +393,10 @@ corticotrophs <- pbsapply(seurat_objects_pomc, function(seurat_obj) {
     cortico <- subset(seurat_obj, Pcsk2 < threshold)
   }
 
-  outfile <- paste0("rds_outs/", seurat_obj$orig.ident[1], "_corticotrophs.rds")
+  outfile <- paste0(
+    "rds_outs/", seurat_obj$orig.ident[1],
+    "_corticotrophs.rds"
+  )
   saveRDS(cortico, outfile)
 
   return(cortico)
@@ -411,7 +433,7 @@ p <- lapply(corticotrophs, function(s) {
   return(p)
 })
 
-do.call("grid.arrange", c(p, nrow = 3, ncol = 4))
+do.call("grid.arrange", c(p, ncol = 4))
 
 n_cells <- data.frame(
   dataset = sapply(
@@ -469,3 +491,5 @@ n_cells %>%
 if (plot_out_type != "none") {
   dev.off()
 }
+
+t.test(num_cort ~ sex, n_cells)
