@@ -43,17 +43,18 @@ sapply(all_corticotrophs, function(x) {
 rm(all_corticotrophs)
 gc()
 
-
 #### SUBCLUSTERING ####
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "F"
+data_to_process <- "M"
+
+plot_out_type <- "none" # "png", "pdf" or "none"
 
 # This is very heavy to compute, so this is a switch to turn it off if already computed
-calculate_elbow_plots <- TRUE
+calculate_elbow_plots <- FALSE
 
 # Read only M or F files
 filenames <- dir("rds_outs",
@@ -64,6 +65,10 @@ filenames <- dir("rds_outs",
 # Ho 2020 has only a handful of cells - we'are not considering it
 filenames <- filenames[-grep("Ho2020", filenames)]
 seurat_corticotrophs <- pblapply(filenames, readRDS)
+
+names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(x) {
+  x$orig.ident[1]
+})
 
 ##### CLUSTERING QUALITY ASSESSMENT #####
 
@@ -153,9 +158,9 @@ elbow_method <- function(obj, resolutions = seq(0, 1, 0.1),
     ungroup()
 }
 
-if (calculate_elbow_plots) {
-  resolutions <- seq(0.1, 1.5, 0.1)
+resolutions <- seq(0.1, 1.5, 0.1)
 
+if (calculate_elbow_plots) {
   # This is quite slow (~7 minutes using 16 cores)
   start_time <- Sys.time()
   elbow_plot_data <- lapply(seurat_corticotrophs, function(obj) {
@@ -169,47 +174,54 @@ if (calculate_elbow_plots) {
   end_time <- Sys.time()
   print(end_time - start_time)
 
-  # Plot the results
-  elbow_plots <- lapply(elbow_plot_data, function(ep) {
-    ep %>%
-      # Calculate the % change from the previous WSS
-      mutate(wss_change = (wss_mean - lag(wss_mean)) / lag(wss_mean)) %>%
-      ggplot(aes(x = resol, y = wss_mean)) +
-      geom_line() +
-      geom_ribbon(
-        aes(
-          ymin = wss_mean - wss_sd,
-          ymax = wss_mean + wss_sd
-        ),
-        alpha = 0.2
-      ) +
-      geom_point(size = 2) +
-      geom_text(aes(label = paste(min_n_clusters, max_n_clusters, sep = "-")), vjust = -1) +
-      xlab("Resolution") +
-      ylab("WSS") +
-      # Works best with uniformly spaced (and not too many) resolutions
-      scale_x_continuous(breaks = seq(min(resolutions), max(resolutions),
-        length.out = length(resolutions)
-      )) +
-      ggtitle(ep$dataset[1]) +
-      theme_minimal() +
-      theme(
-        legend.position = "none",
-        axis.title = element_text(size = 18),
-        axis.text = element_text(size = 16),
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        title = element_text(size = 16)
-      )
-  })
-
   # Save results to file
   write.csv(do.call(rbind, elbow_plot_data),
     file = paste0("elbow_plots_", data_to_process, ".csv"),
     row.names = FALSE
   )
+}
 
-  png(paste0("plots/elbow_plots_", data_to_process, ".png"), width = 15, height = 10, units = "in", res = 300)
-  do.call("grid.arrange", c(elbow_plots, ncol = 3))
+wss_data <- read.csv(paste0(
+  "elbow_plots_",
+  data_to_process, ".csv"
+))
+
+if (plot_out_type == "png") {
+  png(paste0("plots/elbow_plots_", data_to_process, ".png"),
+    width = 15, height = 10, units = "in", res = 300
+  )
+} else if (plot_out_type == "pdf") {
+  pdf(paste0("plots/elbow_plots_", data_to_process, ".pdf"),
+    width = 15, height = 10
+  )
+}
+
+# Plot the results
+ggplot(wss_data, aes(x = resol, y = wss_mean)) +
+  geom_line() +
+  geom_ribbon(
+    aes(
+      ymin = wss_mean - wss_sd,
+      ymax = wss_mean + wss_sd
+    ),
+    alpha = 0.2
+  ) +
+  geom_point(size = 2) +
+  scale_x_continuous(limits = c(0, max(resolutions))) +
+  geom_text(aes(label = paste(min_n_clusters, max_n_clusters, sep = "-")), vjust = -1.5,
+  size = 4) +
+  facet_wrap(~dataset, ncol = 3, scales = "free") +
+  xlab("Resolution") +
+  ylab("WSS") +
+  theme(
+    legend.position = "none",
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 16),
+    title = element_text(size = 16),
+    strip.text = element_text(size = 16)
+  )
+
+if (plot_out_type != "none") {
   dev.off()
 }
 
@@ -250,10 +262,20 @@ cort_plots <- lapply(seurat_corticotrophs, function(obj) {
     )
 })
 
-png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
-  width = 15, height = 10, units = "in", res = 300)
+if (plot_out_type == "png") {
+  png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
+    width = 15, height = 10, units = "in", res = 300
+  )
+} else if (plot_out_type == "pdf") {
+  pdf(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".pdf"),
+    width = 15, height = 10
+  )
+}
 do.call("grid.arrange", c(cort_plots, ncol = 3))
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 # Save to RDS
 pblapply(seurat_corticotrophs, function(obj) {
