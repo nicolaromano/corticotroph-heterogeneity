@@ -27,20 +27,22 @@ The scripts have been numbered sequentially to help navigate the repository.
 
 [08_export_matrices.R](#08exportmatrices)
 
-[09_transfer_learning.py]()
+[09_train_models.ipynb](#09trainmodels)
 
-[10_predict_labels.py]()
+[10_label_transfer_prediction.py](#10labeltransfer)
 
-[11_prepare_velocity_analysis.R](#11preparevelo)
+[11_label_transfer_graph.R](#11labeltransfergraph)
 
-[12_get_velocyto_loom.sh](#12getloom)
+[12_prepare_velocity_analysis.R](#11preparevelo)
 
-[12b_scvelo.ipynb](#12bscvelo)
+[13_get_velocyto_loom.sh](#13getloom)
 
+[14_scvelo.ipynb](#14scvelo)
 
 ---------------
 
 <a name="00downloaddata"></a>
+
 ### `00_download_data.sh`
 
 Downloads raw data for each dataset - Note that this takes **a lot** of space.
@@ -55,6 +57,7 @@ For example
 Note some data is deposited on ArrayExpress, which is not accessible from the NCBI SRA toolkit. A list of files to download is available in the directory and can be simply downloaded using `wget`.
 
 <a name="01aligntogenome"></a>
+
 ### `01_align_to_genome.sh`
 
 Aligns the raw data to the genome using Cell Ranger.
@@ -69,11 +72,13 @@ For example
 Data in this study was aligned to the mouse reference dataset 2020-A (July 7, 2020) available on [the 10x website](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest), based on mouse reference mm10 (GENCODE vM23/Ensembl 98).
 
 <a name="01bmakecellrangerratreference"></a>
+
 ### `01b_make_cellranger_rat_reference.sh`
 
 Creates a rat reference dataset for Cell Ranger.
 
 <a name="02aggregatecounts"></a>
+
 ### `02_aggregate_counts.sh`
 
 Aggregates the counts from the aligned data using Cell Ranger.
@@ -85,6 +90,7 @@ For example
     02_aggregate_counts.sh SRR12345 /home/pitdatasets/Example2022 /home/cellranger/
 
 <a name="03cellrangertoseurat"></a>
+
 ### `03_cellranger_to_seurat_and_QC.R`
 
 Imports data into R, and plots QC metrics. We use data as filtered by Cellranger to remove empty droplets then do some further filtering. This file will output RDS files containing raw counts and SCT-transformed data
@@ -117,32 +123,37 @@ Plots correlation maps between the markers from each datasets on to the others. 
 
 Exports the expression data, dimension reductions, metadata and the assigned clusters to CSV files, to be used in Python for transfer learning and later for velocity analysis.
 
-<a name="09transferlearning"></a>
+<a name="09trainmodels"></a>
 
-### `09_transfer_learning.py`
+### `09_train_models.ipynb`
 
-TODO
+Trains the models for transfer learning, and saves them to disk.
 
-<a name="10predictlabels"></a>
+<a name="10labeltransfer"></a>
 
 ### `10_predict_labels.py`
 
-TODO
+Performs prediction of labels on the new dataset, and calculates saliency maps to identify the most important genes for the prediction.
 
-<a name="11preparevelo"></a>
+<a name="11labeltransfergraph"></a
+### `11_label_transfer_graph.R`
 
-### `11_prepare_velocity_analysis.R`
+Creates a graph from the prediction results.
+
+<a name="12preparevelo"></a>
+
+### `12_prepare_velocity_analysis.R`
 
 Prepares the data for velocity analysis, by creating corticotrops-specific barcode files to feed to velocyto.
 
-<a name="12getloom"></a>
+<a name="13getloom"></a>
 
-### `12_get_velocyto_loom.sh`
+### `13_get_velocyto_loom.sh`
 
-Runs velocyto on the data, and creates loom filea containing the spliced and unspliced matrices for all datasets.
+Runs velocyto on the data, and creates loom files containing the spliced and unspliced matrices for all datasets.
 
-<a name="12bscvelo"></a>
+<a name="14scvelo"></a>
 
-### `12b_scvelo.ipynb`
+### `14_scvelo.ipynb`
 
 Runs scvelo on the loom files, and plots the results.
