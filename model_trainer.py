@@ -228,8 +228,7 @@ class LabelTransferTrainer:
     def _train_model(self,
                      model: keras.Sequential,
                      dataset: str,
-                     train_expr: pd.DataFrame, train_labels: pd.DataFrame,
-                     val_expr: pd.DataFrame, val_labels: pd.DataFrame,
+                     train_expr: pd.DataFrame, train_labels: pd.DataFrame,                     
                      epochs, batch_size) -> Tuple[keras.Sequential, dict]:
         """
         Trains a single model.
@@ -240,10 +239,10 @@ class LabelTransferTrainer:
             The model to train.
         dataset : str
             The name of the dataset. This will be used to save the model and training history.
-        train_expr, val_expr, test_expr : pd.DataFrame
-            The expression data for the training, validation and test sets.
-        train_labels, val_labels, test_labels : pd.DataFrame
-            The labels for the training, validation and test sets.
+        train_expr : pd.DataFrame
+            The expression data for the training set.
+        train_labels : pd.DataFrame
+            The labels for the training set.
         epochs : int, optional
             The number of epochs to train the model.
         batch_size : int, optional
@@ -265,27 +264,32 @@ class LabelTransferTrainer:
                                                      save_best_only=True,
                                                      initial_value_threshold=0.5,
                                                      mode='max')
-
+        
         history = model.fit(train_expr, train_labels,
+                            validation_split=0.2,
                             epochs=epochs,
                             batch_size=batch_size,
-                            validation_data=(val_expr, val_labels),
                             verbose=self.verbose,
                             callbacks=[checkpoint])
 
         # Find all the files in the output directory with the pattern
-        # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{val_f1_score:.2f}.hdf5"
+        # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{f1_score:.2f}.hdf5"
         filenames = [f for f in os.listdir(
             self.output_dir) if f.startswith(f"{dataset}_best_")]
-
+        
         # Find the file with the highest F1 score
-        scores = [f.split('-')[2].split('_')[1] for f in filenames]
-        scores = [float(s[:-5]) for s in scores]
-
+        # Files are named as <dataset_name>_best_<date>-<time>_ep<num_epochs>-f1sc<f1_score>.hdf5
+        # We split by - and get the f1_score part, then remove the .hdf5 extension and the f1sc prefix
+        scores = [f.split('-')[2] for f in filenames]
+        scores = [float(s[4:-5]) for s in scores]
+        
         for i, f in enumerate(filenames):
             if (scores[i] < max(scores)):
                 os.remove(os.path.join(self.output_dir, f))
 
+        if (self.verbose):
+            print(f"Loading best model for {dataset} from {filenames[np.argmax(scores)]}...")
+            
         # Load the best model
         model = keras.models.load_model(
             os.path.join(self.output_dir, filenames[np.argmax(scores)]),
@@ -303,14 +307,15 @@ class LabelTransferTrainer:
 
         return (model, history.history)
 
-    def train_all_models(self) -> None:
+    def train_all_models(self, reset_models: bool = False) -> None:
         """
         Trains all the models. The models are stored in the self.models dictionary.
 
         Parameters
         ----------
 
-        None
+        reset_models : bool, optional, default = False
+            Whether to reset the models before training them. If set to True, the models will be re-created from scratch.
 
         Returns
         -------
@@ -318,19 +323,20 @@ class LabelTransferTrainer:
         None, trains the models
 
         """
-
+        if (reset_models):
+            self._setup_models()
+            
         for i, h in self.hyperparams.iterrows():
             dataset = h['dataset']
 
             # Note: this is deterministic because we set the random seed
-            expr_train, expr_val, _, labels_train, labels_val, _ = self._load_data(dataset)
+            expr_train, _, labels_train, _ = self._load_data(dataset)
 
             model = self.models[dataset]
 
             # Train the model. This returns the trained model at the best epoch and the training history (full)
             self.models[dataset], self.training_histories[dataset] = self._train_model(model=model, dataset=dataset,
-                                                                                       train_expr=expr_train, train_labels=labels_train,
-                                                                                       val_expr=expr_val, val_labels=labels_val,
+                                                                                       train_expr=expr_train, train_labels=labels_train,                                                                                       
                                                                                        epochs=h['epochs'], batch_size=h['batch_size'])
 
     def train_single_model(self, dataset: str) -> dict:
@@ -352,14 +358,12 @@ class LabelTransferTrainer:
             The training history of the model.        
         """
 
-        expr_train, expr_val, _, labels_train, labels_val, _ = self._load_data(
-            dataset)
+        expr_train, _, labels_train, _ = self._load_data(dataset)
 
         hyperparameters = self._get_hyperparameters(dataset)
 
         return self._train_model(model=self.models[dataset], dataset=dataset,
-                                 train_expr=expr_train, train_labels=labels_train,
-                                 val_expr=expr_val, val_labels=labels_val,
+                                 train_expr=expr_train, train_labels=labels_train,                                 
                                  epochs=hyperparameters['epochs'],
                                  batch_size=hyperparameters['batch_size'])
 
@@ -381,7 +385,7 @@ class LabelTransferTrainer:
 
         metrics = {}
         for i, row in self.hyperparams.iterrows():
-            _, _, expr_test, _, _, labels_test = self._load_data(
+            _, expr_test, _, labels_test = self._load_data(
                 row['dataset'])
             metrics[row['dataset']] = self.models[row['dataset']].evaluate(
                 expr_test, labels_test, batch_size=row['batch_size'])
@@ -407,7 +411,7 @@ class LabelTransferTrainer:
 
         h = self._get_hyperparameters(dataset)
 
-        _, _, expr_test, _, _, labels_test = self._load_data(dataset)
+        _, expr_test, _, labels_test = self._load_data(dataset)
 
         return self.models[dataset].evaluate(
             expr_test, labels_test, batch_size=h['batch_size'])
@@ -466,7 +470,7 @@ class LabelTransferTrainer:
 
         tune_res = {}
 
-        expr_train, expr_test, labels_train, labels_test = self._load_data(
+        expr_train, _, labels_train, _ = self._load_data(
             dataset, test_size=0.9)
 
         for v in values:
@@ -492,8 +496,8 @@ class LabelTransferTrainer:
                             
                 history = model.fit(expr_train.iloc[train], labels_train[train],
                         validation_data=(expr_train.iloc[val], labels_train[val]),
-                        epochs=hyper['epochs'], 
-                        batch_size=hyper['batch_size'], 
+                        epochs=hyper['epochs'],                         
+                        batch_size=batch_size, 
                         workers=4,
                         verbose=False)
 
@@ -506,4 +510,3 @@ class LabelTransferTrainer:
                 tune_res[f"{v}_{i}"] = max(history.history['val_f1_score'])
 
         return tune_res
-
