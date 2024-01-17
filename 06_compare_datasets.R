@@ -1,3 +1,6 @@
+# 06_compare_datasets.R
+# Compare the datasets based on their common markers
+
 library(Seurat)
 library(ggplot2)
 library(cowplot)
@@ -11,9 +14,38 @@ library(igraph)
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
+# General dataset stats
+
+# Load all, M+F
+filenames <- dir("rds_outs",
+  pattern = paste0("_subclustered.rds"),
+  full.names = TRUE
+)
+
+seurat_corticotrophs <- pblapply(filenames, readRDS)
+names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(s) {
+  s$orig.ident[1]
+})
+
+# How much of the reads are Pomc?
+pomc_perc <- lapply(seurat_corticotrophs, function(s) {
+  expr <- GetAssayData(s, slot = "counts")
+  sum(expr["Pomc",]) / sum(expr) * 100
+})
+
+quantile(unlist(pomc_perc))
+
+# How many reads are 0?
+zero_perc <- lapply(seurat_corticotrophs, function(s) {
+  expr <- GetAssayData(s, slot = "counts")
+  sum(expr == 0) / (nrow(expr) * ncol(expr)) * 100
+})
+
+quantile(unlist(zero_perc))
+
 # Data to process ("M" or "F")
 data_to_process <- "M"
-output_format <- "pdf" # or "png"
+output_format <- "none" # "pdf", "png" or "none"
 
 markers_output_folder <- "markers"
 
@@ -23,7 +55,9 @@ filenames <- dir("rds_outs",
 )
 
 seurat_corticotrophs <- pblapply(filenames, readRDS)
-names(seurat_corticotrophs) <- gsub("(\\.rds|rds_outs/|_subclustered)", "", filenames)
+names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(s) {
+  s$orig.ident[1]
+})
 
 get_common_markers <- function(markers1, markers2, cluster1, cluster2) {
   #' Gets the percentage of marker genes in common between two
@@ -50,12 +84,13 @@ all_markers <- lapply(seurat_corticotrophs, function(d) {
 })
 
 # Save all markers to csv
-
+out_dir <- "markers"
 if (!dir.exists(out_dir)) {
   dir.create(out_dir)
+  print(paste("Created output directory", out_dir))
 }
 
-for (i in 1:length(all_markers)) {
+for (i in seq_along(all_markers)) {
   write.csv(all_markers[[i]], file.path(markers_output_folder, paste0(names(all_markers)[i], "_markers.csv")))
 }
 
@@ -101,29 +136,68 @@ for (d1 in 1:(length(seurat_corticotrophs) - 1)) {
 rownames(common_markers) <- NULL
 
 if (output_format == "png") {
-  png("plots/percentage_common_markers.png",
+  png("plots/common_markers.png",
     width = 5, height = 10,
     units = "in", res = 300
   )
 } else {
-  pdf("plots/percentage_common_markers.pdf",
+  pdf("plots/common_markers.pdf",
     width = 5, height = 10
   )
 }
 
-ggplot(common_markers, aes(y = Percentage)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(aes(x = 0), width = 0.1, size = 2) +
-  xlim(-0.7, 0.7) +
-  ylab("Percentage of common markers") +
+# For each cluster in each dataset, get the maximum % of common markers
+common_markers %>%
+  # Marker correspondance is transitive, but we want 
+  # to plot the maximum percentage both ways 
+  # i.e. if A and B have 10% common markers then 
+  # we want to plot 10% for A-B and 10% for B-A
+  bind_rows(
+    common_markers %>%
+      mutate(
+        Tmp = Dataset2_name,
+        Dataset2_name = Dataset1_name,
+        Dataset1_name = Tmp,
+        Tmp = Dataset2,
+        Dataset2 = Dataset1,
+        Dataset1 = Tmp,
+        Tmp = Cluster2,
+        Cluster2 = Cluster1,
+        Cluster1 = Tmp
+      )
+  ) %>%
+  select(-Tmp) %>%
+  group_by(Dataset1_name, Dataset2_name, Cluster1) %>%
+  summarise(Max_Pct = max(Percentage)) %>%
+  ungroup() %>%
+  mutate(Dataset = str_split(Dataset1_name, " ", simplify = TRUE)[, 1]) %>% 
+  mutate(Dataset2 = str_split(Dataset2_name, " ", simplify = TRUE)[, 1]) %>%
+  ggplot(aes(x = Dataset, y = Max_Pct)) +
+  geom_boxplot(aes(fill = Dataset2), outlier.size = 0.7,
+    outlier.alpha = 1, alpha = 0.9) +
+  scale_fill_brewer(palette = "Set4", name = "Dataset") +
+  # Global box
+  geom_boxplot(
+    # Note these works because All becomes the first factor
+    # as is the first in alphabetical order...
+    # I could not find a better way to do this
+    data = . %>% mutate(Dataset = factor("All")),
+    aes(x = Dataset, y = Max_Pct), fill = "lightgray"
+  ) +
+  # geom_point(aes(col= Dataset2), size = 2,
+  #   position = position_dodge(width = 0.75),
+  # ) +
+  ylim(0, 100) +
+  ylab("Maximum percentage of common markers") +
   theme(
     axis.title.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
     axis.title.y = element_text(size = 16),
     axis.text.y = element_text(size = 14)
   )
-dev.off()
+
+if (output_format != "none") {
+  dev.off()
+}
 
 # Get all of the possible combinations of datasets
 pl_list <- apply(unique(common_markers[, c("Dataset1", "Dataset2")]), 1, function(d1d2) {
