@@ -402,6 +402,26 @@ corticotrophs <- pbsapply(seurat_objects_pomc, function(seurat_obj) {
   return(cortico)
 })
 
+cort_melano_plots <- lapply(seurat_objects_pomc, function(seurat_obj) {
+  markers <- c("Pomc", "Pcsk2", "Pax7")
+  markers <- markers[markers %in% rownames(seurat_obj)]
+
+  if (length(markers) > 1) {
+    mark_expr <- data.frame(t(as.matrix(GetAssayData(seurat_obj)[markers, ])))
+  } else {
+    mark_expr <- data.frame(as.matrix(GetAssayData(seurat_obj)[markers, ]))
+  }
+
+  umap_coord <- data.frame(seurat_obj@reductions$umap@cell.embeddings)
+  p <- ggplot(umap_coord, aes(UMAP_1, UMAP_2)) +
+    geom_point(aes(col = rowSums(melano_mark_expr) > 0), size = 0.5) +
+    scale_color_manual(values = c("lightgray", "navy"), guide = "none") +
+    ggtitle(seurat_obj$orig.ident[1])
+  return(p)
+})
+
+
+
 # Can load processed files here directly, if needed
 # melanotrophs <- pbsapply(dir(
 #   path = "rds_outs/",
