@@ -49,9 +49,9 @@ gc()
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 
-plot_out_type <- "none" # "png", "pdf" or "none"
+plot_out_type <- "pdf" # "png", "pdf" or "none"
 
 # This is very heavy to compute, so this is a switch to turn it off if already computed
 calculate_elbow_plots <- FALSE
@@ -250,6 +250,26 @@ seurat_corticotrophs <- lapply(
   }
 )
 
+# Save to RDS
+pblapply(seurat_corticotrophs, function(obj) {
+  saveRDS(obj, file = paste0("rds_outs/", obj$orig.ident[1], "_subclustered.rds"))
+})
+
+# seurat_corticotrophs <- pblapply(
+#   paste0("rds_outs/", datasets$orig.ident, "_subclustered.rds"),
+#   readRDS
+# )
+
+if (plot_out_type == "png") {
+  png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
+    width = 15, height = 10, units = "in", res = 300
+  )
+} else if (plot_out_type == "pdf") {
+  pdf(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".pdf"),
+    width = 15, height = 10
+  )
+}
+
 cort_plots <- lapply(seurat_corticotrophs, function(obj) {
   DimPlot(obj, pt.size = 1.5) +
     xlab(expression(UMAP[1])) +
@@ -262,22 +282,8 @@ cort_plots <- lapply(seurat_corticotrophs, function(obj) {
     )
 })
 
-if (plot_out_type == "png") {
-  png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
-    width = 15, height = 10, units = "in", res = 300
-  )
-} else if (plot_out_type == "pdf") {
-  pdf(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".pdf"),
-    width = 15, height = 10
-  )
-}
 do.call("grid.arrange", c(cort_plots, ncol = 3))
 
 if (plot_out_type != "none") {
   dev.off()
 }
-
-# Save to RDS
-pblapply(seurat_corticotrophs, function(obj) {
-  saveRDS(obj, file = paste0("rds_outs/", obj$orig.ident[1], "_subclustered.rds"))
-})
