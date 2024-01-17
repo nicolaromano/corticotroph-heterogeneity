@@ -1,6 +1,7 @@
 library(Seurat)
 library(Matrix)
 library(R.utils)
+library(pbapply)
 
 filenames <- dir("rds_outs",
   pattern = "subclustered.rds",
@@ -9,10 +10,11 @@ filenames <- dir("rds_outs",
 
 seurat_obj_cort <- pblapply(filenames, readRDS)
 
-outdir <- "exported_matrices"
+outdir <- "exported_matrices/"
 
 if (!dir.exists(outdir)) {
   dir.create(outdir)
+  print(paste("Created output directory", outdir))
 }
 
 sapply(seurat_obj_cort, function(obj) {
@@ -32,10 +34,14 @@ sapply(seurat_obj_cort, function(obj) {
 
   print("Exporting cluster assignments")
   outfile <- paste0(outdir, obj$orig.ident[1], "_clusters.csv")
+
   write.csv(
     data.frame(
       Barcode = Cells(obj),
-      Cluster = Idents(obj)
+      Cluster = Idents(obj),
+      Community_markers_10 = obj$marker_community_10,
+      Community_markers_15 = obj$marker_community_15,
+      Community_markers_20 = obj$marker_community_20
     ),
     outfile,
     row.names = FALSE, quote = FALSE
