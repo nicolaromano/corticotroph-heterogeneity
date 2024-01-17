@@ -1,5 +1,9 @@
+# 07_correlation_maps.R
+# Calculates correlation maps between the markers of subclusters of the datasets
+
 library(Seurat)
 library(ggplot2)
+library(dplyr)
 library(grid)
 library(gridExtra)
 library(scales)
@@ -7,12 +11,15 @@ library(tidyverse)
 library(pbapply)
 library(pheatmap)
 library(nlme)
+library(emmeans)
+
+plot_out_type <- "none" # or "pdf" or "none"
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 
 # Number of random swaps to perform
 num_swaps <- 100
@@ -175,7 +182,7 @@ get_marker_correlation <- function(reference_id,
       # **and is one element longer than color vector**.
       # Used for mapping values to colors.
       br <- seq(-0.5, 0.5, length.out = 257)
-      anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
+      anno_colors <- list(cluster = cluster_palette[seq_along(unique(clusters$cluster))])
 
       p <- pheatmap(m$cor,
         show_rownames = FALSE, show_colnames = FALSE,
@@ -249,7 +256,7 @@ get_marker_correlation <- function(reference_id,
         dataset_names[1], "(shuffled)"
       )
       br <- seq(-0.5, 0.5, length.out = 257)
-      anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
+      anno_colors <- list(cluster = cluster_palette[seq_along(unique(clusters$cluster))])
 
       p <- pheatmap(m$rnd_cor[[run_id]],
         show_rownames = FALSE, show_colnames = FALSE,
@@ -307,7 +314,7 @@ get_marker_correlation <- function(reference_id,
         dataset_names[1], "(shuffled in clust)"
       )
       br <- seq(-0.5, 0.5, length.out = 257)
-      anno_colors <- list(cluster = cluster_palette[1:length(unique(clusters$cluster))])
+      anno_colors <- list(cluster = cluster_palette[seq_along(unique(clusters$cluster))])
 
       p <- pheatmap(m$rnd_within_cor[[run_id]],
         show_rownames = FALSE, show_colnames = FALSE,
@@ -444,9 +451,16 @@ get_average_correlations <- function(reference_id, corr_type = "pearson", do_plo
     subset(!(Group %in% c("Random shuffle", "Random shuffle within") & SameDataset == FALSE))
 
   if (do_plot) {
-    png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".png"),
-      width = 15, height = 8, units = "in", res = 300
-    )
+    if (plot_out_type == "pdf") {
+      pdf(paste0("plots/correlation_maps/avg_corr_", data_to_process, "_", reference_id, ".pdf"),
+        width = 15, height = 8
+      )
+    } else if (plot_out_type == "png") {
+      png(paste0("plots/correlation_maps/avg_corr_", data_to_process, "_", reference_id, ".png"),
+        width = 15, height = 8, units = "in", res = 300
+      )
+    }
+
     ggplot(corr_matr_all, aes(Group, Correlation)) +
       geom_boxplot(outlier.shape = NA, aes(fill = SameDataset)) +
       scale_fill_manual(values = c("#86A93F", "#B56492"), name = "Same dataset") +
@@ -458,23 +472,37 @@ get_average_correlations <- function(reference_id, corr_type = "pearson", do_plo
         axis.text = element_text(size = 11),
         strip.text = element_text(size = 12)
       )
-    dev.off()
+
+    if (plot_out_type != "none") {
+      dev.off()
+    }
   }
 
   return(corr_matr_all)
 }
 
-all_avg_corr <- sapply(1:length(seurat_corticotrophs),
-  FUN = get_average_correlations, do_plot = TRUE, corr_type = "pearson",
+all_avg_corr <- sapply(seq_along(seurat_corticotrophs),
+  FUN = get_average_correlations, do_plot = FALSE, corr_type = "pearson",
   simplify = FALSE,
   USE.NAMES = TRUE
 )
 
 all_avg_corr <- do.call("rbind", all_avg_corr)
 
-png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".png"),
-  width = 15, height = 8, units = "in", res = 300
-)
+write.csv(all_avg_corr, file = paste0("all_average_correlations", data_to_process, ".csv"), row.names = FALSE)
+
+all_avg_corr <- read.csv(paste0("all_average_correlations", data_to_process, ".csv"))
+
+if (plot_out_type == "pdf") {
+  pdf(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".pdf"),
+    width = 15, height = 8
+  )
+} else if (plot_out_type == "png") {
+  png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".png"),
+    width = 15, height = 8, units = "in", res = 300
+  )
+}
+
 all_avg_corr %>%
   subset(Group %in% c("Within cluster", "Between clusters")) %>%
   ggplot(aes(Group, Correlation)) +
@@ -490,7 +518,10 @@ all_avg_corr %>%
     strip.text = element_text(size = 12)
   ) +
   facet_wrap(~Dataset1)
-dev.off()
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, "_with_shuffles.png"),
   width = 15, height = 8, units = "in", res = 300
@@ -515,9 +546,29 @@ ggplot(all_avg_corr, aes(Group, Correlation)) +
   facet_wrap(~Dataset1)
 dev.off()
 
-write.csv(all_avg_corr, file = paste0("all_average_correlations", data_to_process, ".csv"), row.names = FALSE)
-all_avg_corr %>%
-  drop_na() -> all_avg_corr_nona
+# Put M and F together
+all_avg_corr_mf <- rbind(
+  read.csv("all_average_correlationsM.csv"),
+  read.csv("all_average_correlationsF.csv")
+)
 
-model <- lme(Correlation ~ Group + SameDataset, random = ~ 1 | Dataset1, data = all_avg_corr_nona)
+model <- all_avg_corr_mf %>%
+  mutate(Sex = str_sub(Dataset1, -1)) %>%
+  drop_na() %>%
+  lme(Correlation ~ Group + SameDataset + Sex,
+    random = ~ 1 | Dataset1, data = .
+  )
+
 summary(model)
+# pairwise comparisons
+emmeans(model, pairwise ~ Group | SameDataset)
+emmeans(model, pairwise ~ SameDataset | Group)
+
+# Get mean corr of random shuffle
+all_avg_corr_mf %>% 
+  dplyr::filter(Group == "Random shuffle") %>% 
+  dplyr::group_by(Dataset1) %>%
+  dplyr::summarise(mean_cor = mean(Correlation, na.rm = TRUE)) -> mean_rnd
+
+mean(mean_rnd$mean_cor)
+sd(mean_rnd$mean_cor)
