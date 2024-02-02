@@ -192,7 +192,7 @@ class LabelTransferTrainer:
             keras.utils.plot_model(model, to_file=os.path.join(
                 self.output_dir, f"{name}_model.png"), show_shapes=True)
 
-    def _load_data(self, dataset: str, test_size: float = 0.9) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
+    def _load_data(self, dataset: str, test_size: float = 0.1) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
         """
         Loads the data for a single dataset.
 
@@ -201,8 +201,8 @@ class LabelTransferTrainer:
 
         dataset : str
             The name of the dataset, e.g. Cheung2018M.
-        test_size : float, optional, default = 0.9
-            The size of the test set. Defaults to 0.9, i.e. 90% of the data is used for training and 10% for testing.
+        test_size : float, optional, default = 0.1
+            The size of the test set. Defaults to 0.1, i.e. 10% of the data is used for training and 90% for testing.
 
         Returns
         -------
@@ -220,7 +220,7 @@ class LabelTransferTrainer:
         labels_data = keras.utils.to_categorical(labels_data)
 
         expr_data_train, expr_data_test, labels_data_train, labels_data_test = train_test_split(
-            expr_data, labels_data, test_size=test_size, random_state=self.random_seed)
+            expr_data, labels_data, train_size=1.0-test_size, random_state=self.random_seed)
 
         return (expr_data_train, expr_data_test,
                 labels_data_train, labels_data_test)
@@ -228,7 +228,7 @@ class LabelTransferTrainer:
     def _train_model(self,
                      model: keras.Sequential,
                      dataset: str,
-                     train_expr: pd.DataFrame, train_labels: pd.DataFrame,                     
+                     train_expr: pd.DataFrame, train_labels: pd.DataFrame,
                      epochs, batch_size) -> Tuple[keras.Sequential, dict]:
         """
         Trains a single model.
@@ -240,7 +240,7 @@ class LabelTransferTrainer:
         dataset : str
             The name of the dataset. This will be used to save the model and training history.
         train_expr : pd.DataFrame
-            The expression data for the training set.
+            The expression data for the training set. A 20% validation split will be used.
         train_labels : pd.DataFrame
             The labels for the training set.
         epochs : int, optional
@@ -264,7 +264,7 @@ class LabelTransferTrainer:
                                                      save_best_only=True,
                                                      initial_value_threshold=0.5,
                                                      mode='max')
-        
+
         history = model.fit(train_expr, train_labels,
                             validation_split=0.2,
                             epochs=epochs,
@@ -276,20 +276,21 @@ class LabelTransferTrainer:
         # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{f1_score:.2f}.hdf5"
         filenames = [f for f in os.listdir(
             self.output_dir) if f.startswith(f"{dataset}_best_")]
-        
+
         # Find the file with the highest F1 score
         # Files are named as <dataset_name>_best_<date>-<time>_ep<num_epochs>-f1sc<f1_score>.hdf5
         # We split by - and get the f1_score part, then remove the .hdf5 extension and the f1sc prefix
         scores = [f.split('-')[2] for f in filenames]
         scores = [float(s[4:-5]) for s in scores]
-        
+
         for i, f in enumerate(filenames):
             if (scores[i] < max(scores)):
                 os.remove(os.path.join(self.output_dir, f))
 
         if (self.verbose):
-            print(f"Loading best model for {dataset} from {filenames[np.argmax(scores)]}...")
-            
+            print(
+                f"Loading best model for {dataset} from {filenames[np.argmax(scores)]}...")
+
         # Load the best model
         model = keras.models.load_model(
             os.path.join(self.output_dir, filenames[np.argmax(scores)]),
@@ -325,7 +326,7 @@ class LabelTransferTrainer:
         """
         if (reset_models):
             self._setup_models()
-            
+
         for i, h in self.hyperparams.iterrows():
             dataset = h['dataset']
 
@@ -336,7 +337,7 @@ class LabelTransferTrainer:
 
             # Train the model. This returns the trained model at the best epoch and the training history (full)
             self.models[dataset], self.training_histories[dataset] = self._train_model(model=model, dataset=dataset,
-                                                                                       train_expr=expr_train, train_labels=labels_train,                                                                                       
+                                                                                       train_expr=expr_train, train_labels=labels_train,
                                                                                        epochs=h['epochs'], batch_size=h['batch_size'])
 
     def train_single_model(self, dataset: str) -> dict:
@@ -363,7 +364,7 @@ class LabelTransferTrainer:
         hyperparameters = self._get_hyperparameters(dataset)
 
         return self._train_model(model=self.models[dataset], dataset=dataset,
-                                 train_expr=expr_train, train_labels=labels_train,                                 
+                                 train_expr=expr_train, train_labels=labels_train,
                                  epochs=hyperparameters['epochs'],
                                  batch_size=hyperparameters['batch_size'])
 
@@ -431,7 +432,8 @@ class LabelTransferTrainer:
             The hyperparameters for the given dataset.        
         """
 
-        assert (dataset in self.hyperparams['dataset'].values)
+        assert (
+            dataset in self.hyperparams['dataset'].values), f"Dataset {dataset} not found. Possible values are {self.hyperparams['dataset'].values}"
 
         return self.hyperparams[self.hyperparams['dataset'] == dataset].to_dict(orient='records')[0]
 
@@ -457,7 +459,7 @@ class LabelTransferTrainer:
 
         The F1 score for each value of the hyperparameter.
         """
-        
+
         assert hyperparam in {
             'learning_rate',
             'num_nodes',
@@ -478,35 +480,40 @@ class LabelTransferTrainer:
 
             num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v
             reg_factor = hyper['reg_factor'] if hyperparam != 'reg_factor' else v
-            bn_momentum = hyper['bn_momentum'] if hyperparam != 'bn_momentum' else v            
+            bn_momentum = hyper['bn_momentum'] if hyperparam != 'bn_momentum' else v
             learning_rate = hyper['learning_rate'] if hyperparam != 'learning_rate' else v
             batch_size = hyper['batch_size'] if hyperparam != 'batch_size' else v
-                
+
             model = self._create_model(learning_rate=learning_rate,
                                        num_nodes=num_nodes,
                                        reg_factor=reg_factor,
                                        bn_momentum=bn_momentum,
                                        num_classes=hyper['num_classes'])
 
-            print(f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam} = {v}...")
+            print(
+                f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam} = {v}...")
 
-            kfold = KFold(n_splits=n_folds, shuffle=True, random_state=self.random_seed)
+            kfold = KFold(n_splits=n_folds, shuffle=True,
+                          random_state=self.random_seed)
+
             for i, (train, val) in enumerate(kfold.split(expr_train, labels_train)):
-                print(f"Fold {i+1}...")
-                            
+                print(f"Fold {i+1}", end="...")
+
                 history = model.fit(expr_train.iloc[train], labels_train[train],
-                        validation_data=(expr_train.iloc[val], labels_train[val]),
-                        epochs=hyper['epochs'],                         
-                        batch_size=batch_size, 
-                        workers=4,
-                        verbose=False)
+                                    validation_data=(
+                                        expr_train.iloc[val], labels_train[val]),
+                                    epochs=hyper['epochs'],
+                                    batch_size=batch_size,
+                                    workers=4,
+                                    verbose=False)
 
                 # We get the best F1 score on the validation set.
-                # Note that we completely ignore the test set here, as we don't 
+                # Note that we completely ignore the test set here, as we don't
                 # want to use it for model selection, since that would bias the results.
                 # Also, when training the final model we will use the highest scoring
                 # model on the validation set (saved through checkpoints), so we
-                # use the max here.                
+                # use the max here.
                 tune_res[f"{v}_{i}"] = max(history.history['val_f1_score'])
+                print(f"max F1 score: {tune_res[f'{v}_{i}']}")
 
         return tune_res
