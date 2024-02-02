@@ -488,7 +488,7 @@ seurat_objects_SCT <- sapply(seurat_objects, function(s) {
   s %>%
     SCTransform() %>%
     FindVariableFeatures() %>%
-    RunPCA() %>%
+    RunPCA(npcs=50) %>%
     RunUMAP(dims = 1:20) -> seuratobj
 
   outfile <- paste0("rds_outs/", s$orig.ident[1], "_SCT.rds")
