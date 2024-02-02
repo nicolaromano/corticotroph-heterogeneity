@@ -142,7 +142,7 @@ if (output_format == "png") {
   )
 } else {
   pdf("plots/common_markers.pdf",
-    width = 5, height = 10
+    width = 10, height = 5
   )
 }
 
@@ -254,7 +254,12 @@ if (output_format == "png") {
 }
 
 grid.arrange(grobs = pl_list, ncol = 4)
-dev.off()
+
+if(output_format != "none")
+  {
+  dev.off()
+  }
+
 ##### Similarity graph ######
 
 format_dataset_name <- function(name) {
@@ -420,6 +425,10 @@ for (thr in c(10, 15, 20)) {
         ),
         names(memberships)
       )]
+    # "Lone" communities of only 1 node should be marked as NA
+    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]][tb[seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]]] == 1] <- NA
+    
+    # Convert to factor
     seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(unique(memberships)))
   }
 
