@@ -98,8 +98,9 @@ class LabelTransferTrainer:
 
         self._setup_models()
 
-    def _create_model(self, learning_rate: float, num_nodes: int,
-                      reg_factor: float, bn_momentum: float, num_classes: int) -> keras.Sequential:
+    def _create_model(self, learning_rate: float, num_layers: int, num_nodes: int,
+                      reg_factor: float, dropout_rate: float, 
+                      bn_momentum: float, num_classes: int) -> keras.Sequential:
         """
         Creates a single model.
         The model consists of an input layer, batch normalization, then a single hidden layer with ReLU activation 
@@ -112,8 +113,12 @@ class LabelTransferTrainer:
             The learning rate
         num_nodes : int
             The number of nodes in the hidden layer.
+        num_layers : int
+            The number of BN + hidden layers to use.
         reg_factor : float
             The regularization factor. We are using L1 regularization for all models.
+        dropout_rate : float
+            The dropout rate to use. If set to 0, no dropout layer will be added.
         bn_momentum : float
             The momentum for the batch normalization layer.
         num_classes : int
@@ -129,10 +134,15 @@ class LabelTransferTrainer:
         model = keras.Sequential()
         model.add(keras.layers.InputLayer(input_shape=(
             self.num_features,), name='input_layer'))
-        model.add(keras.layers.BatchNormalization(
-            name='batchnorm_layer', momentum=bn_momentum))
-        model.add(keras.layers.Dense(num_nodes, activation='relu',
-                  kernel_regularizer=L1(reg_factor), name='hidden_layer'))
+
+        for i in range(num_layers):
+            model.add(keras.layers.BatchNormalization(
+                name=f'batchnorm_layer_{i}', momentum=bn_momentum))
+            model.add(keras.layers.Dense(num_nodes, activation='relu',
+                      kernel_regularizer=L1(reg_factor), name=f'hidden_layer_{i}'))
+            if (dropout_rate > 0):
+                model.add(keras.layers.Dropout(dropout_rate, name=f'dropout{i}'))
+
         model.add(keras.layers.Dense(
             num_classes, activation='softmax', name='output_layer'))
 
@@ -164,8 +174,8 @@ class LabelTransferTrainer:
             # See https://www.tensorflow.org/api_docs/python/tf/keras/backend/clear_session
             tf.keras.backend.clear_session()
 
-            model = self._create_model(learning_rate=h['learning_rate'],
-                                       num_nodes=h['num_nodes'], reg_factor=h['reg_factor'],
+            model = self._create_model(learning_rate=h['learning_rate'], num_layers=h['num_layers'],
+                                       num_nodes=h['num_nodes'], reg_factor=h['reg_factor'], dropout_rate=h['dropout_rate'],
                                        bn_momentum=h['bn_momentum'], num_classes=h['num_classes'])
 
             self.models[h['dataset']] = model
@@ -462,31 +472,37 @@ class LabelTransferTrainer:
 
         assert hyperparam in {
             'learning_rate',
+            'num_layers',
             'num_nodes',
             'reg_factor',
+            'dropout_rate',
             'bn_momentum',
             'batch_size',
         }
 
         hyper = self._get_hyperparameters(dataset)
 
-        tune_res = {}
-
         expr_train, _, labels_train, _ = self._load_data(
             dataset, test_size=0.9)
+
+        tune_res = pd.DataFrame()
 
         for v in values:
             K.clear_session()
 
+            num_layers = hyper['num_layers'] if hyperparam != 'num_layers' else v
             num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v
             reg_factor = hyper['reg_factor'] if hyperparam != 'reg_factor' else v
             bn_momentum = hyper['bn_momentum'] if hyperparam != 'bn_momentum' else v
+            dropout_rate = hyper['dropout_rate'] if hyperparam != 'dropout_rate' else v
             learning_rate = hyper['learning_rate'] if hyperparam != 'learning_rate' else v
             batch_size = hyper['batch_size'] if hyperparam != 'batch_size' else v
 
             model = self._create_model(learning_rate=learning_rate,
+                                       num_layers=num_layers,
                                        num_nodes=num_nodes,
                                        reg_factor=reg_factor,
+                                       dropout_rate=dropout_rate,
                                        bn_momentum=bn_momentum,
                                        num_classes=hyper['num_classes'])
 
@@ -506,14 +522,28 @@ class LabelTransferTrainer:
                                     batch_size=batch_size,
                                     workers=4,
                                     verbose=False)
+                
+                print(" - max F1 score:", max(history.history['val_f1_score']))
 
-                # We get the best F1 score on the validation set.
-                # Note that we completely ignore the test set here, as we don't
-                # want to use it for model selection, since that would bias the results.
-                # Also, when training the final model we will use the highest scoring
-                # model on the validation set (saved through checkpoints), so we
-                # use the max here.
-                tune_res[f"{v}_{i}"] = max(history.history['val_f1_score'])
-                print(f"max F1 score: {tune_res[f'{v}_{i}']}")
+                tune_res = pd.concat([tune_res, pd.DataFrame({
+                    hyperparam: [v] * hyper['epochs'],
+                    "Fold": [i+1] * hyper['epochs'],
+                    "Epoch": range(1, hyper['epochs']+1),
+                    "Loss": history.history['loss'],
+                    "F1 score": history.history['f1_score'],
+                    "Val loss": history.history['val_loss'],
+                    "Val F1 score": history.history['val_f1_score']
+                })])
+                
+                # Enforce types
+                tune_res = tune_res.astype({
+                    hyperparam: float,
+                    "Fold": int,
+                    "Epoch": int,
+                    "Loss": float,
+                    "F1 score": float,
+                    "Val loss": float,
+                    "Val F1 score": float
+                })
 
         return tune_res
