@@ -30,7 +30,7 @@ names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(s) {
 # How much of the reads are Pomc?
 pomc_perc <- lapply(seurat_corticotrophs, function(s) {
   expr <- GetAssayData(s, slot = "counts")
-  sum(expr["Pomc",]) / sum(expr) * 100
+  sum(expr["Pomc", ]) / sum(expr) * 100
 })
 
 quantile(unlist(pomc_perc))
@@ -45,7 +45,7 @@ quantile(unlist(zero_perc))
 
 # Data to process ("M" or "F")
 data_to_process <- "M"
-output_format <- "none" # "pdf", "png" or "none"
+output_format <- "pdf" # "pdf", "png" or "none"
 
 markers_output_folder <- "markers"
 
@@ -136,21 +136,21 @@ for (d1 in 1:(length(seurat_corticotrophs) - 1)) {
 rownames(common_markers) <- NULL
 
 if (output_format == "png") {
-  png("plots/common_markers.png",
+  png(paste0("plots/common_markers_boxplot_", data_to_process, ".png"),
     width = 5, height = 10,
     units = "in", res = 300
   )
 } else {
-  pdf("plots/common_markers.pdf",
+  pdf(paste0("plots/common_markers_boxplot_", data_to_process, ".pdf"),
     width = 10, height = 5
   )
 }
 
 # For each cluster in each dataset, get the maximum % of common markers
 common_markers %>%
-  # Marker correspondance is transitive, but we want 
-  # to plot the maximum percentage both ways 
-  # i.e. if A and B have 10% common markers then 
+  # Marker correspondance is transitive, but we want
+  # to plot the maximum percentage both ways
+  # i.e. if A and B have 10% common markers then
   # we want to plot 10% for A-B and 10% for B-A
   bind_rows(
     common_markers %>%
@@ -170,11 +170,13 @@ common_markers %>%
   group_by(Dataset1_name, Dataset2_name, Cluster1) %>%
   summarise(Max_Pct = max(Percentage)) %>%
   ungroup() %>%
-  mutate(Dataset = str_split(Dataset1_name, " ", simplify = TRUE)[, 1]) %>% 
+  mutate(Dataset = str_split(Dataset1_name, " ", simplify = TRUE)[, 1]) %>%
   mutate(Dataset2 = str_split(Dataset2_name, " ", simplify = TRUE)[, 1]) %>%
   ggplot(aes(x = Dataset, y = Max_Pct)) +
-  geom_boxplot(aes(fill = Dataset2), outlier.size = 0.7,
-    outlier.alpha = 1, alpha = 0.9) +
+  geom_boxplot(aes(fill = Dataset2),
+    outlier.size = 0.7,
+    outlier.alpha = 1, alpha = 0.9
+  ) +
   scale_fill_brewer(palette = "Set4", name = "Dataset") +
   # Global box
   geom_boxplot(
@@ -255,10 +257,9 @@ if (output_format == "png") {
 
 grid.arrange(grobs = pl_list, ncol = 4)
 
-if(output_format != "none")
-  {
+if (output_format != "none") {
   dev.off()
-  }
+}
 
 ##### Similarity graph ######
 
@@ -427,7 +428,7 @@ for (thr in c(10, 15, 20)) {
       )]
     # "Lone" communities of only 1 node should be marked as NA
     seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]][tb[seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]]] == 1] <- NA
-    
+
     # Convert to factor
     seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(unique(memberships)))
   }
