@@ -13,13 +13,13 @@ library(pheatmap)
 library(nlme)
 library(emmeans)
 
-plot_out_type <- "none" # or "pdf" or "none"
+plot_out_type <- "pdf" # or "pdf" or "none"
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "F"
+data_to_process <- "M"
 
 # Number of random swaps to perform
 num_swaps <- 100
@@ -523,34 +523,70 @@ if (plot_out_type != "none") {
   dev.off()
 }
 
-png(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, "_with_shuffles.png"),
-  width = 15, height = 8, units = "in", res = 300
-)
-ggplot(all_avg_corr, aes(Group, Correlation)) +
-  geom_boxplot(
-    outlier.shape = NA, aes(fill = SameDataset),
-    position = position_dodge2(preserve = "single")
-  ) +
-  scale_fill_manual(values = c("#86A93F", "#B56492"), name = "Same dataset") +
-  geom_point(aes(col = SameDataset),
-    position = position_jitterdodge(jitter.width = 0.1)
-  ) +
-  scale_color_manual(values = c("#253700", "#6F1749"), name = "Same dataset") +
-  scale_x_discrete(labels = label_wrap(10)) +
-  geom_hline(yintercept = 0, lty = "dotted") +
-  ylim(c(-0.1, 0.3)) +
-  theme(
-    axis.text = element_text(size = 11),
-    strip.text = element_text(size = 12)
-  ) +
-  facet_wrap(~Dataset1)
-dev.off()
+plot_correlation_boxplot <- function(data, with_shuffles = FALSE) {
+  #' Plots a boxplot of the correlation values
+  #' @param data: the data to plot  
+  #' @param with_shuffles: whether to include the random shuffles in the plot
+  #' @return NULL, but saves the plot
+  
+  if (!with_shuffles) {
+    data <- data %>%
+      subset(Group %in% c("Within cluster", "Between clusters"))
+  }
+
+  ggplot(data, aes(Group, Correlation)) +
+    geom_boxplot(
+      outlier.shape = NA, aes(fill = SameDataset),
+      position = position_dodge2(preserve = "single")
+    ) +
+    scale_fill_manual(values = c("#86A93F", "#B56492"), name = "Same dataset") +
+    geom_point(aes(col = SameDataset),
+      position = position_jitterdodge(jitter.width = 0.1)
+    ) +
+    scale_color_manual(values = c("#253700", "#6F1749"), name = "Same dataset") +
+    scale_x_discrete(labels = label_wrap(10)) +
+    geom_hline(yintercept = 0, lty = "dotted") +
+    ylim(c(-0.1, 0.3)) +
+    theme(
+      axis.text = element_text(size = 11),
+      strip.text = element_text(size = 12)
+    ) +
+    facet_wrap(~Dataset1)
+}
+
+if (plot_out_type == "pdf") {
+  pdf(paste0("plots/correlation_maps/all_avg_corr", data_to_process, ".pdf"),
+    width = 15, height = 8
+  )
+} else if (plot_out_type == "png") {
+  png(paste0("plots/correlation_maps/all_avg_corr", data_to_process, ".png"),
+    width = 15, height = 8, units = "in", res = 300
+  )
+}
+
+plot_correlation_boxplot(all_avg_corr, TRUE)
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 # Put M and F together
 all_avg_corr_mf <- rbind(
   read.csv("all_average_correlationsM.csv"),
   read.csv("all_average_correlationsF.csv")
 )
+
+if (plot_out_type == "pdf") {
+    pdf("plots/correlation_maps/all_avg_corr_MF.pdf", width = 15, height = 8)
+  } else if (plot_out_type == "png") {
+    png("plots/correlation_maps/all_avg_corr_MF.png", width = 15, height = 8, units = "in", res = 300)
+}
+
+plot_correlation_boxplot(all_avg_corr_mf, FALSE)
+
+if (plot_out_type != "none") {
+  dev.off()
+}
 
 model <- all_avg_corr_mf %>%
   mutate(Sex = str_sub(Dataset1, -1)) %>%
@@ -560,9 +596,12 @@ model <- all_avg_corr_mf %>%
   )
 
 summary(model)
+intervals(model)[[1]] %>% 
+  as.data.frame() %>% 
+  format(digits = 2, scientific = FALSE)
 # pairwise comparisons
-emmeans(model, pairwise ~ Group | SameDataset)
-emmeans(model, pairwise ~ SameDataset | Group)
+emmeans(model, pairwise ~ Group | SameDataset) %>% confint
+emmeans(model, pairwise ~ SameDataset | Group) %>% confint
 
 # Get mean corr of random shuffle
 all_avg_corr_mf %>% 
