@@ -7,16 +7,20 @@ This class is used by the 09_train_models.ipynb script to train the models.
 from typing import Tuple
 import time
 import tensorflow as tf
-from tensorflow import keras
+import keras
 from keras import backend as K
-from keras.regularizers import L1
-import tensorflow_addons as tfa
+from keras.regularizers import L1, L2, L1L2
+from keras.callbacks import ModelCheckpoint
+from keras.metrics import F1Score, AUC
+# import tensorflow_addons as tfa
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, KFold
 import random
 import os
+from math import exp
 
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
 class LabelTransferTrainer:
     """
@@ -98,8 +102,67 @@ class LabelTransferTrainer:
 
         self._setup_models()
 
+    # def macro_F1_score(self, n_classes: int) -> float:
+    #     def F1_score(y_true: tf.Tensor, y_pred: tf.Tensor):
+    #         """
+    #         Computes the macro F1 score for a given set of true and predicted labels.
+
+    #         Parameters
+    #         ----------
+
+    #         y_true : np.array
+    #             The true labels.
+    #         y_pred : np.array
+    #             The predicted labels.
+    #         n_classes : int
+    #             The number of classes.
+    #         tau : float
+    #             The threshold to use for the predicted labels.
+
+    #         Returns
+    #         -------
+
+    #         f1_score : float
+    #             The macro F1 score.
+    #         """
+
+        #     # Compute the confusion matrix
+        #     y_pred = tf.argmax(y_pred, axis=1)
+        #     # Reshape as a 1D tensor
+        #     y_pred = tf.reshape(y_pred, [-1])
+
+        #     print(y_pred, y_true)
+        #     print(y_pred.shape, y_true.shape)
+        #     cm = tf.math.confusion_matrix(y_true, y_pred, num_classes=n_classes)
+
+        #     # Compute the precision and recall
+        #     precision = tf.math.divide_no_nan(tf.linalg.diag_part(cm), tf.reduce_sum(cm, axis=0))
+        #     recall = tf.math.divide_no_nan(tf.linalg.diag_part(cm), tf.reduce_sum(cm, axis=1))
+
+        #     # Compute the F1 score
+        #     f1_score = tf.math.divide_no_nan(2 * precision * recall, precision + recall)
+
+        #     # Compute the macro F1 score
+        #     return tf.reduce_mean(f1_score)
+
+        #     y_pred = K.round(y_pred)
+
+        #     tp = K.sum(K.cast(y_true * y_pred, 'float'), axis=0)
+        #     # tn = K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
+        #     fp = K.sum(K.cast((1 - y_true) * y_pred, 'float'), axis=0)
+        #     fn = K.sum(K.cast(y_true * (1 - y_pred), 'float'), axis=0)
+
+        #     p = tp / (tp + fp + K.epsilon())
+        #     r = tp / (tp + fn + K.epsilon())
+
+        #     f1 = 2*p*r / (p+r+K.epsilon())
+        #     f1 = tf.where(tf.math.is_nan(f1), tf.zeros_like(f1), f1)
+        #     return K.mean(f1)
+
+        # return F1_score    
+        
     def _create_model(self, learning_rate: float, num_layers: int, num_nodes: int,
-                      reg_factor: float, dropout_rate: float, 
+                      reg_factor: float, reg_type: str, dropout_rate: float,
                       bn_momentum: float, num_classes: int) -> keras.Sequential:
         """
         Creates a single model.
@@ -116,7 +179,9 @@ class LabelTransferTrainer:
         num_layers : int
             The number of BN + hidden layers to use.
         reg_factor : float
-            The regularization factor. We are using L1 regularization for all models.
+            The regularization factor.
+        reg_type : str
+            The type of regularization to use. Can be 'l1', 'l2' or 'l1l2'.
         dropout_rate : float
             The dropout rate to use. If set to 0, no dropout layer will be added.
         bn_momentum : float
@@ -132,25 +197,28 @@ class LabelTransferTrainer:
         """
 
         model = keras.Sequential()
-        model.add(keras.layers.InputLayer(input_shape=(
+        model.add(keras.layers.InputLayer(shape=(
             self.num_features,), name='input_layer'))
 
         for i in range(num_layers):
             model.add(keras.layers.BatchNormalization(
                 name=f'batchnorm_layer_{i}', momentum=bn_momentum))
+            kernel_regularizer = L1 if reg_type == 'l1' else L2 if reg_type == 'l2' else L1L2
             model.add(keras.layers.Dense(num_nodes, activation='relu',
-                      kernel_regularizer=L1(reg_factor), name=f'hidden_layer_{i}'))
+                      kernel_regularizer=kernel_regularizer(reg_factor), name=f'hidden_layer_{i}'))
             if (dropout_rate > 0):
-                model.add(keras.layers.Dropout(dropout_rate, name=f'dropout{i}'))
+                model.add(keras.layers.Dropout(
+                    dropout_rate, name=f'dropout{i}'))
 
         model.add(keras.layers.Dense(
             num_classes, activation='softmax', name='output_layer'))
 
         optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         model.compile(optimizer=optimizer,
-                      loss='categorical_crossentropy',
-                      metrics=[tfa.metrics.F1Score(num_classes=num_classes, average='macro')])
-
+                      loss='categorical_crossentropy',                      
+                      metrics = ['accuracy', F1Score(average='micro', name='micro_f1_score'),
+                                 F1Score(average='macro', name='macro_f1_score'),
+                                 AUC(num_thresholds = 100, name='ROCAUC')])
         return model
 
     def _setup_models(self) -> None:
@@ -175,7 +243,8 @@ class LabelTransferTrainer:
             tf.keras.backend.clear_session()
 
             model = self._create_model(learning_rate=h['learning_rate'], num_layers=h['num_layers'],
-                                       num_nodes=h['num_nodes'], reg_factor=h['reg_factor'], dropout_rate=h['dropout_rate'],
+                                       num_nodes=h['num_nodes'], reg_factor=h['reg_factor'], 
+                                       reg_type=h['reg_type'], dropout_rate=h['dropout_rate'],
                                        bn_momentum=h['bn_momentum'], num_classes=h['num_classes'])
 
             self.models[h['dataset']] = model
@@ -235,6 +304,25 @@ class LabelTransferTrainer:
         return (expr_data_train, expr_data_test,
                 labels_data_train, labels_data_test)
 
+    def clear_saved_models(self) -> None:
+        """
+        Clears the saved models and training history from the output directory.
+
+        Parameters
+        ----------
+
+        None
+
+        Returns
+        -------
+
+        None
+        """
+
+        for f in os.listdir(self.output_dir):
+            if (f.endswith('.keras') or f.endswith('.csv')) and "_best_" in f:
+                os.remove(os.path.join(self.output_dir, f))
+                
     def _train_model(self,
                      model: keras.Sequential,
                      dataset: str,
@@ -267,31 +355,33 @@ class LabelTransferTrainer:
         print(f"Training model {dataset} for {epochs} epochs...")
 
         date = time.strftime("%Y%m%d-%H%M%S")
-        # Save model as <dataset_name>_best_<date>-<time>_ep<num_epochs>-f1sc<f1_score>.hdf5
-        checkpoint = keras.callbacks.ModelCheckpoint(f"{self.output_dir}/{dataset}_best_{date}_ep" +
-                                                     "{epoch:02d}-f1sc{val_f1_score:.2f}.hdf5",
-                                                     monitor='val_f1_score',
+        # Save model as <dataset_name>_best_<date>-<time>_ep<num_epochs>-f1sc<macro_f1_score>.keras
+        checkpoint = ModelCheckpoint(f"{self.output_dir}{dataset}_best_{date}_ep" +
+                                                     "{epoch:02d}-f1_{val_macro_f1_score:.2f}.keras",
+                                                     monitor='val_macro_f1_score',
                                                      save_best_only=True,
                                                      initial_value_threshold=0.5,
                                                      mode='max')
-
+        
         history = model.fit(train_expr, train_labels,
                             validation_split=0.2,
                             epochs=epochs,
                             batch_size=batch_size,
-                            verbose=self.verbose,
+                            verbose="auto",
                             callbacks=[checkpoint])
 
         # Find all the files in the output directory with the pattern
-        # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{f1_score:.2f}.hdf5"
+        # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{macro_f1_score:.2f}.keras"
         filenames = [f for f in os.listdir(
             self.output_dir) if f.startswith(f"{dataset}_best_")]
 
+        if (len(filenames) == 0):
+            raise Exception(
+                f"No files found in {self.output_dir} for dataset {dataset}.")
+
         # Find the file with the highest F1 score
-        # Files are named as <dataset_name>_best_<date>-<time>_ep<num_epochs>-f1sc<f1_score>.hdf5
-        # We split by - and get the f1_score part, then remove the .hdf5 extension and the f1sc prefix
-        scores = [f.split('-')[2] for f in filenames]
-        scores = [float(s[4:-5]) for s in scores]
+        scores = [f.split('f1_')[1] for f in filenames]
+        scores = [float(f.split('.keras')[0]) for f in scores]
 
         for i, f in enumerate(filenames):
             if (scores[i] < max(scores)):
@@ -302,9 +392,7 @@ class LabelTransferTrainer:
                 f"Loading best model for {dataset} from {filenames[np.argmax(scores)]}...")
 
         # Load the best model
-        model = keras.models.load_model(
-            os.path.join(self.output_dir, filenames[np.argmax(scores)]),
-            custom_objects={'F1Score': tfa.metrics.F1Score})
+        model = keras.models.load_model(filepath = os.path.join(self.output_dir, filenames[np.argmax(scores)]))
 
         # Save history to file
         pd.DataFrame(history.history).to_csv(
@@ -400,6 +488,8 @@ class LabelTransferTrainer:
                 row['dataset'])
             metrics[row['dataset']] = self.models[row['dataset']].evaluate(
                 expr_test, labels_test, batch_size=row['batch_size'])
+            metrics_names = ['accuracy', 'micro_f1_score', 'macro_f1_score', 'ROCAUC']
+            metrics[row['dataset']] = dict(zip(metrics_names, metrics[row['dataset']]))
 
         return metrics
 
@@ -447,7 +537,7 @@ class LabelTransferTrainer:
 
         return self.hyperparams[self.hyperparams['dataset'] == dataset].to_dict(orient='records')[0]
 
-    def tune_hyperparam(self, dataset: str, hyperparam: str, values: list, n_folds: int = 5) -> dict:
+    def tune_hyperparam(self, dataset: str, hyperparam: str, values: list, n_folds: int = 5) -> pd.DataFrame:
         """
         Tests the effect of changing an hyperparameter on the performance of a single model
 
@@ -456,30 +546,25 @@ class LabelTransferTrainer:
 
         dataset : str
             The name of the dataset to use.
-        hyperparam : str
+        hyperparam: str
             The name of the hyperparameter to test. This should be one of the following:
-            learning_rate, num_nodes, reg_factor, bn_momentum, batch_size            
+            learning_rate, num_layers, num_nodes, reg_factor, reg_type, dropout_rate, bn_momentum, batch_size
         values : list
-            The values to test.
+            The values to test for the hyperparameter
         n_folds : int, optional, default = 5
             The number of folds to use for cross-validation.
 
         Returns
         -------
 
-        The F1 score for each value of the hyperparameter.
+        tune_res : pd.DataFrame containing the results of the hyperparameter tuning.
         """
 
-        assert hyperparam in {
-            'learning_rate',
-            'num_layers',
-            'num_nodes',
-            'reg_factor',
-            'dropout_rate',
-            'bn_momentum',
-            'batch_size',
-        }
-
+        valid_hyperparameters = ['learning_rate', 'num_layers', 'num_nodes', 'reg_factor', 
+                                 'reg_type', 'dropout_rate', 'bn_momentum', 'batch_size']
+        
+        assert hyperparam in valid_hyperparameters        
+        
         hyper = self._get_hyperparameters(dataset)
 
         expr_train, _, labels_train, _ = self._load_data(
@@ -488,23 +573,14 @@ class LabelTransferTrainer:
         tune_res = pd.DataFrame()
 
         for v in values:
-            K.clear_session()
-
             num_layers = hyper['num_layers'] if hyperparam != 'num_layers' else v
-            num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v
+            num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v            
             reg_factor = hyper['reg_factor'] if hyperparam != 'reg_factor' else v
+            reg_type = hyper['reg_type'] if hyperparam != 'reg_type' else v
             bn_momentum = hyper['bn_momentum'] if hyperparam != 'bn_momentum' else v
             dropout_rate = hyper['dropout_rate'] if hyperparam != 'dropout_rate' else v
             learning_rate = hyper['learning_rate'] if hyperparam != 'learning_rate' else v
             batch_size = hyper['batch_size'] if hyperparam != 'batch_size' else v
-
-            model = self._create_model(learning_rate=learning_rate,
-                                       num_layers=num_layers,
-                                       num_nodes=num_nodes,
-                                       reg_factor=reg_factor,
-                                       dropout_rate=dropout_rate,
-                                       bn_momentum=bn_momentum,
-                                       num_classes=hyper['num_classes'])
 
             print(
                 f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam} = {v}...")
@@ -514,36 +590,166 @@ class LabelTransferTrainer:
 
             for i, (train, val) in enumerate(kfold.split(expr_train, labels_train)):
                 print(f"Fold {i+1}", end="...")
+                
+                # Reset model
+                K.clear_session()
+                model = self._create_model(learning_rate=learning_rate,
+                                           num_layers=num_layers,
+                                           num_nodes=num_nodes,
+                                           reg_factor=reg_factor,
+                                           reg_type=reg_type,
+                                           dropout_rate=dropout_rate,
+                                           bn_momentum=bn_momentum,
+                                           num_classes=hyper['num_classes'])           
 
                 history = model.fit(expr_train.iloc[train], labels_train[train],
                                     validation_data=(
                                         expr_train.iloc[val], labels_train[val]),
                                     epochs=hyper['epochs'],
-                                    batch_size=batch_size,
-                                    workers=4,
-                                    verbose=False)
-                
-                print(" - max F1 score:", max(history.history['val_f1_score']))
+                                    batch_size=batch_size,            
+                                    verbose=self.verbose)
+
+                print("max F1 score:", max(history.history['val_macro_f1_score']))
 
                 tune_res = pd.concat([tune_res, pd.DataFrame({
                     hyperparam: [v] * hyper['epochs'],
                     "Fold": [i+1] * hyper['epochs'],
                     "Epoch": range(1, hyper['epochs']+1),
                     "Loss": history.history['loss'],
-                    "F1 score": history.history['f1_score'],
+                    "Macro F1 score": history.history['macro_f1_score'],
+                    "Micro F1 score": history.history['micro_f1_score'],
+                    "ROCAUC": history.history['ROCAUC'],
                     "Val loss": history.history['val_loss'],
-                    "Val F1 score": history.history['val_f1_score']
+                    "Val Macro F1 score": history.history['val_macro_f1_score'],
+                    "Val Micro F1 score": history.history['val_micro_f1_score'],
+                    "Val ROCAUC": history.history['val_ROCAUC']
                 })])
-                
+
                 # Enforce types
                 tune_res = tune_res.astype({
-                    hyperparam: float,
+                    hyperparam: float if hyperparam not in {'reg_type'} else str,
                     "Fold": int,
                     "Epoch": int,
                     "Loss": float,
-                    "F1 score": float,
+                    "Macro F1 score": float,
+                    "Micro F1 score": float,
+                    "ROCAUC": float,
                     "Val loss": float,
-                    "Val F1 score": float
+                    "Val Macro F1 score": float,
+                    "Val Micro F1 score": float,
+                    "Val ROCAUC": float
                 })
+
+        return tune_res
+    
+    def tune_two_hyperparameters(self, dataset:str,
+                                 hyperparam1:str, hyperparam2:str, values1:list, values2:list, n_folds:int=5) -> pd.DataFrame:
+        """
+        Tests the effect of changing two hyperparameters on the performance of a single model
+
+        Parameters
+        ----------
+
+        dataset: str
+            The name of the dataset to use.
+        hyperparam1, 2: str
+            The name of the hyperparameters to test. This should be one of the following:
+            learning_rate, num_layers, num_nodes, reg_factor, reg_type, dropout_rate, bn_momentum, batch_size
+        values1, 2 : list
+            The values to test for the hyperparameters
+        n_folds : int, optional, default = 5
+            The number of folds to use for cross-validation.
+
+        Returns
+        -------
+
+        tune_res : pd.DataFrame containing the results of the hyperparameter tuning.
+        """
+
+        valid_hyperparameters = ['learning_rate', 'num_layers', 'num_nodes', 'reg_factor', 
+                                 'reg_type', 'dropout_rate', 'bn_momentum', 'batch_size']
+        
+        if not hyperparam1 in valid_hyperparameters:
+            raise ValueError(f"Invalid hyperparameter {hyperparam1}")
+        if not hyperparam2 in valid_hyperparameters:
+            raise ValueError(f"Invalid hyperparameter {hyperparam2}")
+        
+        if hyperparam1 == hyperparam2:
+            raise ValueError("The two hyperparameters to tune should be different")
+        
+        hyper = self._get_hyperparameters(dataset)
+        expr_train, _, labels_train, _ = self._load_data(dataset, test_size=0.9)
+
+        tune_res = pd.DataFrame()
+
+        for v1 in values1:
+            for v2 in values2:
+                num_layers = v1 if hyperparam1 == 'num_layers' else v2 if hyperparam2 == 'num_layers' else hyper['num_layers']
+                num_nodes = v1 if hyperparam1 == 'num_nodes' else v2 if hyperparam2 == 'num_nodes' else hyper['num_nodes']
+                reg_factor = v1 if hyperparam1 == 'reg_factor' else v2 if hyperparam2 == 'reg_factor' else hyper['reg_factor']
+                reg_type = v1 if hyperparam1 == 'reg_type' else v2 if hyperparam2 == 'reg_type' else hyper['reg_type']
+                bn_momentum = v1 if hyperparam1 == 'bn_momentum' else v2 if hyperparam2 == 'bn_momentum' else hyper['bn_momentum']
+                dropout_rate = v1 if hyperparam1 == 'dropout_rate' else v2 if hyperparam2 == 'dropout_rate' else hyper['dropout_rate']
+                learning_rate = v1 if hyperparam1 == 'learning_rate' else v2 if hyperparam2 == 'learning_rate' else hyper['learning_rate']
+                batch_size = v1 if hyperparam1 == 'batch_size' else v2 if hyperparam2 == 'batch_size' else hyper['batch_size']
+                
+                print(f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam1} = {v1} and {hyperparam2} = {v2}")
+
+                kfold = KFold(n_splits=n_folds, shuffle=True,
+                            random_state=self.random_seed)
+
+                for i, (train, val) in enumerate(kfold.split(expr_train, labels_train)):
+                    print(f"Fold {i+1}", end="...")
+                    
+                    # Reset model
+                    K.clear_session()
+                    model = self._create_model(learning_rate=learning_rate,
+                                            num_layers=num_layers,
+                                            num_nodes=num_nodes,
+                                            reg_factor=reg_factor,
+                                            reg_type=reg_type,
+                                            dropout_rate=dropout_rate,
+                                            bn_momentum=bn_momentum,
+                                            num_classes=hyper['num_classes'])           
+
+                    history = model.fit(expr_train.iloc[train], labels_train[train],
+                                        validation_data=(
+                                            expr_train.iloc[val], labels_train[val]),
+                                        epochs=hyper['epochs'],
+                                        batch_size=batch_size,
+                                        verbose=self.verbose)
+
+                    print("max macro F1 score:", max(history.history['val_macro_f1_score']))
+
+                    tune_res = pd.concat([tune_res, pd.DataFrame({
+                        hyperparam1: [v1] * hyper['epochs'],
+                        hyperparam2: [v2] * hyper['epochs'],
+                        "Fold": [i+1] * hyper['epochs'],
+                        "Epoch": range(1, hyper['epochs']+1),
+                        "Loss": history.history['loss'],
+                        "Macro F1 score": history.history['macro_f1_score'],
+                        "Micro F1 score": history.history['micro_f1_score'],
+                        "ROCAUC": history.history['ROCAUC'],
+                        "Val loss": history.history['val_loss'],
+                        "Val Macro F1 score": history.history['val_macro_f1_score'],
+                        "Val Micro F1 score": history.history['val_micro_f1_score'],
+                        "Val ROCAUC": history.history['val_ROCAUC']
+                    })])
+
+                    # Enforce types
+                    tune_res = tune_res.astype({
+                        hyperparam1: float if hyperparam1 not in {'reg_type'} else str,
+                        hyperparam2: float if hyperparam2 not in {'reg_type'} else str,
+                        "Fold": int,
+                        "Epoch": int,
+                        "Loss": float,
+                        "Macro F1 score": float,
+                        "Micro F1 score": float,
+                        "ROCAUC": float,
+                        "Val loss": float,
+                        "Val Macro F1 score": float,
+                        "Val Micro F1 score": float,
+                        "Val ROCAUC": float
+                    })
 
         return tune_res
