@@ -212,7 +212,7 @@ class LabelTransferTrainer:
             keras.utils.plot_model(model, to_file=os.path.join(
                 self.output_dir, f"{name}_model.png"), show_shapes=True)
 
-    def _load_data(self, dataset: str, test_size: float = 0.1) -> tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
+    def _load_data(self, dataset: str, test_size: float = 0.1) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Loads the data for a single dataset.
 
@@ -227,7 +227,7 @@ class LabelTransferTrainer:
         Returns
         -------
 
-        (expr_data_train, expr_data_test, labels_data_train, labels_data_test) : tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]
+        (expr_data_train, expr_data_test, labels_data_train, labels_data_test) : tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
             The expression data and labels for the training and test sets.
         """
 
@@ -269,7 +269,37 @@ class LabelTransferTrainer:
         for f in os.listdir(self.output_dir):
             if (f.endswith('.keras') or f.endswith('.csv')) and "_best_" in f:
                 os.remove(os.path.join(self.output_dir, f))
-                
+
+    def load_best_models(self) -> None:
+        """
+        Loads the best models from the output directory.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
+        all_models = [f for f in os.listdir(self.output_dir) if (f.endswith('.keras') and "_best_" in f)]
+
+        studies = set([m.split("_best_")[0] for m in all_models]) # Get the name of the studies
+        for s in studies:
+            models = [m for m in all_models if m.startswith(s)]
+            # Get F1 and date from the model name
+            f1 = [m.split("f1_")[1].replace(".keras", "") for m in models]
+            date = [m.split("_best_")[1].split("_ep")[0] for m in models]
+            # Get the model with the highest F1 score. If there are multiple, get the latest one
+            # Sort the models by date, with latest first
+            models = [m for _, m in sorted(zip(date, models), reverse=True)]
+            best_model = models[np.argmax([float(f) for f in f1])]
+            self.models[s] = keras.models.load_model(os.path.join(self.output_dir, best_model))
+            self.training_histories[s] = pd.read_csv(os.path.join(self.output_dir, f"{s}_history.csv"))
+            if self.verbose:
+                print(f"Loaded best model for {s} from {best_model}")
+            
+        
     def _train_model(self,
                      model: keras.Sequential,
                      dataset: str,
