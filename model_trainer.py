@@ -4,7 +4,6 @@ Defines the LabelTransferTrainer class, used to train the ANN models for label t
 The class uses the hyperparameters defined in the hyperparameters.csv file to build a MLP model for each dataset.
 This class is used by the 09_train_models.ipynb script to train the models.
 """
-from typing import Tuple
 import time
 import tensorflow as tf
 import keras
@@ -16,6 +15,7 @@ from keras.metrics import F1Score, AUC
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, KFold
+from sklearn.preprocessing import MinMaxScaler
 import random
 import os
 from math import exp
@@ -101,65 +101,6 @@ class LabelTransferTrainer:
         tf.random.set_seed(self.random_seed)
 
         self._setup_models()
-
-    # def macro_F1_score(self, n_classes: int) -> float:
-    #     def F1_score(y_true: tf.Tensor, y_pred: tf.Tensor):
-    #         """
-    #         Computes the macro F1 score for a given set of true and predicted labels.
-
-    #         Parameters
-    #         ----------
-
-    #         y_true : np.array
-    #             The true labels.
-    #         y_pred : np.array
-    #             The predicted labels.
-    #         n_classes : int
-    #             The number of classes.
-    #         tau : float
-    #             The threshold to use for the predicted labels.
-
-    #         Returns
-    #         -------
-
-    #         f1_score : float
-    #             The macro F1 score.
-    #         """
-
-        #     # Compute the confusion matrix
-        #     y_pred = tf.argmax(y_pred, axis=1)
-        #     # Reshape as a 1D tensor
-        #     y_pred = tf.reshape(y_pred, [-1])
-
-        #     print(y_pred, y_true)
-        #     print(y_pred.shape, y_true.shape)
-        #     cm = tf.math.confusion_matrix(y_true, y_pred, num_classes=n_classes)
-
-        #     # Compute the precision and recall
-        #     precision = tf.math.divide_no_nan(tf.linalg.diag_part(cm), tf.reduce_sum(cm, axis=0))
-        #     recall = tf.math.divide_no_nan(tf.linalg.diag_part(cm), tf.reduce_sum(cm, axis=1))
-
-        #     # Compute the F1 score
-        #     f1_score = tf.math.divide_no_nan(2 * precision * recall, precision + recall)
-
-        #     # Compute the macro F1 score
-        #     return tf.reduce_mean(f1_score)
-
-        #     y_pred = K.round(y_pred)
-
-        #     tp = K.sum(K.cast(y_true * y_pred, 'float'), axis=0)
-        #     # tn = K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
-        #     fp = K.sum(K.cast((1 - y_true) * y_pred, 'float'), axis=0)
-        #     fn = K.sum(K.cast(y_true * (1 - y_pred), 'float'), axis=0)
-
-        #     p = tp / (tp + fp + K.epsilon())
-        #     r = tp / (tp + fn + K.epsilon())
-
-        #     f1 = 2*p*r / (p+r+K.epsilon())
-        #     f1 = tf.where(tf.math.is_nan(f1), tf.zeros_like(f1), f1)
-        #     return K.mean(f1)
-
-        # return F1_score    
         
     def _create_model(self, learning_rate: float, num_layers: int, num_nodes: int,
                       reg_factor: float, reg_type: str, dropout_rate: float,
@@ -271,7 +212,7 @@ class LabelTransferTrainer:
             keras.utils.plot_model(model, to_file=os.path.join(
                 self.output_dir, f"{name}_model.png"), show_shapes=True)
 
-    def _load_data(self, dataset: str, test_size: float = 0.1) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
+    def _load_data(self, dataset: str, test_size: float = 0.1) -> tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
         """
         Loads the data for a single dataset.
 
@@ -286,13 +227,14 @@ class LabelTransferTrainer:
         Returns
         -------
 
-        (expr_data_train, expr_data_test, labels_data_train, labels_data_test) : Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]
+        (expr_data_train, expr_data_test, labels_data_train, labels_data_test) : tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]
             The expression data and labels for the training and test sets.
         """
 
         expr_data = pd.read_csv(os.path.join(
             self.data_dir, f"{dataset}_expression.csv"), index_col=0)
         expr_data = expr_data.T
+        
         labels_data = pd.read_csv(os.path.join(
             self.data_dir, f"{dataset}_clusters.csv"), index_col=0)
         labels_data = labels_data['Cluster'].values
@@ -300,7 +242,12 @@ class LabelTransferTrainer:
 
         expr_data_train, expr_data_test, labels_data_train, labels_data_test = train_test_split(
             expr_data, labels_data, train_size=1.0-test_size, random_state=self.random_seed)
-
+        
+        # Min-max scaling
+        scaler = MinMaxScaler()
+        expr_data_train = scaler.fit_transform(expr_data_train)
+        expr_data_test = scaler.transform(expr_data_test)        
+        
         return (expr_data_train, expr_data_test,
                 labels_data_train, labels_data_test)
 
@@ -327,7 +274,7 @@ class LabelTransferTrainer:
                      model: keras.Sequential,
                      dataset: str,
                      train_expr: pd.DataFrame, train_labels: pd.DataFrame,
-                     epochs, batch_size) -> Tuple[keras.Sequential, dict]:
+                     epochs, batch_size) -> tuple[keras.Sequential, dict]:
         """
         Trains a single model.
 
@@ -348,7 +295,7 @@ class LabelTransferTrainer:
 
         Returns
         -------
-        (model, history) : Tuple[keras.Sequential, dict]
+        (model, history) : tuple[keras.Sequential, dict]
             The trained model at the best epoch and the training history (full)
         """
         start_time = time.time()
@@ -602,9 +549,9 @@ class LabelTransferTrainer:
                                            bn_momentum=bn_momentum,
                                            num_classes=hyper['num_classes'])           
 
-                history = model.fit(expr_train.iloc[train], labels_train[train],
+                history = model.fit(expr_train[train], labels_train[train],
                                     validation_data=(
-                                        expr_train.iloc[val], labels_train[val]),
+                                        expr_train[val], labels_train[val]),
                                     epochs=hyper['epochs'],
                                     batch_size=batch_size,            
                                     verbose=self.verbose)
@@ -712,9 +659,9 @@ class LabelTransferTrainer:
                                             bn_momentum=bn_momentum,
                                             num_classes=hyper['num_classes'])           
 
-                    history = model.fit(expr_train.iloc[train], labels_train[train],
+                    history = model.fit(expr_train[train], labels_train[train],
                                         validation_data=(
-                                            expr_train.iloc[val], labels_train[val]),
+                                            expr_train[val], labels_train[val]),
                                         epochs=hyper['epochs'],
                                         batch_size=batch_size,
                                         verbose=self.verbose)
