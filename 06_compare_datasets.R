@@ -9,45 +9,23 @@ library(grid)
 library(gridExtra)
 library(tidyverse)
 library(pbapply)
+library(pheatmap)
 library(igraph)
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
-# General dataset stats
-
-# Load all, M+F
-filenames <- dir("rds_outs",
-  pattern = paste0("_subclustered.rds"),
-  full.names = TRUE
-)
-
-seurat_corticotrophs <- pblapply(filenames, readRDS)
-names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(s) {
-  s$orig.ident[1]
-})
-
-# How much of the reads are Pomc?
-pomc_perc <- lapply(seurat_corticotrophs, function(s) {
-  expr <- GetAssayData(s, slot = "counts")
-  sum(expr["Pomc", ]) / sum(expr) * 100
-})
-
-quantile(unlist(pomc_perc))
-
-# How many reads are 0?
-zero_perc <- lapply(seurat_corticotrophs, function(s) {
-  expr <- GetAssayData(s, slot = "counts")
-  sum(expr == 0) / (nrow(expr) * ncol(expr)) * 100
-})
-
-quantile(unlist(zero_perc))
+####### Compare datasets #######
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 output_format <- "pdf" # "pdf", "png" or "none"
 
-markers_output_folder <- "markers"
+markers_output_folder <- "markers/"
+if (!dir.exists(markers_output_folder)) {
+  dir.create(markers_output_folder)
+  print(paste("Created output directory", markers_output_folder))
+}
 
 filenames <- dir("rds_outs",
   pattern = paste0(data_to_process, "_subclustered.rds"),
@@ -84,12 +62,6 @@ all_markers <- lapply(seurat_corticotrophs, function(d) {
 })
 
 # Save all markers to csv
-out_dir <- "markers"
-if (!dir.exists(out_dir)) {
-  dir.create(out_dir)
-  print(paste("Created output directory", out_dir))
-}
-
 for (i in seq_along(all_markers)) {
   write.csv(all_markers[[i]], file.path(markers_output_folder, paste0(names(all_markers)[i], "_markers.csv")))
 }
@@ -191,6 +163,7 @@ common_markers %>%
   # ) +
   ylim(0, 100) +
   ylab("Maximum percentage of common markers") +
+  theme_minimal() +
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_text(size = 16),
@@ -233,7 +206,6 @@ g <- ggplot(data.frame(x = 8, y = 0), aes(x, y)) +
     guide = guide_legend(override.aes = list(size = 3))
   ) +
   theme_minimal()
-
 
 leg <- get_legend(g)
 leg$layout[2, ]$b <- 2
@@ -390,11 +362,16 @@ for (thr in c(10, 15, 20)) {
     )
   }
 
-  community_palette <- c(
-    "#F16745", "#FFC65D", "#7BC8A4",
-    "#4CC3D9", "#93648D", "#808070"
-  )
-
+  if (data_to_process == "M") {
+    community_palette <- c(
+      "#F16745", "#FFC65D", "#7BC8A4"
+    )
+  } else {
+    community_palette <- c(
+      "#F11E4E", "#5B2C6F",
+      "#1A9337", "#4CC3D9"
+    )
+  }
   get_similarity_graph(thr,
     out_radius = out_radius, in_radius = in_radius,
     node_palette = community_palette
@@ -454,7 +431,7 @@ for (thr in c(10, 15, 20)) {
     pdf(paste0("plots/umap_communities_common_markers_thr", thr, "_", data_to_process, ".pdf"),
       width = 7, height = 7
     )
-  } else {
+  } else if (output_format == "png") {
     png(paste0("plots/umap_communities_common_markers_thr", thr, "_", data_to_process, ".png"),
       width = 7, height = 7, units = "in", res = 300
     )
@@ -467,7 +444,309 @@ for (thr in c(10, 15, 20)) {
       gp = gpar(fontsize = 20)
     )
   )
-  dev.off()
+
+  if (output_format != "none") {
+    dev.off()
+  }
+
+  community_prop <- lapply(seurat_corticotrophs, function(s) {
+    table(Community = s$marker_community_10) %>%
+      as.data.frame() %>%
+      filter(Freq > 0) %>%
+      mutate(Freq = Freq / ncol(s) * 100) %>%
+      rbind(data.frame(Community = "None", Freq = 100 - sum(.$Freq))) %>%
+      mutate(Dataset = paste(s$author[1]))
+  })
+
+
+  if (output_format == "pdf") {
+    pdf(paste0("plots/community_proportions_thr", thr, "_", data_to_process, ".pdf"),
+      width = 7, height = 7
+    )
+  } else if (output_format == "png") {
+    png(paste0("plots/community_proportions_", data_to_process, ".png"),
+      width = 7, height = 7, units = "in", res = 300
+    )
+  }
+
+  community_prop <- do.call(rbind, community_prop)
+
+  p <- ggplot(community_prop, aes(x = Dataset, y = Freq, fill = fct_rev(Community))) +
+    scale_fill_manual(values = c(comm_colors, c("None" = "lightgray")), name = "Community") +
+    geom_bar(stat = "identity") +
+    ylab("Percentage of cells") +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "bottom"
+    )
+
+  print(p)
+
+  if (output_format != "none") {
+    dev.off()
+  }
+}
+
+# filenames <- dir("rds_outs",
+#   pattern = paste0(data_to_process, "_subclustered.rds"),
+#   full.names = TRUE
+# )
+# seurat_corticotrophs <- pblapply(filenames, readRDS)
+
+# Community-specific markers
+for (perc_similarity in c(10, 15, 20)) {
+  community_mark_intersection <- list()
+  community_mark_union <- list()
+  num_clusters_per_community <- list()
+
+  for (i in seq_along(seurat_corticotrophs)) {
+    obj <- seurat_corticotrophs[[i]]
+    dataset_name <- names(seurat_corticotrophs)[i]
+    for (cl in unique(Idents(obj))) {
+      comm_num <- obj[[paste0("marker_community_", perc_similarity)]][Idents(obj) == cl, ][1]
+
+      if (is.na(comm_num)) {
+        next
+      }
+
+      # INTERSECTION
+      if (is.null(community_mark_intersection[[paste0("comm_", comm_num)]])) {
+        community_mark_intersection[[paste0("comm_", comm_num)]] <- all_markers[[dataset_name]] %>%
+          filter(cluster == cl) %>%
+          pull(gene)
+      } else {
+        community_mark_intersection[[paste0("comm_", comm_num)]] <- intersect(
+          community_mark_intersection[[paste0("comm_", comm_num)]],
+          all_markers[[dataset_name]] %>%
+            filter(cluster == cl) %>%
+            pull(gene)
+        )
+      }
+
+      # UNION
+      if (is.null(community_mark_union[[paste0("comm_", comm_num)]])) {
+        community_mark_union[[paste0("comm_", comm_num)]] <- all_markers[[dataset_name]] %>%
+          filter(cluster == cl) %>%
+          pull(gene)
+      } else {
+        community_mark_union[[paste0("comm_", comm_num)]] <- union(
+          community_mark_union[[paste0("comm_", comm_num)]],
+          all_markers[[dataset_name]] %>%
+            filter(cluster == cl) %>%
+            pull(gene)
+        )
+      }
+
+      # Number of clusters per community
+      if (is.null(num_clusters_per_community[[paste0("comm_", comm_num)]])) {
+        num_clusters_per_community[[paste0("comm_", comm_num)]] <- 1
+      } else {
+        num_clusters_per_community[[paste0("comm_", comm_num)]] <- num_clusters_per_community[[paste0("comm_", comm_num)]] + 1
+      }
+    } # end for cl
+  } # end for i
+
+  num_clusters_per_community <- unlist(num_clusters_per_community)
+  # Only get the communities with more than one cluster
+  comm_names <- sort(names(num_clusters_per_community[num_clusters_per_community > 1]))
+  comm_names <- comm_names[!is.na(comm_names)]
+
+  # Write to file
+  for (cn in comm_names) {
+    community_un <- community_mark_union[[cn]]
+    community_in <- community_mark_intersection[[cn]]
+
+    print(paste(
+      "Community", cn, " - markers intersection / union = ",
+      format(length(community_in) / length(community_un) * 100, digits = 2), "%"
+    ))
+
+    write.table(community_un, file.path(markers_output_folder, paste0(cn, "_", data_to_process, "_perc_simil_", perc_similarity, "_markers_union.csv")),
+      row.names = FALSE, col.names = FALSE, quote = FALSE
+    )
+    write.table(community_in, file.path(markers_output_folder, paste0(cn, "_", data_to_process, "_perc_simil_", perc_similarity, "_markers_intersection.csv")),
+      row.names = FALSE, col.names = FALSE, quote = FALSE
+    )
+  }
+
+  # Write a table of Dataset, Cluster, Community
+  community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
+    obj <- seurat_corticotrophs[[i]]
+    dataset_name <- names(seurat_corticotrophs)[i]
+
+    clusters <- unique(Idents(obj))
+    sapply(clusters, function(cl) {
+      subset(obj, idents = cl)[[paste0(
+        "marker_community_",
+        perc_similarity
+      )]][1, 1]
+    }) -> communities
+
+    res <- data.frame(
+      Dataset = dataset_name,
+      Cluster = clusters,
+      Community = communities
+    )
+  })
+
+  do.call("rbind", community_df) %>%
+    write.csv(
+      file.path(
+        markers_output_folder, paste0("markers_communities_", perc_similarity, "_", data_to_process, ".csv")
+      ),
+      row.names = FALSE
+    )
+} # end for perc_similarity
+
+marker_stats <- data.frame()
+
+for (simil in c(10, 15, 20)) {
+  markers_filenames <- dir(markers_output_folder,
+    pattern = paste0(data_to_process, "_perc_simil_", simil, ".*_union.csv"),
+    full.names = TRUE
+  )
+  total_markers <- sapply(markers_filenames, function(f) {
+    read.table(f) %>%
+      nrow()
+  })
+
+  markers_filenames <- dir(markers_output_folder,
+    pattern = paste0(data_to_process, "_perc_simil_", simil, ".*_intersection.csv"),
+    full.names = TRUE
+  )
+  common_markers <- sapply(markers_filenames, function(f) {
+    # Need to use try as some files are empty and read.table throws an error
+    marker_data <- NULL
+    try(marker_data <- read.table(f), silent = TRUE)
+    if (is.null(marker_data)) {
+      return(0)
+    }
+
+    return(nrow(marker_data))
+  })
+
+  communities <- sapply(strsplit(markers_filenames, "_"), function(x) {
+    x[2]
+  })
+  marker_stats <- rbind(
+    marker_stats,
+    data.frame(
+      Similarity = simil,
+      Community = communities,
+      Total_Markers = total_markers,
+      Common_Markers = common_markers
+    )
+  )
+} # end for simil
+
+write.csv(marker_stats, file.path(markers_output_folder, paste0("markers_stats_", data_to_process, ".csv")), row.names = FALSE)
+
+community_df <- read.csv(file.path(markers_output_folder, paste0("markers_communities_", 10, "_", data_to_process, ".csv")))
+
+# Upset plots
+plot_upSet <- function(community, all_markers, community_df) {
+  mrk_df <- lapply(seq_along(all_markers), function(i) {
+    all_markers[[i]] %>%
+      mutate(Dataset = names(all_markers)[i]) %>%
+      select(Dataset, cluster, gene) %>%
+      mutate(Community = community_df$Community[match(paste(names(all_markers)[i], cluster, sep = "-"), paste(community_df$Dataset, community_df$Cluster, sep = "-"))])
+  })
+
+  mrk_df <- do.call(rbind, mrk_df) %>%
+    filter(Community == community) %>%
+    rename(Cluster = cluster)
+
+  # Prepare data for the upset plot
+  # We want Dataset, Community, Cluster, Gene1, Gene2, Gene3, ...
+  # The values of the gene columns will be 0 or 1
+  # depending on whether the gene is present in that Dataset, Community, Cluster
+  mrk_df <- mrk_df %>%
+    pivot_wider(names_from = gene, values_from = gene, values_fn = length, values_fill = 0) %>%
+    # Group is the first letter of the dataset name plus the cluster number
+    mutate(Group = paste0(substr(Dataset, 1, 1), Cluster)) %>%
+    select(-Dataset, -Community, -Cluster)
+
+  upset_groups <- mrk_df$Group
+
+  mrk_df <- mrk_df %>%
+    select(-Group) %>%
+    t() %>%
+    as.data.frame() %>%
+    rownames_to_column("Gene")
+
+  colnames(mrk_df) <- upset_groups
+  head(mrk_df)
+  upset(mrk_df, order.by = "freq")
+}
+
+upset_plots <- lapply(1:3, function(comm) {
+  plot_upSet(comm, all_markers, community_df)
+})
+
+grid.arrange(grobs = upset_plots, ncol = 1)
+
+
+plot_perc_cell_per_marker <- function(perc_similarity = 10) {
+  #' Plots the percentage of cells in each dataset, for each community that express common markers
+  #' @param perc_similarity: optional, defaults to 10. The similarity threshold we're using
+
+  files <- list.files(markers_output_folder, pattern = paste0(data_to_process, "_perc_simil_", perc_similarity, ".*_union.csv"), full.names = TRUE)
+  community_summary <- read.csv(paste0(markers_output_folder, "markers_communities_", perc_similarity, "_", data_to_process, ".csv")) %>%
+    subset(!is.na(Community))
+
+  markers <- lapply(files, function(f) {
+    df <- data.frame(read.table(f)) %>%
+      rename(Gene = 1) %>%
+      mutate(Community = paste("Community", strsplit(f, "_")[[1]][[2]]))
+  })
+
+  markers <- do.call(rbind, markers)
+
+  marker_expression <- lapply(seurat_corticotrophs, function(obj) {
+    expr_per_cluster <- sapply(unique(Idents(obj)), function(id) {
+      # Get expression for each cluster
+
+      expr <- GetAssayData(subset(obj, ident = id))[markers$Gene, ]
+      # mean the expression only in cells that express the gene...
+      expr <- apply(expr, 1, function(x) {
+        x <- x[x > 0]
+        (x - mean(x)) / sd(x)
+      })
+      expr <- sapply(expr, mean)
+      # perc <- apply(expr, 1, function(x){length(x[x>0]) / length(x) * 100})
+    })
+
+    colnames(expr_per_cluster) <- factor(unique(Idents(obj)))
+
+    expr_long <- expr_per_cluster %>%
+      as.data.frame() %>%
+      rownames_to_column("Gene") %>%
+      pivot_longer(cols = -Gene, values_to = "Expression", names_to = "Cluster") %>%
+      mutate(Cluster = as.integer(sub("V", "", Cluster))) %>%
+      left_join(markers, by = "Gene", relationship = "many-to-many") %>%
+      subset(!is.na(Community))
+
+    return(expr_long)
+  })
+
+  marker_expression <- lapply(names(marker_expression), function(x) {
+    marker_expression[[x]] <- marker_expression[[x]] %>%
+      mutate(Dataset = x)
+  })
+
+  marker_expression <- do.call(rbind, marker_expression)
+
+  marker_expression %>%
+    subset(!is.na(Expression)) %>%
+    group_by(Dataset, Cluster, Community) %>%
+    summarize(Mean_Expression = mean(Expression)) %>%
+    ggplot(aes(x = Community, y = Cluster)) +
+    geom_tile(aes(fill = Mean_Expression)) +
+    scale_fill_gradient2(low = "#00aeff", mid = "#ffffe4", high = "#e96363") +
+    facet_grid(Dataset ~ 1, scales = "free") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, size = 5))
 }
 
 # Save the seurat objects back to disk
@@ -475,162 +754,91 @@ pblapply(seurat_corticotrophs, function(s) {
   saveRDS(s, paste0("rds_outs/", s$orig.ident[1], "_subclustered.rds"))
 })
 
-# Community-specific markers
-community_mark_intersection <- list()
-community_mark_union <- list()
-num_clusters_per_community <- list()
+####### GENERAL DATASET STATS #######
 
-perc_similarity <- 15
+# Load all, M+F
+filenames <- dir("rds_outs",
+  pattern = paste0("_subclustered.rds"),
+  full.names = TRUE
+)
 
-for (i in seq_along(seurat_corticotrophs)) {
-  obj <- seurat_corticotrophs[[i]]
-  dataset_name <- names(seurat_corticotrophs)[i]
-  for (cl in unique(Idents(obj))) {
-    comm_num <- obj[[paste0("marker_community_", perc_similarity)]][Idents(obj) == cl, ][1]
-
-    # INTERSECTION
-    if (is.null(community_mark_intersection[[paste0("comm_", comm_num)]])) {
-      community_mark_intersection[[paste0("comm_", comm_num)]] <- all_markers[[dataset_name]] %>%
-        filter(cluster == cl) %>%
-        pull(gene)
-    } else {
-      community_mark_intersection[[paste0("comm_", comm_num)]] <- intersect(
-        community_mark_intersection[[paste0("comm_", comm_num)]],
-        all_markers[[dataset_name]] %>%
-          filter(cluster == cl) %>%
-          pull(gene)
-      )
-    }
-
-    # UNION
-    if (is.null(community_mark_union[[paste0("comm_", comm_num)]])) {
-      community_mark_union[[paste0("comm_", comm_num)]] <- all_markers[[dataset_name]] %>%
-        filter(cluster == cl) %>%
-        pull(gene)
-    } else {
-      community_mark_union[[paste0("comm_", comm_num)]] <- union(
-        community_mark_union[[paste0("comm_", comm_num)]],
-        all_markers[[dataset_name]] %>%
-          filter(cluster == cl) %>%
-          pull(gene)
-      )
-    }
-
-    # Number of clusters per community
-    if (is.null(num_clusters_per_community[[paste0("comm_", comm_num)]])) {
-      num_clusters_per_community[[paste0("comm_", comm_num)]] <- 1
-    } else {
-      num_clusters_per_community[[paste0("comm_", comm_num)]] <- num_clusters_per_community[[paste0("comm_", comm_num)]] + 1
-    }
-  } # end for cl
-} # end for i
-
-num_clusters_per_community <- unlist(num_clusters_per_community)
-# Only get the communities with more than one cluster
-comm_names <- sort(names(num_clusters_per_community[num_clusters_per_community > 1]))
-
-# Write to file
-for (cn in comm_names) {
-  community_un <- community_mark_union[[cn]]
-  community_in <- community_mark_intersection[[cn]]
-
-  print(paste(
-    "Community", cn, " - markers intersection / union = ",
-    format(length(community_in) / length(community_un) * 100, digits = 2), "%"
-  ))
-
-  write.table(community_un, file.path(markers_output_folder, paste0(cn, "_markers_union.csv")),
-    row.names = FALSE, col.names = FALSE, quote = FALSE
-  )
-  write.table(community_in, file.path(markers_output_folder, paste0(cn, "_markers_intersection.csv")),
-    row.names = FALSE, col.names = FALSE, quote = FALSE
-  )
-}
-
-# Write a table of Dataset, Cluster, Community
-community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
-  obj <- seurat_corticotrophs[[i]]
-  dataset_name <- names(seurat_corticotrophs)[i]
-
-  clusters <- unique(Idents(obj))
-  sapply(clusters, function(cl) {
-    subset(obj, idents = cl)[[paste0(
-      "marker_community_",
-      perc_similarity
-    )]][1, 1]
-  }) -> communities
-
-  res <- data.frame(
-    Dataset = dataset_name,
-    Cluster = clusters,
-    Community = communities
-  )
+seurat_corticotrophs <- pblapply(filenames, readRDS)
+names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(s) {
+  s$orig.ident[1]
 })
 
-do.call("rbind", community_df) %>%
-  write.csv(
-    file.path(
-      markers_output_folder, paste0("markers_communities_", perc_similarity, ".csv")
-    ),
-    row.names = FALSE
-  )
+# How much of the reads are Pomc?
+pomc_perc <- lapply(seurat_corticotrophs, function(s) {
+  expr <- GetAssayData(s, slot = "counts")
+  sum(expr["Pomc", ]) / sum(expr) * 100
+})
 
-plot_gene_rankings <- function(seurat_corticotrophs, reference_dataset, outfile = NULL) {
-  #' Plots the gene rankings for each dataset, using one
-  #' dataset as a reference.
-  #'
-  #' Params
-  #' ------
-  #' seurat_corticotrophs: A list of Seurat objects.
-  #' reference_dataset: The dataset to use as a reference (as an index in the list)
-  #' outfile: The file to save the plot to. If NULL, the plot is not saved.
+quantile(unlist(pomc_perc))
 
-  # Get the gene rankings for each dataset
-  rankings <- lapply(seurat_corticotrophs, function(s) {
-    expr <- GetAssayData(s, slot = "data")
-    data.frame(
-      Dataset = paste(s$author[1], s$year[1], "-", s$sex[1]),
-      Gene = rownames(s),
-      Rank = rank(-rowMeans(expr)),
-      AvgExpr = rowMeans(expr)
-    ) %>%
-      arrange(Rank)
-  })
+# How many reads are 0?
+zero_perc <- lapply(seurat_corticotrophs, function(s) {
+  expr <- GetAssayData(s, slot = "counts")
+  sum(expr == 0) / (nrow(expr) * ncol(expr)) * 100
+})
 
-  # Get the ranked gene name for the reference dataset
-  ref_rankings <- rankings[[reference_dataset]] %>%
-    arrange(Rank) %>%
-    pull(Gene)
+quantile(unlist(zero_perc))
 
-  # Now sort the rankings by the reference dataset
-  ranks <- lapply(rankings, function(r) {
-    r[ref_rankings, ]$Rank
-  })
 
-  if (!is.null(outfile)) {
-    png(outfile, width = 15, height = 10, units = "in", res = 300)
-  }
+##### Gene rankings #####
 
-  g <- do.call("rbind", rankings) %>%
-    as.data.frame() %>%
-    # Substitute the ranks with the ranks sorted by the reference dataset's order
-    mutate(Rank = Reduce(c, ranks)) %>%
-    ggplot(aes(x = Rank, AvgExpr)) +
-    geom_line() +
-    scale_y_log10() +
-    ylab("Average expression") +
-    facet_wrap(~Dataset) +
-    theme(
-      axis.title = element_text(size = 15),
-      axis.text = element_text(size = 14),
-      strip.text = element_text(size = 16)
-    )
+# plot_gene_rankings <- function(seurat_corticotrophs, reference_dataset, outfile = NULL) {
+#   #' Plots the gene rankings for each dataset, using one
+#   #' dataset as a reference.
+#   #' @param seurat_corticotrophs: A list of Seurat objects.
+#   #' @param reference_dataset: The dataset to use as a reference (as an index in the list)
+#   #' @param outfile: The file to save the plot to. If NULL, the plot is not saved.
 
-  print(g)
+#   # Get the gene rankings for each dataset
+#   rankings <- lapply(seurat_corticotrophs, function(s) {
+#     expr <- GetAssayData(s, slot = "data")
+#     data.frame(
+#       Dataset = paste(s$author[1], s$year[1], "-", s$sex[1]),
+#       Gene = rownames(s),
+#       Rank = rank(-rowMeans(expr)),
+#       AvgExpr = rowMeans(expr)
+#     ) %>%
+#       arrange(Rank)
+#   })
 
-  if (!is.null(outfile)) {
-    dev.off()
-  }
-}
+#   # Get the ranked gene name for the reference dataset
+#   ref_rankings <- rankings[[reference_dataset]] %>%
+#     arrange(Rank) %>%
+#     pull(Gene)
 
-plot_gene_rankings(seurat_corticotrophs, 1, paste0("plots/gene_rankings_", data_to_process, ".png"))
+#   # Now sort the rankings by the reference dataset
+#   ranks <- lapply(rankings, function(r) {
+#     r[ref_rankings, ]$Rank
+#   })
+
+#   if (!is.null(outfile)) {
+#     png(outfile, width = 15, height = 10, units = "in", res = 300)
+#   }
+
+#   g <- do.call("rbind", rankings) %>%
+#     as.data.frame() %>%
+#     # Substitute the ranks with the ranks sorted by the reference dataset's order
+#     mutate(Rank = Reduce(c, ranks)) %>%
+#     ggplot(aes(x = Rank, AvgExpr)) +
+#     geom_line() +
+#     scale_y_log10() +
+#     ylab("Average expression") +
+#     facet_wrap(~Dataset) +
+#     theme(
+#       axis.title = element_text(size = 15),
+#       axis.text = element_text(size = 14),
+#       strip.text = element_text(size = 16)
+#     )
+
+#   print(g)
+
+#   if (!is.null(outfile)) {
+#     dev.off()
+#   }
+# }
+
+# plot_gene_rankings(seurat_corticotrophs, 1, paste0("plots/gene_rankings_", data_to_process, ".png"))
