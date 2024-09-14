@@ -19,7 +19,7 @@ plot_out_type <- "pdf" # or "pdf" or "none"
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 
 # Number of random swaps to perform
 num_swaps <- 100
@@ -517,13 +517,18 @@ all_avg_corr %>%
     axis.text = element_text(size = 11),
     strip.text = element_text(size = 12)
   ) +
-  facet_wrap(~Dataset1)
+  facet_wrap(~Dataset1) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12),
+    strip.text = element_text(size = 14)
+  )
 
 if (plot_out_type != "none") {
   dev.off()
 }
 
-plot_correlation_boxplot <- function(data, with_shuffles = FALSE) {
+plot_correlation_boxplot <- function(data, with_shuffles = FALSE, ncol = 4) {
   #' Plots a boxplot of the correlation values
   #' @param data: the data to plot  
   #' @param with_shuffles: whether to include the random shuffles in the plot
@@ -547,11 +552,12 @@ plot_correlation_boxplot <- function(data, with_shuffles = FALSE) {
     scale_x_discrete(labels = label_wrap(10)) +
     geom_hline(yintercept = 0, lty = "dotted") +
     ylim(c(-0.1, 0.3)) +
+    theme_minimal() +
     theme(
-      axis.text = element_text(size = 11),
-      strip.text = element_text(size = 12)
+      axis.text = element_text(size = 12),
+      strip.text = element_text(size = 14)
     ) +
-    facet_wrap(~Dataset1)
+    facet_wrap(~Dataset1, ncol = ncol)
 }
 
 if (plot_out_type == "pdf") {
@@ -564,7 +570,7 @@ if (plot_out_type == "pdf") {
   )
 }
 
-plot_correlation_boxplot(all_avg_corr, TRUE)
+plot_correlation_boxplot(all_avg_corr, TRUE, ncol=3)
 
 if (plot_out_type != "none") {
   dev.off()
@@ -577,12 +583,12 @@ all_avg_corr_mf <- rbind(
 )
 
 if (plot_out_type == "pdf") {
-    pdf("plots/correlation_maps/all_avg_corr_MF.pdf", width = 15, height = 8)
+    pdf("plots/correlation_maps/all_avg_corr_MF.pdf", width = 9, height = 8)
   } else if (plot_out_type == "png") {
-    png("plots/correlation_maps/all_avg_corr_MF.png", width = 15, height = 8, units = "in", res = 300)
+    png("plots/correlation_maps/all_avg_corr_MF.png", width = 9, height = 8, units = "in", res = 300)
 }
 
-plot_correlation_boxplot(all_avg_corr_mf, FALSE)
+plot_correlation_boxplot(all_avg_corr_mf, with_shuffles = FALSE, ncol=3)
 
 if (plot_out_type != "none") {
   dev.off()

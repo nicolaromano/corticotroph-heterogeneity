@@ -1,0 +1,4 @@
+Enrichment FDR;nGenes;Pathway Genes;Fold Enrichment;Pathway;URL;Genes
+5.68661477396583e-08;10;130;15.7601591361182;Path:mmu03010 Ribosome;http://www.genome.jp/kegg-bin/show_pathway?mmu03010;Fau  Rpl18  Rpl19  Rpl9  Rps18  Rps24  Rps5  Rpl8  Rps11  Rps27
+5.5370793526221e-07;10;235;11.6488132745222;Path:mmu05171 Coronavirus disease-COVID-19;http://www.genome.jp/kegg-bin/show_pathway?mmu05171;Fau  Rpl18  Rpl19  Rpl9  Rps18  Rps24  Rps5  Rpl8  Rps11  Rps27
+0.00743488496846816;5;385;8.93075684380032;Path:mmu04080 Neuroactive ligand-receptor interaction;http://www.genome.jp/kegg-bin/show_pathway?mmu04080; Cga  Penk  Pomc  Prl  Nmb

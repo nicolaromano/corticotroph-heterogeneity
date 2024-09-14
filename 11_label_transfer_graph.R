@@ -7,10 +7,12 @@ library(dplyr)
 library(igraph)
 library(RColorBrewer)
 
+SHAP_path <- "label_transfer_model_output/shap_top_genes/"
+
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
-data_to_process <- "M" # M or F
+data_to_process <- "F" # M or F
 
 datasets <- datasets %>%
     dplyr::filter(author != "Ho") %>%
@@ -27,10 +29,8 @@ filenames <- dir("rds_outs",
 seurat_corticotrophs <- pblapply(filenames, readRDS)
 names(seurat_corticotrophs) <- gsub("(\\.rds|rds_outs/|_subclustered)", "", filenames)
 
-pred_dir <- "label_transfer_model_output/predictions/"
-
 for (dataset in unique(datasets$study_id)) {
-    filename <- paste0(pred_dir, dataset, "_predictions.csv")
+    filename <- paste0(output_folder, dataset, "_label_transfer_predictions.csv")
     predictions <- read.csv(filename)
     print(paste("Adding predictions to", dataset))
     # Add the predictions to the Seurat objects
@@ -41,8 +41,8 @@ for (dataset in unique(datasets$study_id)) {
 }
 
 confusion_matrices <- lapply(seurat_corticotrophs, function(obj) {
-    predictions <- obj@meta.data %>% select(starts_with("Predicted"))
-    predictors_names <- sub("Predicted_cluster_", "", names(predictions))
+    predictions <- obj@meta.data %>% select(starts_with("Label_Transfer_Cluster"))
+    predictors_names <- sub("Label_Transfer_Cluster_", "", names(predictions))
 
     # Get the confusion matrix for each dataset
     conf <- lapply(seq_along(predictions), function(i) {
@@ -76,7 +76,6 @@ confusion_matrices_df <- lapply(seq_along(confusion_matrices), function(i) {
         predictor_name <- names(confusion_matrices[[i]])[j]
 
         conf <- confusion_matrices[[i]][[j]]
-        print(conf)
         conf %>%
             as.data.frame() %>%
             mutate(
@@ -208,22 +207,33 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
     return(network)
 }
 
-for (min_similarity in c(0.8, 0.9, 0.95)) {
+for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
     if (output_format == "png") {
-        png(paste0(output_folder, "label_transfer_graph_", min_similarity, ".png"),
+        png(paste0(output_folder, "label_transfer_graph_", data_to_process, "_", min_similarity, ".png"),
             width = 10, height = 10,
             units = "in", res = 300
         )
     } else if (output_format == "pdf") {
-        pdf(paste0(output_folder, "label_transfer_graph_", min_similarity, ".pdf"),
+        pdf(paste0(output_folder, "label_transfer_graph_", data_to_process, "_", min_similarity, ".pdf"),
             width = 10, height = 10
         )
     }
 
-    community_palette <- c(
-        "#F16745", "#FFC65D", "#7BC8A4",
-        "#4CC3D9", "#93648D", "#808070"
-    )
+    if (data_to_process == "M") {
+        community_palette <- c(
+        "#F16745", "#FFC65D", "#7BC8A4"
+        )
+    } else {
+        community_palette <- c(
+        "#F11E4E", "#5B2C6F",
+        "#1A9337", "#4CC3D9"
+        )
+    }
+
+    # community_palette <- c(
+    #     "#F16745", "#FFC65D", "#7BC8A4",
+    #     "#4CC3D9", "#93648D", "#808070"
+    # )
 
     graph <- get_similarity_graph(min_similarity,
         do_plot = TRUE,
@@ -272,11 +282,11 @@ for (min_similarity in c(0.8, 0.9, 0.95)) {
     })
 
     if (output_format == "pdf") {
-        pdf(paste0(output_folder, "umap_nn_communities_min_sim_", min_similarity, "_", data_to_process, ".pdf"),
+        pdf(paste0(output_folder, "umap_xgboost_communities_min_sim_", min_similarity, "_", data_to_process, ".pdf"),
             width = 10, height = 10
         )
     } else {
-        png(paste0(output_folder, "umap_nn_communities_min_sim_", min_similarity, "_", data_to_process, ".png"),
+        png(paste0(output_folder, "umap_xgboost_communities_min_sim_", min_similarity, "_", data_to_process, ".png"),
             width = 10, height = 10, units = "in", res = 300
         )
     }
@@ -290,3 +300,120 @@ for (min_similarity in c(0.8, 0.9, 0.95)) {
     )
     dev.off()
 } # end for min_similarity
+
+min_similarity <- 0.9
+
+# Community-specific important genes (in terms of saliency)
+community_top_genes_intersection <- list()
+community_top_genes_union <- list()
+num_clusters_per_community <- list()
+
+all_important_genes <- lapply(unique(datasets$study_id), function(dataset) {
+    filename <- paste0(SHAP_path, dataset, "_shap_top_genes.csv")
+    genes <- read.csv(filename)
+
+    # Get top 10% SHAP genes
+    genes <- genes %>%
+        filter(Saliency_mean > quantile(Saliency_mean, 0.9)) %>%
+        select(Gene, Saliency_mean, Cluster)
+
+    genes
+})
+
+names(all_important_genes) <- unique(datasets$study_id)
+
+for (i in seq_along(seurat_corticotrophs)) {
+    obj <- seurat_corticotrophs[[i]]
+    dataset_name <- names(seurat_corticotrophs)[i]
+    for (cl in unique(Idents(obj))) {
+        comm_num <- obj[[paste0("nn_community_", min_similarity)]][Idents(obj) == cl, ][1]
+
+        # INTERSECTION
+        if (is.null(community_top_genes_intersection[[paste0("comm_", comm_num)]])) {
+            community_top_genes_intersection[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
+                filter(Cluster == cl) %>%
+                pull(Gene)
+        } else {
+            community_top_genes_intersection[[paste0("comm_", comm_num)]] <- intersect(
+                community_top_genes_intersection[[paste0("comm_", comm_num)]],
+                all_important_genes[[dataset_name]] %>%
+                    filter(Cluster == cl) %>%
+                    pull(Gene)
+            )
+        }
+
+        # UNION
+        if (is.null(community_top_genes_union[[paste0("comm_", comm_num)]])) {
+            community_top_genes_union[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
+                filter(Cluster == cl) %>%
+                pull(Gene)
+        } else {
+            community_top_genes_union[[paste0("comm_", comm_num)]] <- union(
+                community_top_genes_union[[paste0("comm_", comm_num)]],
+                all_important_genes[[dataset_name]] %>%
+                    filter(Cluster == cl) %>%
+                    pull(Gene)
+            )
+        }
+
+        # Number of clusters per community
+        if (is.null(num_clusters_per_community[[paste0("comm_", comm_num)]])) {
+            num_clusters_per_community[[paste0("comm_", comm_num)]] <- 1
+        } else {
+            num_clusters_per_community[[paste0("comm_", comm_num)]] <- num_clusters_per_community[[paste0("comm_", comm_num)]] + 1
+        }
+    } # end for cl
+} # end for i
+
+num_clusters_per_community <- unlist(num_clusters_per_community)
+# Only get the communities with more than one cluster
+comm_names <- sort(names(num_clusters_per_community[num_clusters_per_community > 1]))
+
+# Write to file
+for (cn in comm_names) {
+    community_un <- community_top_genes_union[[cn]]
+    community_in <- community_top_genes_intersection[[cn]]
+
+    print(paste(
+        "Community", cn, " - markers intersection / union = ",
+        format(length(community_in) / length(community_un) * 100, digits = 2), "%"
+    ))
+
+    write.table(community_un, file.path(saliency_path, paste0(cn, "_top_genes_union.csv")),
+        row.names = FALSE, col.names = FALSE, quote = FALSE
+    )
+    write.table(community_in, file.path(saliency_path, paste0(cn, "_top_genes_intersection.csv")),
+        row.names = FALSE, col.names = FALSE, quote = FALSE
+    )
+}
+
+
+
+
+
+# Write a table of Dataset, Cluster, Community
+community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
+    obj <- seurat_corticotrophs[[i]]
+    dataset_name <- names(seurat_corticotrophs)[i]
+
+    clusters <- unique(Idents(obj))
+    sapply(clusters, function(cl) {
+        subset(obj, idents = cl)[[paste0(
+            "nn_community_", min_similarity
+        )]][1, 1]
+    }) -> communities
+
+    res <- data.frame(
+        Dataset = dataset_name,
+        Cluster = clusters,
+        Community = communities
+    )
+})
+
+do.call("rbind", community_df) %>%
+    write.csv(
+        file.path(
+            output_folder, paste0("nn_communities_", min_similarity, ".csv")
+        ),
+        row.names = FALSE
+    )
