@@ -1,0 +1,20 @@
+Enrichment FDR;nGenes;Pathway Genes;Fold Enrichment;Pathway;URL;Genes
+0.00218627066521438;2;4;616.166666666667;GO:0033366 protein localization to secretory granule;http://amigo.geneontology.org/amigo/term/GO:0033366; Chga  Cpe
+0.00327251090602837;2;29;273.851851851852;GO:0043950 positive reg. of cAMP-mediated signaling;http://amigo.geneontology.org/amigo/term/GO:0043950; Pomc  Chga
+0.00873593567976903;2;77;144.980392156863;GO:0031640 killing of cells of another organism;http://amigo.geneontology.org/amigo/term/GO:0031640;Pomc  Cxcl14
+0.00974470553941106;2;119;107.159420289855;GO:0061844 antimicrobial humoral immune response mediated by antimicrobial pepti;http://amigo.geneontology.org/amigo/term/GO:0061844;Cxcl14  Pomc
+0.00985012260950974;2;107;98.5866666666667;GO:0007218 neuropeptide signaling pathway;http://amigo.geneontology.org/amigo/term/GO:0007218; Pomc  Nmb
+0.0130649186199378;2;155;82.1555555555556;GO:0019730 antimicrobial humoral response;http://amigo.geneontology.org/amigo/term/GO:0019730;Cxcl14  Pomc
+0.0137395103578944;2;58;77.0208333333333;GO:0140353 lipid export from cell;http://amigo.geneontology.org/amigo/term/GO:0140353; Pomc  Nmb
+0.01509908594618;2;67;68.462962962963;GO:0019933 cAMP-mediated signaling;http://amigo.geneontology.org/amigo/term/GO:0019933; Pomc  Chga
+0.0211840631683568;2;55;56.0151515151515;GO:0033059 cellular pigmentation;http://amigo.geneontology.org/amigo/term/GO:0033059;Pomc  Cd63
+0.0240735731674309;2;98;50.2993197278912;GO:0019935 cyclic-nucleotide-mediated signaling;http://amigo.geneontology.org/amigo/term/GO:0019935; Pomc  Chga
+0.0240735731674309;2;119;46.503144654088;GO:0002444 myeloid leukocyte mediated immunity;http://amigo.geneontology.org/amigo/term/GO:0002444; Chga  Pomc
+0.0240735731674309;2;93;46.503144654088;GO:0046888 negative reg. of hormone secretion;http://amigo.geneontology.org/amigo/term/GO:0046888; Chga  Nmb
+0.00974470553941106;3;264;26.4071428571429;GO:0015850 organic hydroxy compound transport;http://amigo.geneontology.org/amigo/term/GO:0015850; Pomc  Chga  Nmb
+0.00327251090602837;4;369;21.811209439528;GO:0046879 hormone secretion;http://amigo.geneontology.org/amigo/term/GO:0046879; Pomc  Chga  Nmb  Cpe
+0.00327251090602837;4;378;21.5254730713246;GO:0009914 hormone transport;http://amigo.geneontology.org/amigo/term/GO:0009914; Pomc  Chga  Nmb  Cpe
+0.01509908594618;3;308;19.8763440860215;GO:0046883 reg. of hormone secretion;http://amigo.geneontology.org/amigo/term/GO:0046883; Pomc  Chga  Nmb
+0.00873593567976903;4;596;15.0284552845528;GO:0010817 reg. of hormone levels;http://amigo.geneontology.org/amigo/term/GO:0010817; Pomc  Chga  Nmb  Cpe
+0.00921041843974801;4;568;13.7690875232775;GO:0023061 signal release;http://amigo.geneontology.org/amigo/term/GO:0023061; Pomc  Chga  Nmb  Cpe
+0.0240735731674309;4;900;8.5282583621684;GO:0032940 secretion by cell;http://amigo.geneontology.org/amigo/term/GO:0032940; Pomc  Chga  Nmb  Cpe

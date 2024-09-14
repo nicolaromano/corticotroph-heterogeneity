@@ -1,0 +1,21 @@
+Enrichment FDR;nGenes;Pathway Genes;Fold Enrichment;Pathway;URL;Genes
+0.000296732267702715;5;48;18.1225490196078;Path:mmu05030 Cocaine addiction;http://www.genome.jp/kegg-bin/show_pathway?mmu05030;Atf4  Fosb  Gnas  Gria2  Jun
+1.93230043552186e-05;7;68;17.9715277777778;Path:mmu05031 Amphetamine addiction;http://www.genome.jp/kegg-bin/show_pathway?mmu05031;Atf4  Cacna1d  Fos  Fosb  Gnas  Gria2  Jun
+0.00128184060754953;5;75;12.8368055555556;Path:mmu04971 Gastric acid secretion;http://www.genome.jp/kegg-bin/show_pathway?mmu04971;Actb  Actg1  Atp1b1  Gnas  Ezr
+0.0026205027028026;5;93;10.4435028248588;Path:mmu04657 IL-17 signaling pathway;http://www.genome.jp/kegg-bin/show_pathway?mmu04657;Fos  Fosb  Hsp90aa1  Jun  Jund
+0.000296732267702715;7;134;9.91532567049808;Path:mmu04915 Estrogen signaling pathway;http://www.genome.jp/kegg-bin/show_pathway?mmu04915;Atf4  Fos  Gnas  Hspa8  Hsp90aa1  Jun  Krt18
+0.000234129228044091;8;145;9.12839506172839;Path:mmu05418 Fluid shear stress and atherosclerosis;http://www.genome.jp/kegg-bin/show_pathway?mmu05418;Actb  Actg1  Fos  Gstm1  Hsp90aa1  Jun  Klf2  Mgst1
+0.00490326801263943;5;90;8.55787037037037;Path:mmu04912 GnRH signaling pathway;http://www.genome.jp/kegg-bin/show_pathway?mmu04912;Atf4  Cacna1d  Egr1  Gnas  Jun
+0.0132703941859802;4;86;8.35480225988701;Path:mmu04911 Insulin secretion;http://www.genome.jp/kegg-bin/show_pathway?mmu04911;Atf4  Atp1b1  Cacna1d  Gnas
+0.0132703941859802;4;94;8.35480225988701;Path:mmu05414 Dilated cardiomyopathy;http://www.genome.jp/kegg-bin/show_pathway?mmu05414;Actb  Actg1  Cacna1d  Gnas
+0.00534077485822422;5;108;8.10745614035088;Path:mmu04928 Parathyroid hormone synthesis secretion and action;http://www.genome.jp/kegg-bin/show_pathway?mmu04928;Atf4  Egr1  Fos  Gnas  Jund
+0.0026205027028026;6;117;7.86595744680851;Path:mmu04935 Growth hormone synthesis secretion and action;http://www.genome.jp/kegg-bin/show_pathway?mmu04935;Atf4  Cacna1d  Socs3  Fos  Gnas  Irs2
+0.000296732267702715;8;209;7.82433862433863;Path:mmu05207 Chemical carcinogenesis-receptor activation;http://www.genome.jp/kegg-bin/show_pathway?mmu05207;Atf4  Cacna1d  Fos  Gnas  Gstm1  Hsp90aa1  Jun  Mgst1
+0.0083157419233446;5;124;7.24901960784314;Path:mmu04380 Osteoclast differentiation;http://www.genome.jp/kegg-bin/show_pathway?mmu04380;Socs3  Fos  Fosb  Jun  Jund
+0.00363990405603453;6;152;7.10961538461538;Path:mmu04921 Oxytocin signaling pathway;http://www.genome.jp/kegg-bin/show_pathway?mmu04921;Actb  Actg1  Cacna1d  Fos  Gnas  Jun
+0.002995148191282;7;170;6.11796690307329;Path:mmu04141 Protein processing in endoplasmic reticulum;http://www.genome.jp/kegg-bin/show_pathway?mmu04141;Atf4  Cryab  Hspa8  Dnaja1  Hsp90aa1  Ppp1r15a  Dnajb1
+0.0132703941859802;5;136;6.04084967320261;Path:mmu04210 Apoptosis;http://www.genome.jp/kegg-bin/show_pathway?mmu04210;Actb  Actg1  Atf4  Fos  Jun
+0.0132703941859802;5;132;6.04084967320261;Path:mmu04728 Dopaminergic synapse;http://www.genome.jp/kegg-bin/show_pathway?mmu04728;Atf4  Cacna1d  Fos  Gnas  Gria2
+0.00983135774946701;6;219;5.47703703703704;Path:mmu04024 cAMP signaling pathway;http://www.genome.jp/kegg-bin/show_pathway?mmu04024;Atp1b1  Cacna1d  Fos  Gnas  Gria2  Jun
+0.00527891178508088;7;241;5.32489711934156;Path:mmu05166 Human T-cell leukemia virus 1 infection;http://www.genome.jp/kegg-bin/show_pathway?mmu05166;Atf4  Ccnd2  Egr1  Egr2  Fos  Jun  Zfp36
+0.0126841694078945;7;251;4.37884940778342;Path:mmu05132 Salmonella infection;http://www.genome.jp/kegg-bin/show_pathway?mmu05132;Actb  Actg1  Fos  Hsp90aa1  Jun  S100a10  Dctn6

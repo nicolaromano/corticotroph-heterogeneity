@@ -1,0 +1,16 @@
+Enrichment FDR;nGenes;Pathway Genes;Fold Enrichment;Pathway;URL;Genes
+0.0135507802832666;2;9;53.5845410628019;GO:0031628 opioid receptor binding;http://amigo.geneontology.org/amigo/term/GO:0031628; Gnas  Penk
+0.00192376189441914;3;38;48.2260869565217;GO:0071855 neuropeptide receptor binding;http://amigo.geneontology.org/amigo/term/GO:0071855; Nmb  Gnas  Pomc
+0.002357969623914;3;14;40.1884057971014;GO:0044548 S100 protein binding;http://amigo.geneontology.org/amigo/term/GO:0044548;S100a11  Anxa2  S100a1
+0.002357969623914;4;134;19.4852876592007;GO:0005179 hormone activity;http://amigo.geneontology.org/amigo/term/GO:0005179; Prl  Nmb  Cga  Pomc
+0.00431846229455551;4;64;14.953825412875;GO:0001540 amyloid-beta binding;http://amigo.geneontology.org/amigo/term/GO:0001540;Apoe  Itm2b  Itm2c  Clu
+0.00192376189441914;5;70;14.3530020703934;GO:0019843 rRNA binding;http://amigo.geneontology.org/amigo/term/GO:0019843;Rps11  Rpl8  Rps18  Rpl9  Rpl19
+0.00192376189441914;5;91;13.8580709645177;GO:0048306 calcium-dependent protein binding;http://amigo.geneontology.org/amigo/term/GO:0048306;S100a11  S100a10  S100a16  Anxa2  Mgp
+2.04175898662602e-06;10;174;12.4615211773958;GO:0003735 structural constituent of ribosome;http://amigo.geneontology.org/amigo/term/GO:0003735;Rps11  Rpl8  Rpl19  Rpl9  Rpl18  Rps27  Rps18  Rps5  Rps24  Fau
+0.00388215494412186;7;514;6.43014492753623;GO:0048018 receptor ligand activity;http://amigo.geneontology.org/amigo/term/GO:0048018;Prl  Nmb  Cga  Ptn  Pomc  Timp1  Penk
+0.00431846229455551;7;523;6.18283166109253;GO:0030546 signaling receptor activator activity;http://amigo.geneontology.org/amigo/term/GO:0030546;Prl  Nmb  Cga  Ptn  Pomc  Timp1  Penk
+0.00636618183546693;7;568;5.65465006190372;GO:0030545 signaling receptor regulator activity;http://amigo.geneontology.org/amigo/term/GO:0030545;Prl  Nmb  Cga  Ptn  Pomc  Timp1  Penk
+0.000514897555915473;12;747;5.11682620228347;GO:0005198 structural molecule activity;http://amigo.geneontology.org/amigo/term/GO:0005198;Rps11  Rpl8  Rpl19  Vim  Rpl9  Rpl18  Rps27  Rps18  Rps5  Rps24  Fau  Sparc
+0.0256814772598857;6;291;5.07643020594966;GO:0050839 cell adhesion molecule binding;http://amigo.geneontology.org/amigo/term/GO:0050839;Emb  Esm1  P4hb  Ptn  Cd9  Cpe
+0.00388215494412186;10;721;4.26402183523623;GO:0005509 calcium ion binding;http://amigo.geneontology.org/amigo/term/GO:0005509;Sparc  S100a11  Anxa2  S100a10  S100a16  Pam  Mgp  Dlk1  Crtac1  S100a1
+0.0113622106853904;14;1561;2.7445740544362;GO:0005102 signaling receptor binding;http://amigo.geneontology.org/amigo/term/GO:0005102;Apoe  Pomc  Prl  Nmb  Gnas  Cga  Ptn  Esm1  Penk  Timp1  Clu  P4hb  Cd9  Cpe

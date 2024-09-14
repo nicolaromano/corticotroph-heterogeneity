@@ -1,0 +1,19 @@
+Enrichment FDR;nGenes;Pathway Genes;Fold Enrichment;Pathway;URL;Genes
+0.00940964245374307;1;5;616.166666666667;GO:0031779 melanocortin receptor binding;http://amigo.geneontology.org/amigo/term/GO:0031779; Pomc
+0.00940964245374307;1;5;616.166666666667;GO:0031781 type 3 melanocortin receptor binding;http://amigo.geneontology.org/amigo/term/GO:0031781; Pomc
+0.00940964245374307;1;5;616.166666666667;GO:0031782 type 4 melanocortin receptor binding;http://amigo.geneontology.org/amigo/term/GO:0031782; Pomc
+0.00940964245374307;1;4;616.166666666667;GO:0070996 type 1 melanocortin receptor binding;http://amigo.geneontology.org/amigo/term/GO:0070996; Pomc
+0.0128267028248691;1;4;410.777777777778;GO:0031705 bombesin receptor binding;http://amigo.geneontology.org/amigo/term/GO:0031705; Nmb
+0.00152267854623549;2;38;246.466666666667;GO:0071855 neuropeptide receptor binding;http://amigo.geneontology.org/amigo/term/GO:0071855; Nmb  Pomc
+0.0268265759213722;1;26;154.041666666667;GO:0005184 neuropeptide hormone activity;http://amigo.geneontology.org/amigo/term/GO:0005184; Nmb
+0.0268265759213722;1;9;154.041666666667;GO:0050897 cobalt ion binding;http://amigo.geneontology.org/amigo/term/GO:0050897; Cpe
+0.0281577492528847;1;13;136.925925925926;GO:0042043 neurexin family protein binding;http://amigo.geneontology.org/amigo/term/GO:0042043; Cpe
+0.0351591356222041;1;27;102.694444444444;GO:0004181 metallocarboxypeptidase activity;http://amigo.geneontology.org/amigo/term/GO:0004181; Cpe
+0.0358356089762015;1;17;94.7948717948718;GO:0005520 insulin-like growth factor binding;http://amigo.geneontology.org/amigo/term/GO:0005520;Igfbp7
+0.00393806169906942;2;134;74.6868686868687;GO:0005179 hormone activity;http://amigo.geneontology.org/amigo/term/GO:0005179; Nmb  Pomc
+0.0493585332122211;1;45;64.859649122807;GO:0008009 chemokine activity;http://amigo.geneontology.org/amigo/term/GO:0008009;Cxcl14
+0.00393806169906942;3;312;23.3987341772152;GO:0001664 G protein-coupled receptor binding;http://amigo.geneontology.org/amigo/term/GO:0001664;Pomc  Nmb  Cxcl14
+0.00393806169906942;3;514;21.1257142857143;GO:0048018 receptor ligand activity;http://amigo.geneontology.org/amigo/term/GO:0048018;Nmb  Pomc  Cxcl14
+0.00393806169906942;3;523;20.3131868131868;GO:0030546 signaling receptor activator activity;http://amigo.geneontology.org/amigo/term/GO:0030546;Nmb  Pomc  Cxcl14
+0.00426619937226753;3;568;18.5778894472362;GO:0030545 signaling receptor regulator activity;http://amigo.geneontology.org/amigo/term/GO:0030545;Nmb  Pomc  Cxcl14
+0.0133648996808165;4;1561;6.01138211382114;GO:0005102 signaling receptor binding;http://amigo.geneontology.org/amigo/term/GO:0005102;Pomc  Nmb  Cxcl14  Cpe
