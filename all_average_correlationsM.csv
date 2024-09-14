@@ -1,421 +1,421 @@
-"Correlation","Group","Dataset1","Dataset2","SameDataset"
-0.118514233696415,"Within cluster","Cheung2018M","Cheung2018M","TRUE"
--0.0367280080462101,"Between clusters","Cheung2018M","Cheung2018M","TRUE"
--2.04690218991961e-05,"Random shuffle","Cheung2018M","Cheung2018M","TRUE"
-0.0575627025313415,"Random shuffle within","Cheung2018M","Cheung2018M","TRUE"
-0.087731232348736,"Within cluster","Cheung2018M","Cheung2018M","TRUE"
-0.0200715122535769,"Between clusters","Cheung2018M","Cheung2018M","TRUE"
--6.00384895340209e-06,"Random shuffle","Cheung2018M","Cheung2018M","TRUE"
-0.0622621308508447,"Random shuffle within","Cheung2018M","Cheung2018M","TRUE"
-0.114564946222753,"Within cluster","Cheung2018M","Cheung2018M","TRUE"
-0.0134413175307408,"Between clusters","Cheung2018M","Cheung2018M","TRUE"
-3.24158668312136e-05,"Random shuffle","Cheung2018M","Cheung2018M","TRUE"
-0.089486211328169,"Random shuffle within","Cheung2018M","Cheung2018M","TRUE"
-0.270761797055825,"Within cluster","Cheung2018M","Cheung2018M","TRUE"
-0.0167765103852551,"Between clusters","Cheung2018M","Cheung2018M","TRUE"
-0.000611507344857608,"Random shuffle","Cheung2018M","Cheung2018M","TRUE"
-0.204656272701902,"Random shuffle within","Cheung2018M","Cheung2018M","TRUE"
-0.175825503217232,"Within cluster","Cheung2018M","Cheung2018M","TRUE"
--0.0149004633174067,"Between clusters","Cheung2018M","Cheung2018M","TRUE"
-0.000171664269589729,"Random shuffle","Cheung2018M","Cheung2018M","TRUE"
-0.0615490558425075,"Random shuffle within","Cheung2018M","Cheung2018M","TRUE"
-0.0380813730648266,"Within cluster","Fletcher2019M","Cheung2018M","FALSE"
-0.00518281902214668,"Between clusters","Fletcher2019M","Cheung2018M","FALSE"
-0.0122703024497634,"Within cluster","Fletcher2019M","Cheung2018M","FALSE"
-0.0120797225436726,"Between clusters","Fletcher2019M","Cheung2018M","FALSE"
-0.0288740325897929,"Within cluster","Fletcher2019M","Cheung2018M","FALSE"
-0.0141754138733878,"Between clusters","Fletcher2019M","Cheung2018M","FALSE"
-0.0280673879246107,"Within cluster","Fletcher2019M","Cheung2018M","FALSE"
-0.0208019578183495,"Between clusters","Fletcher2019M","Cheung2018M","FALSE"
-0.0218779326705572,"Within cluster","Fletcher2019M","Cheung2018M","FALSE"
-0.0100889727678896,"Between clusters","Fletcher2019M","Cheung2018M","FALSE"
-0.177883071722776,"Within cluster","Lopez2021M","Cheung2018M","FALSE"
-0.0751457388974264,"Between clusters","Lopez2021M","Cheung2018M","FALSE"
-0.0962340197312689,"Within cluster","Lopez2021M","Cheung2018M","FALSE"
-0.0719049256015903,"Between clusters","Lopez2021M","Cheung2018M","FALSE"
-0.0651337030361591,"Within cluster","Lopez2021M","Cheung2018M","FALSE"
-0.0638072749346362,"Between clusters","Lopez2021M","Cheung2018M","FALSE"
-0.0776467618937697,"Within cluster","Lopez2021M","Cheung2018M","FALSE"
-0.0656160363141736,"Between clusters","Lopez2021M","Cheung2018M","FALSE"
-0.0937219933706974,"Within cluster","Lopez2021M","Cheung2018M","FALSE"
--0.0231139977762826,"Between clusters","Lopez2021M","Cheung2018M","FALSE"
-0.0372558172627878,"Within cluster","Mayran2019M","Cheung2018M","FALSE"
-0.00919060221392929,"Between clusters","Mayran2019M","Cheung2018M","FALSE"
-0.0305050258599523,"Within cluster","Mayran2019M","Cheung2018M","FALSE"
-0.0203292749238593,"Between clusters","Mayran2019M","Cheung2018M","FALSE"
-0.0323175596317329,"Within cluster","Mayran2019M","Cheung2018M","FALSE"
-0.0187710565572115,"Between clusters","Mayran2019M","Cheung2018M","FALSE"
-0.0454041534792762,"Within cluster","Mayran2019M","Cheung2018M","FALSE"
-0.0198012954727143,"Between clusters","Mayran2019M","Cheung2018M","FALSE"
-0.0551728144457226,"Within cluster","Mayran2019M","Cheung2018M","FALSE"
-0.00346769397983864,"Between clusters","Mayran2019M","Cheung2018M","FALSE"
-0.0667731732578826,"Within cluster","RufZamojski2021M","Cheung2018M","FALSE"
-0.00293194386171749,"Between clusters","RufZamojski2021M","Cheung2018M","FALSE"
-0.0484745897824554,"Within cluster","RufZamojski2021M","Cheung2018M","FALSE"
-0.0237207694776678,"Between clusters","RufZamojski2021M","Cheung2018M","FALSE"
-0.0660615155348025,"Within cluster","RufZamojski2021M","Cheung2018M","FALSE"
-0.0220564171910912,"Between clusters","RufZamojski2021M","Cheung2018M","FALSE"
-0.112105523341148,"Within cluster","RufZamojski2021M","Cheung2018M","FALSE"
-0.0354656529253199,"Between clusters","RufZamojski2021M","Cheung2018M","FALSE"
-0.021134709417383,"Within cluster","RufZamojski2021M","Cheung2018M","FALSE"
--0.0108051072633246,"Between clusters","RufZamojski2021M","Cheung2018M","FALSE"
-0.0721463620676733,"Within cluster","Vennekens2021M","Cheung2018M","FALSE"
-0.0143709152162497,"Between clusters","Vennekens2021M","Cheung2018M","FALSE"
-0.0512855743398041,"Within cluster","Vennekens2021M","Cheung2018M","FALSE"
-0.0318431146682777,"Between clusters","Vennekens2021M","Cheung2018M","FALSE"
-0.0652499307930277,"Within cluster","Vennekens2021M","Cheung2018M","FALSE"
-0.0275514762486842,"Between clusters","Vennekens2021M","Cheung2018M","FALSE"
-0.144768475466452,"Within cluster","Vennekens2021M","Cheung2018M","FALSE"
-0.0216320345435425,"Between clusters","Vennekens2021M","Cheung2018M","FALSE"
-0.0984536181979163,"Within cluster","Vennekens2021M","Cheung2018M","FALSE"
-0.012906395320671,"Between clusters","Vennekens2021M","Cheung2018M","FALSE"
-0.0653325418137192,"Within cluster","Cheung2018M","Fletcher2019M","FALSE"
-0.0139943788421997,"Between clusters","Cheung2018M","Fletcher2019M","FALSE"
-0.0424857441331892,"Within cluster","Cheung2018M","Fletcher2019M","FALSE"
-0.0175448858697832,"Between clusters","Cheung2018M","Fletcher2019M","FALSE"
-0.0368306026340431,"Within cluster","Cheung2018M","Fletcher2019M","FALSE"
-0.0150391199260744,"Between clusters","Cheung2018M","Fletcher2019M","FALSE"
-0.0276242891809263,"Within cluster","Cheung2018M","Fletcher2019M","FALSE"
-0.0124888590277666,"Between clusters","Cheung2018M","Fletcher2019M","FALSE"
-0.17795379962056,"Within cluster","Fletcher2019M","Fletcher2019M","TRUE"
--0.0701624819897154,"Between clusters","Fletcher2019M","Fletcher2019M","TRUE"
--0.000581707971899129,"Random shuffle","Fletcher2019M","Fletcher2019M","TRUE"
-0.058574072761275,"Random shuffle within","Fletcher2019M","Fletcher2019M","TRUE"
-0.135472368217974,"Within cluster","Fletcher2019M","Fletcher2019M","TRUE"
-0.0248187694153017,"Between clusters","Fletcher2019M","Fletcher2019M","TRUE"
--0.000160116125328609,"Random shuffle","Fletcher2019M","Fletcher2019M","TRUE"
-0.093440538780845,"Random shuffle within","Fletcher2019M","Fletcher2019M","TRUE"
-0.057989307052349,"Within cluster","Fletcher2019M","Fletcher2019M","TRUE"
-0.0173635475821226,"Between clusters","Fletcher2019M","Fletcher2019M","TRUE"
-0.000102614128740854,"Random shuffle","Fletcher2019M","Fletcher2019M","TRUE"
-0.0353714648792004,"Random shuffle within","Fletcher2019M","Fletcher2019M","TRUE"
-0.222486291595337,"Within cluster","Fletcher2019M","Fletcher2019M","TRUE"
--0.000549966533358553,"Between clusters","Fletcher2019M","Fletcher2019M","TRUE"
--0.000307088831635822,"Random shuffle","Fletcher2019M","Fletcher2019M","TRUE"
-0.0653750323019568,"Random shuffle within","Fletcher2019M","Fletcher2019M","TRUE"
-0.0908967324395914,"Within cluster","Lopez2021M","Fletcher2019M","FALSE"
-0.0406934828446183,"Between clusters","Lopez2021M","Fletcher2019M","FALSE"
-0.121743624530625,"Within cluster","Lopez2021M","Fletcher2019M","FALSE"
-0.066213928909456,"Between clusters","Lopez2021M","Fletcher2019M","FALSE"
-0.0721960408666541,"Within cluster","Lopez2021M","Fletcher2019M","FALSE"
-0.0413141259369356,"Between clusters","Lopez2021M","Fletcher2019M","FALSE"
-0.0217454337519152,"Within cluster","Lopez2021M","Fletcher2019M","FALSE"
--0.00184612472834709,"Between clusters","Lopez2021M","Fletcher2019M","FALSE"
-0.0818761402397289,"Within cluster","Mayran2019M","Fletcher2019M","FALSE"
-0.0104340616764612,"Between clusters","Mayran2019M","Fletcher2019M","FALSE"
-0.046095500320236,"Within cluster","Mayran2019M","Fletcher2019M","FALSE"
-0.0176438056452619,"Between clusters","Mayran2019M","Fletcher2019M","FALSE"
-0.0439497596954769,"Within cluster","Mayran2019M","Fletcher2019M","FALSE"
-0.0122290813119164,"Between clusters","Mayran2019M","Fletcher2019M","FALSE"
-0.0323234978328156,"Within cluster","Mayran2019M","Fletcher2019M","FALSE"
-0.00165432507106663,"Between clusters","Mayran2019M","Fletcher2019M","FALSE"
-0.0641603264750338,"Within cluster","RufZamojski2021M","Fletcher2019M","FALSE"
--0.00261137132921348,"Between clusters","RufZamojski2021M","Fletcher2019M","FALSE"
-0.0449322130191875,"Within cluster","RufZamojski2021M","Fletcher2019M","FALSE"
-0.0185807376332986,"Between clusters","RufZamojski2021M","Fletcher2019M","FALSE"
-0.0551665499777693,"Within cluster","RufZamojski2021M","Fletcher2019M","FALSE"
-0.00783260391188807,"Between clusters","RufZamojski2021M","Fletcher2019M","FALSE"
-0.0169731103257038,"Within cluster","RufZamojski2021M","Fletcher2019M","FALSE"
-0.00407661760168236,"Between clusters","RufZamojski2021M","Fletcher2019M","FALSE"
-0.0983624785885267,"Within cluster","Vennekens2021M","Fletcher2019M","FALSE"
-0.0108976280635197,"Between clusters","Vennekens2021M","Fletcher2019M","FALSE"
-0.0542044913056889,"Within cluster","Vennekens2021M","Fletcher2019M","FALSE"
-0.0281324623244565,"Between clusters","Vennekens2021M","Fletcher2019M","FALSE"
-0.0404006895342395,"Within cluster","Vennekens2021M","Fletcher2019M","FALSE"
-0.0240837531663261,"Between clusters","Vennekens2021M","Fletcher2019M","FALSE"
-0.0340401807156034,"Within cluster","Vennekens2021M","Fletcher2019M","FALSE"
-0.0156472959863428,"Between clusters","Vennekens2021M","Fletcher2019M","FALSE"
-0.0602169740147606,"Within cluster","Cheung2018M","Lopez2021M","FALSE"
-0.0021440675050036,"Between clusters","Cheung2018M","Lopez2021M","FALSE"
-0.045859269887547,"Within cluster","Cheung2018M","Lopez2021M","FALSE"
-0.0266353879816977,"Between clusters","Cheung2018M","Lopez2021M","FALSE"
-0.079416741924793,"Within cluster","Cheung2018M","Lopez2021M","FALSE"
--0.0151128338800644,"Between clusters","Cheung2018M","Lopez2021M","FALSE"
-0.0481615245394686,"Within cluster","Cheung2018M","Lopez2021M","FALSE"
-0.0227220517784492,"Between clusters","Cheung2018M","Lopez2021M","FALSE"
-0.0342471013955707,"Within cluster","Cheung2018M","Lopez2021M","FALSE"
-0.0248741047261791,"Between clusters","Cheung2018M","Lopez2021M","FALSE"
-0.0307561340457203,"Within cluster","Cheung2018M","Lopez2021M","FALSE"
--0.00592176338826923,"Between clusters","Cheung2018M","Lopez2021M","FALSE"
-0.0175762135309278,"Within cluster","Fletcher2019M","Lopez2021M","FALSE"
-0.0148224379869143,"Between clusters","Fletcher2019M","Lopez2021M","FALSE"
-0.0221987840692821,"Within cluster","Fletcher2019M","Lopez2021M","FALSE"
-0.0186345784042192,"Between clusters","Fletcher2019M","Lopez2021M","FALSE"
-0.0045026972476817,"Within cluster","Fletcher2019M","Lopez2021M","FALSE"
-0.00590269847569501,"Between clusters","Fletcher2019M","Lopez2021M","FALSE"
-0.0250808104073065,"Within cluster","Fletcher2019M","Lopez2021M","FALSE"
-0.0179793973264628,"Between clusters","Fletcher2019M","Lopez2021M","FALSE"
-0.0177177641742757,"Within cluster","Fletcher2019M","Lopez2021M","FALSE"
-0.017178689603045,"Between clusters","Fletcher2019M","Lopez2021M","FALSE"
-0.0291235560618375,"Within cluster","Fletcher2019M","Lopez2021M","FALSE"
-0.0139700817837134,"Between clusters","Fletcher2019M","Lopez2021M","FALSE"
-0.200121078743561,"Within cluster","Lopez2021M","Lopez2021M","TRUE"
--0.0942231865853212,"Between clusters","Lopez2021M","Lopez2021M","TRUE"
-2.81681535972543e-06,"Random shuffle","Lopez2021M","Lopez2021M","TRUE"
-0.176293578247018,"Random shuffle within","Lopez2021M","Lopez2021M","TRUE"
-0.0963550810372576,"Within cluster","Lopez2021M","Lopez2021M","TRUE"
-0.0307457104072903,"Between clusters","Lopez2021M","Lopez2021M","TRUE"
--0.000175836752329188,"Random shuffle","Lopez2021M","Lopez2021M","TRUE"
-0.0363714272638669,"Random shuffle within","Lopez2021M","Lopez2021M","TRUE"
-0.631794005999611,"Within cluster","Lopez2021M","Lopez2021M","TRUE"
--0.166614305659624,"Between clusters","Lopez2021M","Lopez2021M","TRUE"
--0.00060421186233713,"Random shuffle","Lopez2021M","Lopez2021M","TRUE"
-0.527277102528493,"Random shuffle within","Lopez2021M","Lopez2021M","TRUE"
-0.176492272017992,"Within cluster","Lopez2021M","Lopez2021M","TRUE"
-0.0128550449068098,"Between clusters","Lopez2021M","Lopez2021M","TRUE"
-3.10129824555766e-05,"Random shuffle","Lopez2021M","Lopez2021M","TRUE"
-0.156704970597614,"Random shuffle within","Lopez2021M","Lopez2021M","TRUE"
-0.144711000132013,"Within cluster","Lopez2021M","Lopez2021M","TRUE"
-0.0350413776078072,"Between clusters","Lopez2021M","Lopez2021M","TRUE"
--5.99158078539469e-06,"Random shuffle","Lopez2021M","Lopez2021M","TRUE"
-0.103378471783623,"Random shuffle within","Lopez2021M","Lopez2021M","TRUE"
-0.148547713154639,"Within cluster","Lopez2021M","Lopez2021M","TRUE"
--0.077472264124603,"Between clusters","Lopez2021M","Lopez2021M","TRUE"
--1.53629142220213e-06,"Random shuffle","Lopez2021M","Lopez2021M","TRUE"
-0.123754768786361,"Random shuffle within","Lopez2021M","Lopez2021M","TRUE"
-0.0266000231367012,"Within cluster","Mayran2019M","Lopez2021M","FALSE"
--0.000177467998781086,"Between clusters","Mayran2019M","Lopez2021M","FALSE"
-0.0440821280206693,"Within cluster","Mayran2019M","Lopez2021M","FALSE"
-0.0272888323639524,"Between clusters","Mayran2019M","Lopez2021M","FALSE"
-0.351529136777787,"Within cluster","Mayran2019M","Lopez2021M","FALSE"
--0.080422537699162,"Between clusters","Mayran2019M","Lopez2021M","FALSE"
-0.0610825155830552,"Within cluster","Mayran2019M","Lopez2021M","FALSE"
-0.0254014946170599,"Between clusters","Mayran2019M","Lopez2021M","FALSE"
-0.0387561533867582,"Within cluster","Mayran2019M","Lopez2021M","FALSE"
-0.0251445187422692,"Between clusters","Mayran2019M","Lopez2021M","FALSE"
-0.0329068867956777,"Within cluster","Mayran2019M","Lopez2021M","FALSE"
--0.0216089399842706,"Between clusters","Mayran2019M","Lopez2021M","FALSE"
-0.0449610609592582,"Within cluster","RufZamojski2021M","Lopez2021M","FALSE"
--0.0241915935392545,"Between clusters","RufZamojski2021M","Lopez2021M","FALSE"
-0.0357312417444875,"Within cluster","RufZamojski2021M","Lopez2021M","FALSE"
-0.0203853382743575,"Between clusters","RufZamojski2021M","Lopez2021M","FALSE"
-0.489341316119421,"Within cluster","RufZamojski2021M","Lopez2021M","FALSE"
--0.0862390027254649,"Between clusters","RufZamojski2021M","Lopez2021M","FALSE"
-0.0612334277764259,"Within cluster","RufZamojski2021M","Lopez2021M","FALSE"
-0.0205358573717931,"Between clusters","RufZamojski2021M","Lopez2021M","FALSE"
-0.0521932660692113,"Within cluster","RufZamojski2021M","Lopez2021M","FALSE"
-0.0217242392396243,"Between clusters","RufZamojski2021M","Lopez2021M","FALSE"
-0.0526024487698988,"Within cluster","RufZamojski2021M","Lopez2021M","FALSE"
--0.0273485638925814,"Between clusters","RufZamojski2021M","Lopez2021M","FALSE"
-0.0609005733273301,"Within cluster","Vennekens2021M","Lopez2021M","FALSE"
-0.0211187255118361,"Between clusters","Vennekens2021M","Lopez2021M","FALSE"
-0.0576002417951556,"Within cluster","Vennekens2021M","Lopez2021M","FALSE"
-0.0433895011489671,"Between clusters","Vennekens2021M","Lopez2021M","FALSE"
-0.0349008715971901,"Within cluster","Vennekens2021M","Lopez2021M","FALSE"
-0.00870303782548731,"Between clusters","Vennekens2021M","Lopez2021M","FALSE"
-0.0656544468841204,"Within cluster","Vennekens2021M","Lopez2021M","FALSE"
-0.0410814418742632,"Between clusters","Vennekens2021M","Lopez2021M","FALSE"
-0.0464735395771599,"Within cluster","Vennekens2021M","Lopez2021M","FALSE"
-0.0407387624794531,"Between clusters","Vennekens2021M","Lopez2021M","FALSE"
-0.0279085042400691,"Within cluster","Vennekens2021M","Lopez2021M","FALSE"
-0.00624694181483903,"Between clusters","Vennekens2021M","Lopez2021M","FALSE"
-0.124058271233502,"Within cluster","Cheung2018M","Mayran2019M","FALSE"
--0.0228497282185632,"Between clusters","Cheung2018M","Mayran2019M","FALSE"
-0.0417309603829396,"Within cluster","Cheung2018M","Mayran2019M","FALSE"
-0.0393360336333445,"Between clusters","Cheung2018M","Mayran2019M","FALSE"
-0.0800874419993854,"Within cluster","Cheung2018M","Mayran2019M","FALSE"
-0.0366565666542505,"Between clusters","Cheung2018M","Mayran2019M","FALSE"
-0.0331073553468277,"Within cluster","Cheung2018M","Mayran2019M","FALSE"
--0.0200763892089694,"Between clusters","Cheung2018M","Mayran2019M","FALSE"
-0.147139962019278,"Within cluster","Cheung2018M","Mayran2019M","FALSE"
-0.0437695915448462,"Between clusters","Cheung2018M","Mayran2019M","FALSE"
-0.207242379122989,"Within cluster","Cheung2018M","Mayran2019M","FALSE"
--0.0564877339566195,"Between clusters","Cheung2018M","Mayran2019M","FALSE"
-0.205864651747521,"Within cluster","Fletcher2019M","Mayran2019M","FALSE"
--0.0323234152974178,"Between clusters","Fletcher2019M","Mayran2019M","FALSE"
-0.0253253146253752,"Within cluster","Fletcher2019M","Mayran2019M","FALSE"
-0.0237768019848519,"Between clusters","Fletcher2019M","Mayran2019M","FALSE"
-0.0339342970415166,"Within cluster","Fletcher2019M","Mayran2019M","FALSE"
-0.0250613567500144,"Between clusters","Fletcher2019M","Mayran2019M","FALSE"
-0.00251035248894305,"Within cluster","Fletcher2019M","Mayran2019M","FALSE"
-0.0065556906718678,"Between clusters","Fletcher2019M","Mayran2019M","FALSE"
-0.0716251734228035,"Within cluster","Fletcher2019M","Mayran2019M","FALSE"
-0.0289009012527202,"Between clusters","Fletcher2019M","Mayran2019M","FALSE"
-0.101648112870047,"Within cluster","Fletcher2019M","Mayran2019M","FALSE"
-0.0102976493750496,"Between clusters","Fletcher2019M","Mayran2019M","FALSE"
-0.172245805406766,"Within cluster","Lopez2021M","Mayran2019M","FALSE"
-0.0529473415946382,"Between clusters","Lopez2021M","Mayran2019M","FALSE"
-0.146989350539133,"Within cluster","Lopez2021M","Mayran2019M","FALSE"
-0.0907034749765434,"Between clusters","Lopez2021M","Mayran2019M","FALSE"
-0.155576812007509,"Within cluster","Lopez2021M","Mayran2019M","FALSE"
-0.0858890993572631,"Between clusters","Lopez2021M","Mayran2019M","FALSE"
-0.0700987144364936,"Within cluster","Lopez2021M","Mayran2019M","FALSE"
--0.0882371095060148,"Between clusters","Lopez2021M","Mayran2019M","FALSE"
-0.194784074278487,"Within cluster","Lopez2021M","Mayran2019M","FALSE"
-0.100736517486181,"Between clusters","Lopez2021M","Mayran2019M","FALSE"
-0.445668657236159,"Within cluster","Lopez2021M","Mayran2019M","FALSE"
--0.216688492857504,"Between clusters","Lopez2021M","Mayran2019M","FALSE"
-0.22943976051107,"Within cluster","Mayran2019M","Mayran2019M","TRUE"
--0.0392324497226205,"Between clusters","Mayran2019M","Mayran2019M","TRUE"
-0.00192733590182378,"Random shuffle","Mayran2019M","Mayran2019M","TRUE"
-0.109829398888695,"Random shuffle within","Mayran2019M","Mayran2019M","TRUE"
-0.10461485117287,"Within cluster","Mayran2019M","Mayran2019M","TRUE"
-0.0362197359820685,"Between clusters","Mayran2019M","Mayran2019M","TRUE"
--3.17617914156291e-05,"Random shuffle","Mayran2019M","Mayran2019M","TRUE"
-0.0607539003399867,"Random shuffle within","Mayran2019M","Mayran2019M","TRUE"
-0.110459335624873,"Within cluster","Mayran2019M","Mayran2019M","TRUE"
-0.0260003037451849,"Between clusters","Mayran2019M","Mayran2019M","TRUE"
-1.63820444572288e-05,"Random shuffle","Mayran2019M","Mayran2019M","TRUE"
-0.068414549184931,"Random shuffle within","Mayran2019M","Mayran2019M","TRUE"
-0.119432112590951,"Within cluster","Mayran2019M","Mayran2019M","TRUE"
--0.0728925636676393,"Between clusters","Mayran2019M","Mayran2019M","TRUE"
--1.26490857240591e-05,"Random shuffle","Mayran2019M","Mayran2019M","TRUE"
-0.0735804266371481,"Random shuffle within","Mayran2019M","Mayran2019M","TRUE"
-0.170114155924538,"Within cluster","Mayran2019M","Mayran2019M","TRUE"
-0.0531317242361461,"Between clusters","Mayran2019M","Mayran2019M","TRUE"
-0.000314947110850539,"Random shuffle","Mayran2019M","Mayran2019M","TRUE"
-0.134181456530829,"Random shuffle within","Mayran2019M","Mayran2019M","TRUE"
-0.23450420491327,"Within cluster","Mayran2019M","Mayran2019M","TRUE"
--0.0832947882018828,"Between clusters","Mayran2019M","Mayran2019M","TRUE"
-0.000759457153178679,"Random shuffle","Mayran2019M","Mayran2019M","TRUE"
-0.1250528152287,"Random shuffle within","Mayran2019M","Mayran2019M","TRUE"
-0.234350434657879,"Within cluster","RufZamojski2021M","Mayran2019M","FALSE"
--0.0488405045387405,"Between clusters","RufZamojski2021M","Mayran2019M","FALSE"
-0.0658730208118545,"Within cluster","RufZamojski2021M","Mayran2019M","FALSE"
-0.028322194816398,"Between clusters","RufZamojski2021M","Mayran2019M","FALSE"
-0.0983616368048541,"Within cluster","RufZamojski2021M","Mayran2019M","FALSE"
-0.0273759417166046,"Between clusters","RufZamojski2021M","Mayran2019M","FALSE"
-0.180745785995919,"Within cluster","RufZamojski2021M","Mayran2019M","FALSE"
--0.0933580728385935,"Between clusters","RufZamojski2021M","Mayran2019M","FALSE"
-0.119752251904165,"Within cluster","RufZamojski2021M","Mayran2019M","FALSE"
-0.0355113000208953,"Between clusters","RufZamojski2021M","Mayran2019M","FALSE"
-0.406733730737622,"Within cluster","RufZamojski2021M","Mayran2019M","FALSE"
--0.114875913120021,"Between clusters","RufZamojski2021M","Mayran2019M","FALSE"
-0.244897105262421,"Within cluster","Vennekens2021M","Mayran2019M","FALSE"
--0.0295031754759829,"Between clusters","Vennekens2021M","Mayran2019M","FALSE"
-0.0538170962410863,"Within cluster","Vennekens2021M","Mayran2019M","FALSE"
-0.0451275531247923,"Between clusters","Vennekens2021M","Mayran2019M","FALSE"
-0.112069179348318,"Within cluster","Vennekens2021M","Mayran2019M","FALSE"
-0.0467451796699036,"Between clusters","Vennekens2021M","Mayran2019M","FALSE"
-0.0648179991197375,"Within cluster","Vennekens2021M","Mayran2019M","FALSE"
--0.0195435904428593,"Between clusters","Vennekens2021M","Mayran2019M","FALSE"
-0.11745788716083,"Within cluster","Vennekens2021M","Mayran2019M","FALSE"
-0.0494035945718933,"Between clusters","Vennekens2021M","Mayran2019M","FALSE"
-0.224400123362943,"Within cluster","Vennekens2021M","Mayran2019M","FALSE"
--0.0326444237326356,"Between clusters","Vennekens2021M","Mayran2019M","FALSE"
-0.174194663539059,"Within cluster","Cheung2018M","RufZamojski2021M","FALSE"
-0.0404676930861125,"Between clusters","Cheung2018M","RufZamojski2021M","FALSE"
-0.0681081630073043,"Within cluster","Cheung2018M","RufZamojski2021M","FALSE"
-0.0316840249109702,"Between clusters","Cheung2018M","RufZamojski2021M","FALSE"
-0.025308185893113,"Within cluster","Cheung2018M","RufZamojski2021M","FALSE"
-0.0290075102729738,"Between clusters","Cheung2018M","RufZamojski2021M","FALSE"
-0.047069547509319,"Within cluster","Cheung2018M","RufZamojski2021M","FALSE"
-0.0258941467019111,"Between clusters","Cheung2018M","RufZamojski2021M","FALSE"
-0.0557078139195003,"Within cluster","Cheung2018M","RufZamojski2021M","FALSE"
-0.0382354158780794,"Between clusters","Cheung2018M","RufZamojski2021M","FALSE"
-0.0773428993081191,"Within cluster","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0115876888876462,"Between clusters","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0326611068342415,"Within cluster","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0152264969443668,"Between clusters","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0211549092351829,"Within cluster","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0167370198292419,"Between clusters","Fletcher2019M","RufZamojski2021M","FALSE"
-0.02177773993673,"Within cluster","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0145784904742948,"Between clusters","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0278502088520719,"Within cluster","Fletcher2019M","RufZamojski2021M","FALSE"
-0.0178997892297775,"Between clusters","Fletcher2019M","RufZamojski2021M","FALSE"
-0.226934247680469,"Within cluster","Lopez2021M","RufZamojski2021M","FALSE"
-0.113238761256879,"Between clusters","Lopez2021M","RufZamojski2021M","FALSE"
-0.119801391323778,"Within cluster","Lopez2021M","RufZamojski2021M","FALSE"
-0.105979027257539,"Between clusters","Lopez2021M","RufZamojski2021M","FALSE"
-0.0920343808017402,"Within cluster","Lopez2021M","RufZamojski2021M","FALSE"
-0.0915531371494531,"Between clusters","Lopez2021M","RufZamojski2021M","FALSE"
-0.0832273183323403,"Within cluster","Lopez2021M","RufZamojski2021M","FALSE"
-0.0932215718322084,"Between clusters","Lopez2021M","RufZamojski2021M","FALSE"
-0.124368536297798,"Within cluster","Lopez2021M","RufZamojski2021M","FALSE"
-0.111694918607394,"Between clusters","Lopez2021M","RufZamojski2021M","FALSE"
-0.128054148493795,"Within cluster","Mayran2019M","RufZamojski2021M","FALSE"
-0.00843343681418197,"Between clusters","Mayran2019M","RufZamojski2021M","FALSE"
-0.0441092153422291,"Within cluster","Mayran2019M","RufZamojski2021M","FALSE"
-0.0230197198108203,"Between clusters","Mayran2019M","RufZamojski2021M","FALSE"
-0.043466068979632,"Within cluster","Mayran2019M","RufZamojski2021M","FALSE"
-0.0216005366243587,"Between clusters","Mayran2019M","RufZamojski2021M","FALSE"
-0.0367228791571659,"Within cluster","Mayran2019M","RufZamojski2021M","FALSE"
-0.0229501462423323,"Between clusters","Mayran2019M","RufZamojski2021M","FALSE"
-0.0325252217387513,"Within cluster","Mayran2019M","RufZamojski2021M","FALSE"
-0.0227100052810061,"Between clusters","Mayran2019M","RufZamojski2021M","FALSE"
-0.191544342540173,"Within cluster","RufZamojski2021M","RufZamojski2021M","TRUE"
--0.0172776380381012,"Between clusters","RufZamojski2021M","RufZamojski2021M","TRUE"
--5.22864151772242e-05,"Random shuffle","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0418159039574408,"Random shuffle within","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.101891117809507,"Within cluster","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0311700573719707,"Between clusters","RufZamojski2021M","RufZamojski2021M","TRUE"
-5.34736053734474e-05,"Random shuffle","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0786406279512877,"Random shuffle within","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.129777238854983,"Within cluster","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0180379172299838,"Between clusters","RufZamojski2021M","RufZamojski2021M","TRUE"
-1.19500841197349e-05,"Random shuffle","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0436258532748234,"Random shuffle within","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0871055018330599,"Within cluster","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0301499715024812,"Between clusters","RufZamojski2021M","RufZamojski2021M","TRUE"
--3.19193844660986e-05,"Random shuffle","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0580644364178571,"Random shuffle within","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0521210388972666,"Within cluster","RufZamojski2021M","RufZamojski2021M","TRUE"
--0.00314422397236376,"Between clusters","RufZamojski2021M","RufZamojski2021M","TRUE"
-7.94617279772721e-05,"Random shuffle","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.0203376456533334,"Random shuffle within","RufZamojski2021M","RufZamojski2021M","TRUE"
-0.144266456072196,"Within cluster","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0309262352262311,"Between clusters","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0540406980089496,"Within cluster","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0329252561538177,"Between clusters","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0428529221126057,"Within cluster","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0359686606681672,"Between clusters","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0443693411445147,"Within cluster","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0344819865810537,"Between clusters","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0498436944811648,"Within cluster","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0425180669049226,"Between clusters","Vennekens2021M","RufZamojski2021M","FALSE"
-0.0636992199788538,"Within cluster","Cheung2018M","Vennekens2021M","FALSE"
-0.026158740637218,"Between clusters","Cheung2018M","Vennekens2021M","FALSE"
-0.0792305382672335,"Within cluster","Cheung2018M","Vennekens2021M","FALSE"
--0.0281827501041292,"Between clusters","Cheung2018M","Vennekens2021M","FALSE"
-0.156720080682823,"Within cluster","Cheung2018M","Vennekens2021M","FALSE"
-0.0180762435829486,"Between clusters","Cheung2018M","Vennekens2021M","FALSE"
-0.29356372710604,"Within cluster","Cheung2018M","Vennekens2021M","FALSE"
--0.0553651121250855,"Between clusters","Cheung2018M","Vennekens2021M","FALSE"
-0.0292028600427055,"Within cluster","Fletcher2019M","Vennekens2021M","FALSE"
-0.0204476034075296,"Between clusters","Fletcher2019M","Vennekens2021M","FALSE"
--0.0148366490180127,"Within cluster","Fletcher2019M","Vennekens2021M","FALSE"
-0.00362133209170341,"Between clusters","Fletcher2019M","Vennekens2021M","FALSE"
-0.0404382883527317,"Within cluster","Fletcher2019M","Vennekens2021M","FALSE"
-0.020437064052257,"Between clusters","Fletcher2019M","Vennekens2021M","FALSE"
-0.0411983905912586,"Within cluster","Fletcher2019M","Vennekens2021M","FALSE"
-0.0142237629002557,"Between clusters","Fletcher2019M","Vennekens2021M","FALSE"
-0.132780018333847,"Within cluster","Lopez2021M","Vennekens2021M","FALSE"
-0.0612265075281301,"Between clusters","Lopez2021M","Vennekens2021M","FALSE"
-0.234073153901644,"Within cluster","Lopez2021M","Vennekens2021M","FALSE"
-0.0936829934149097,"Between clusters","Lopez2021M","Vennekens2021M","FALSE"
-0.0571705165261006,"Within cluster","Lopez2021M","Vennekens2021M","FALSE"
-0.0623443632689254,"Between clusters","Lopez2021M","Vennekens2021M","FALSE"
-0.451365596382653,"Within cluster","Lopez2021M","Vennekens2021M","FALSE"
--0.162029677172062,"Between clusters","Lopez2021M","Vennekens2021M","FALSE"
-0.0664984016505888,"Within cluster","Mayran2019M","Vennekens2021M","FALSE"
-0.0200013829824817,"Between clusters","Mayran2019M","Vennekens2021M","FALSE"
-0.0532211595511314,"Within cluster","Mayran2019M","Vennekens2021M","FALSE"
-0.0260810429549642,"Between clusters","Mayran2019M","Vennekens2021M","FALSE"
-0.0343495471524412,"Within cluster","Mayran2019M","Vennekens2021M","FALSE"
-0.0215055576491257,"Between clusters","Mayran2019M","Vennekens2021M","FALSE"
-0.185781434532234,"Within cluster","Mayran2019M","Vennekens2021M","FALSE"
--0.0533794893898701,"Between clusters","Mayran2019M","Vennekens2021M","FALSE"
-0.0607980202758544,"Within cluster","RufZamojski2021M","Vennekens2021M","FALSE"
-0.0338551789713137,"Between clusters","RufZamojski2021M","Vennekens2021M","FALSE"
-0.0403053330240865,"Within cluster","RufZamojski2021M","Vennekens2021M","FALSE"
-0.0398213763287565,"Between clusters","RufZamojski2021M","Vennekens2021M","FALSE"
-0.0754803243029834,"Within cluster","RufZamojski2021M","Vennekens2021M","FALSE"
-0.0339463312317616,"Between clusters","RufZamojski2021M","Vennekens2021M","FALSE"
-0.404809037753597,"Within cluster","RufZamojski2021M","Vennekens2021M","FALSE"
--0.127771294326532,"Between clusters","RufZamojski2021M","Vennekens2021M","FALSE"
-0.119846360207593,"Within cluster","Vennekens2021M","Vennekens2021M","TRUE"
-0.0219082158832337,"Between clusters","Vennekens2021M","Vennekens2021M","TRUE"
-0.000244300658991812,"Random shuffle","Vennekens2021M","Vennekens2021M","TRUE"
-0.0667924790828591,"Random shuffle within","Vennekens2021M","Vennekens2021M","TRUE"
-0.133010093906594,"Within cluster","Vennekens2021M","Vennekens2021M","TRUE"
--0.0126416081629683,"Between clusters","Vennekens2021M","Vennekens2021M","TRUE"
-0.00199544210630641,"Random shuffle","Vennekens2021M","Vennekens2021M","TRUE"
-0.0766043129490946,"Random shuffle within","Vennekens2021M","Vennekens2021M","TRUE"
-0.147307478015633,"Within cluster","Vennekens2021M","Vennekens2021M","TRUE"
-0.0105749019838729,"Between clusters","Vennekens2021M","Vennekens2021M","TRUE"
--0.000136592696619133,"Random shuffle","Vennekens2021M","Vennekens2021M","TRUE"
-0.103221176502732,"Random shuffle within","Vennekens2021M","Vennekens2021M","TRUE"
-0.276937756878891,"Within cluster","Vennekens2021M","Vennekens2021M","TRUE"
--0.0396754518347921,"Between clusters","Vennekens2021M","Vennekens2021M","TRUE"
--0.000851885765121485,"Random shuffle","Vennekens2021M","Vennekens2021M","TRUE"
-0.0864128802970335,"Random shuffle within","Vennekens2021M","Vennekens2021M","TRUE"
+Correlation,Group,Dataset1,Dataset2,SameDataset
+0.118514233696415,Within cluster,Cheung 2018 - M,Cheung 2018 - M,TRUE
+-0.0367280080462101,Between clusters,Cheung 2018 - M,Cheung 2018 - M,TRUE
+-2.04690218991961E-05,Random shuffle,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0575627025313415,Random shuffle within,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.087731232348736,Within cluster,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0200715122535769,Between clusters,Cheung 2018 - M,Cheung 2018 - M,TRUE
+-6.00384895340209E-06,Random shuffle,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0622621308508447,Random shuffle within,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.114564946222753,Within cluster,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0134413175307408,Between clusters,Cheung 2018 - M,Cheung 2018 - M,TRUE
+3.24158668312136E-05,Random shuffle,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.089486211328169,Random shuffle within,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.270761797055825,Within cluster,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0167765103852551,Between clusters,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.000611507344857608,Random shuffle,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.204656272701902,Random shuffle within,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.175825503217232,Within cluster,Cheung 2018 - M,Cheung 2018 - M,TRUE
+-0.0149004633174067,Between clusters,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.000171664269589729,Random shuffle,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0615490558425075,Random shuffle within,Cheung 2018 - M,Cheung 2018 - M,TRUE
+0.0380813730648266,Within cluster,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.00518281902214668,Between clusters,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0122703024497634,Within cluster,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0120797225436726,Between clusters,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0288740325897929,Within cluster,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0141754138733878,Between clusters,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0280673879246107,Within cluster,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0208019578183495,Between clusters,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0218779326705572,Within cluster,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.0100889727678896,Between clusters,Fletcher 2019 - M,Cheung 2018 - M,FALSE
+0.177883071722776,Within cluster,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0751457388974264,Between clusters,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0962340197312689,Within cluster,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0719049256015903,Between clusters,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0651337030361591,Within cluster,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0638072749346362,Between clusters,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0776467618937697,Within cluster,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0656160363141736,Between clusters,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0937219933706974,Within cluster,Lopez 2021 - M,Cheung 2018 - M,FALSE
+-0.0231139977762826,Between clusters,Lopez 2021 - M,Cheung 2018 - M,FALSE
+0.0372558172627878,Within cluster,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.00919060221392929,Between clusters,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0305050258599523,Within cluster,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0203292749238593,Between clusters,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0323175596317329,Within cluster,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0187710565572115,Between clusters,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0454041534792762,Within cluster,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0198012954727143,Between clusters,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0551728144457226,Within cluster,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.00346769397983864,Between clusters,Mayran 2019 - M,Cheung 2018 - M,FALSE
+0.0667731732578826,Within cluster,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.00293194386171749,Between clusters,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.0484745897824554,Within cluster,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.0237207694776678,Between clusters,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.0660615155348025,Within cluster,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.0220564171910912,Between clusters,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.112105523341148,Within cluster,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.0354656529253199,Between clusters,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.021134709417383,Within cluster,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+-0.0108051072633246,Between clusters,RufZamojski 2021 - M,Cheung 2018 - M,FALSE
+0.0721463620676733,Within cluster,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0143709152162497,Between clusters,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0512855743398041,Within cluster,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0318431146682777,Between clusters,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0652499307930277,Within cluster,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0275514762486842,Between clusters,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.144768475466452,Within cluster,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0216320345435425,Between clusters,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0984536181979163,Within cluster,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.012906395320671,Between clusters,Vennekens 2021 - M,Cheung 2018 - M,FALSE
+0.0653325418137192,Within cluster,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0139943788421997,Between clusters,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0424857441331892,Within cluster,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0175448858697832,Between clusters,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0368306026340431,Within cluster,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0150391199260744,Between clusters,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0276242891809263,Within cluster,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.0124888590277666,Between clusters,Cheung 2018 - M,Fletcher 2019 - M,FALSE
+0.17795379962056,Within cluster,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+-0.0701624819897154,Between clusters,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+-0.000581707971899129,Random shuffle,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.058574072761275,Random shuffle within,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.135472368217974,Within cluster,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.0248187694153017,Between clusters,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+-0.000160116125328609,Random shuffle,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.093440538780845,Random shuffle within,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.057989307052349,Within cluster,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.0173635475821226,Between clusters,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.000102614128740854,Random shuffle,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.0353714648792004,Random shuffle within,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.222486291595337,Within cluster,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+-0.000549966533358553,Between clusters,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+-0.000307088831635822,Random shuffle,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.0653750323019568,Random shuffle within,Fletcher 2019 - M,Fletcher 2019 - M,TRUE
+0.0908967324395914,Within cluster,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.0406934828446183,Between clusters,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.121743624530625,Within cluster,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.066213928909456,Between clusters,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.0721960408666541,Within cluster,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.0413141259369356,Between clusters,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.0217454337519152,Within cluster,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+-0.00184612472834709,Between clusters,Lopez 2021 - M,Fletcher 2019 - M,FALSE
+0.0818761402397289,Within cluster,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.0104340616764612,Between clusters,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.046095500320236,Within cluster,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.0176438056452619,Between clusters,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.0439497596954769,Within cluster,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.0122290813119164,Between clusters,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.0323234978328156,Within cluster,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.00165432507106663,Between clusters,Mayran 2019 - M,Fletcher 2019 - M,FALSE
+0.0641603264750338,Within cluster,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+-0.00261137132921348,Between clusters,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.0449322130191875,Within cluster,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.0185807376332986,Between clusters,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.0551665499777693,Within cluster,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.00783260391188807,Between clusters,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.0169731103257038,Within cluster,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.00407661760168236,Between clusters,RufZamojski 2021 - M,Fletcher 2019 - M,FALSE
+0.0983624785885267,Within cluster,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0108976280635197,Between clusters,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0542044913056889,Within cluster,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0281324623244565,Between clusters,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0404006895342395,Within cluster,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0240837531663261,Between clusters,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0340401807156034,Within cluster,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0156472959863428,Between clusters,Vennekens 2021 - M,Fletcher 2019 - M,FALSE
+0.0602169740147606,Within cluster,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0021440675050036,Between clusters,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.045859269887547,Within cluster,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0266353879816977,Between clusters,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.079416741924793,Within cluster,Cheung 2018 - M,Lopez 2021 - M,FALSE
+-0.0151128338800644,Between clusters,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0481615245394686,Within cluster,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0227220517784492,Between clusters,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0342471013955707,Within cluster,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0248741047261791,Between clusters,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0307561340457203,Within cluster,Cheung 2018 - M,Lopez 2021 - M,FALSE
+-0.00592176338826923,Between clusters,Cheung 2018 - M,Lopez 2021 - M,FALSE
+0.0175762135309278,Within cluster,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0148224379869143,Between clusters,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0221987840692821,Within cluster,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0186345784042192,Between clusters,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0045026972476817,Within cluster,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.00590269847569501,Between clusters,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0250808104073065,Within cluster,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0179793973264628,Between clusters,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0177177641742757,Within cluster,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.017178689603045,Between clusters,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0291235560618375,Within cluster,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.0139700817837134,Between clusters,Fletcher 2019 - M,Lopez 2021 - M,FALSE
+0.200121078743561,Within cluster,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-0.0942231865853212,Between clusters,Lopez 2021 - M,Lopez 2021 - M,TRUE
+2.81681535972543E-06,Random shuffle,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.176293578247018,Random shuffle within,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.0963550810372576,Within cluster,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.0307457104072903,Between clusters,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-0.000175836752329188,Random shuffle,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.0363714272638669,Random shuffle within,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.631794005999611,Within cluster,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-0.166614305659624,Between clusters,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-0.00060421186233713,Random shuffle,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.527277102528493,Random shuffle within,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.176492272017992,Within cluster,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.0128550449068098,Between clusters,Lopez 2021 - M,Lopez 2021 - M,TRUE
+3.10129824555766E-05,Random shuffle,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.156704970597614,Random shuffle within,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.144711000132013,Within cluster,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.0350413776078072,Between clusters,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-5.99158078539469E-06,Random shuffle,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.103378471783623,Random shuffle within,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.148547713154639,Within cluster,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-0.077472264124603,Between clusters,Lopez 2021 - M,Lopez 2021 - M,TRUE
+-1.53629142220213E-06,Random shuffle,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.123754768786361,Random shuffle within,Lopez 2021 - M,Lopez 2021 - M,TRUE
+0.0266000231367012,Within cluster,Mayran 2019 - M,Lopez 2021 - M,FALSE
+-0.000177467998781086,Between clusters,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0440821280206693,Within cluster,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0272888323639524,Between clusters,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.351529136777787,Within cluster,Mayran 2019 - M,Lopez 2021 - M,FALSE
+-0.080422537699162,Between clusters,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0610825155830552,Within cluster,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0254014946170599,Between clusters,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0387561533867582,Within cluster,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0251445187422692,Between clusters,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0329068867956777,Within cluster,Mayran 2019 - M,Lopez 2021 - M,FALSE
+-0.0216089399842706,Between clusters,Mayran 2019 - M,Lopez 2021 - M,FALSE
+0.0449610609592582,Within cluster,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+-0.0241915935392545,Between clusters,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0357312417444875,Within cluster,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0203853382743575,Between clusters,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.489341316119421,Within cluster,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+-0.0862390027254649,Between clusters,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0612334277764259,Within cluster,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0205358573717931,Between clusters,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0521932660692113,Within cluster,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0217242392396243,Between clusters,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0526024487698988,Within cluster,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+-0.0273485638925814,Between clusters,RufZamojski 2021 - M,Lopez 2021 - M,FALSE
+0.0609005733273301,Within cluster,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0211187255118361,Between clusters,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0576002417951556,Within cluster,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0433895011489671,Between clusters,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0349008715971901,Within cluster,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.00870303782548731,Between clusters,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0656544468841204,Within cluster,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0410814418742632,Between clusters,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0464735395771599,Within cluster,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0407387624794531,Between clusters,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.0279085042400691,Within cluster,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.00624694181483903,Between clusters,Vennekens 2021 - M,Lopez 2021 - M,FALSE
+0.124058271233502,Within cluster,Cheung 2018 - M,Mayran 2019 - M,FALSE
+-0.0228497282185632,Between clusters,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.0417309603829396,Within cluster,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.0393360336333445,Between clusters,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.0800874419993854,Within cluster,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.0366565666542505,Between clusters,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.0331073553468277,Within cluster,Cheung 2018 - M,Mayran 2019 - M,FALSE
+-0.0200763892089694,Between clusters,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.147139962019278,Within cluster,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.0437695915448462,Between clusters,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.207242379122989,Within cluster,Cheung 2018 - M,Mayran 2019 - M,FALSE
+-0.0564877339566195,Between clusters,Cheung 2018 - M,Mayran 2019 - M,FALSE
+0.205864651747521,Within cluster,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+-0.0323234152974178,Between clusters,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0253253146253752,Within cluster,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0237768019848519,Between clusters,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0339342970415166,Within cluster,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0250613567500144,Between clusters,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.00251035248894305,Within cluster,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0065556906718678,Between clusters,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0716251734228035,Within cluster,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0289009012527202,Between clusters,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.101648112870047,Within cluster,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.0102976493750496,Between clusters,Fletcher 2019 - M,Mayran 2019 - M,FALSE
+0.172245805406766,Within cluster,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.0529473415946382,Between clusters,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.146989350539133,Within cluster,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.0907034749765434,Between clusters,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.155576812007509,Within cluster,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.0858890993572631,Between clusters,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.0700987144364936,Within cluster,Lopez 2021 - M,Mayran 2019 - M,FALSE
+-0.0882371095060148,Between clusters,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.194784074278487,Within cluster,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.100736517486181,Between clusters,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.445668657236159,Within cluster,Lopez 2021 - M,Mayran 2019 - M,FALSE
+-0.216688492857504,Between clusters,Lopez 2021 - M,Mayran 2019 - M,FALSE
+0.22943976051107,Within cluster,Mayran 2019 - M,Mayran 2019 - M,TRUE
+-0.0392324497226205,Between clusters,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.00192733590182378,Random shuffle,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.109829398888695,Random shuffle within,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.10461485117287,Within cluster,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.0362197359820685,Between clusters,Mayran 2019 - M,Mayran 2019 - M,TRUE
+-3.17617914156291E-05,Random shuffle,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.0607539003399867,Random shuffle within,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.110459335624873,Within cluster,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.0260003037451849,Between clusters,Mayran 2019 - M,Mayran 2019 - M,TRUE
+1.63820444572288E-05,Random shuffle,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.068414549184931,Random shuffle within,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.119432112590951,Within cluster,Mayran 2019 - M,Mayran 2019 - M,TRUE
+-0.0728925636676393,Between clusters,Mayran 2019 - M,Mayran 2019 - M,TRUE
+-1.26490857240591E-05,Random shuffle,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.0735804266371481,Random shuffle within,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.170114155924538,Within cluster,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.0531317242361461,Between clusters,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.000314947110850539,Random shuffle,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.134181456530829,Random shuffle within,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.23450420491327,Within cluster,Mayran 2019 - M,Mayran 2019 - M,TRUE
+-0.0832947882018828,Between clusters,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.000759457153178679,Random shuffle,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.1250528152287,Random shuffle within,Mayran 2019 - M,Mayran 2019 - M,TRUE
+0.234350434657879,Within cluster,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+-0.0488405045387405,Between clusters,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.0658730208118545,Within cluster,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.028322194816398,Between clusters,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.0983616368048541,Within cluster,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.0273759417166046,Between clusters,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.180745785995919,Within cluster,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+-0.0933580728385935,Between clusters,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.119752251904165,Within cluster,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.0355113000208953,Between clusters,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.406733730737622,Within cluster,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+-0.114875913120021,Between clusters,RufZamojski 2021 - M,Mayran 2019 - M,FALSE
+0.244897105262421,Within cluster,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+-0.0295031754759829,Between clusters,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.0538170962410863,Within cluster,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.0451275531247923,Between clusters,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.112069179348318,Within cluster,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.0467451796699036,Between clusters,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.0648179991197375,Within cluster,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+-0.0195435904428593,Between clusters,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.11745788716083,Within cluster,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.0494035945718933,Between clusters,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.224400123362943,Within cluster,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+-0.0326444237326356,Between clusters,Vennekens 2021 - M,Mayran 2019 - M,FALSE
+0.174194663539059,Within cluster,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0404676930861125,Between clusters,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0681081630073043,Within cluster,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0316840249109702,Between clusters,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.025308185893113,Within cluster,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0290075102729738,Between clusters,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.047069547509319,Within cluster,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0258941467019111,Between clusters,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0557078139195003,Within cluster,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0382354158780794,Between clusters,Cheung 2018 - M,RufZamojski 2021 - M,FALSE
+0.0773428993081191,Within cluster,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0115876888876462,Between clusters,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0326611068342415,Within cluster,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0152264969443668,Between clusters,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0211549092351829,Within cluster,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0167370198292419,Between clusters,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.02177773993673,Within cluster,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0145784904742948,Between clusters,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0278502088520719,Within cluster,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.0178997892297775,Between clusters,Fletcher 2019 - M,RufZamojski 2021 - M,FALSE
+0.226934247680469,Within cluster,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.113238761256879,Between clusters,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.119801391323778,Within cluster,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.105979027257539,Between clusters,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.0920343808017402,Within cluster,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.0915531371494531,Between clusters,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.0832273183323403,Within cluster,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.0932215718322084,Between clusters,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.124368536297798,Within cluster,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.111694918607394,Between clusters,Lopez 2021 - M,RufZamojski 2021 - M,FALSE
+0.128054148493795,Within cluster,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.00843343681418197,Between clusters,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0441092153422291,Within cluster,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0230197198108203,Between clusters,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.043466068979632,Within cluster,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0216005366243587,Between clusters,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0367228791571659,Within cluster,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0229501462423323,Between clusters,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0325252217387513,Within cluster,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.0227100052810061,Between clusters,Mayran 2019 - M,RufZamojski 2021 - M,FALSE
+0.191544342540173,Within cluster,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+-0.0172776380381012,Between clusters,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+-5.22864151772242E-05,Random shuffle,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0418159039574408,Random shuffle within,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.101891117809507,Within cluster,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0311700573719707,Between clusters,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+5.34736053734474E-05,Random shuffle,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0786406279512877,Random shuffle within,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.129777238854983,Within cluster,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0180379172299838,Between clusters,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+1.19500841197349E-05,Random shuffle,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0436258532748234,Random shuffle within,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0871055018330599,Within cluster,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0301499715024812,Between clusters,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+-3.19193844660986E-05,Random shuffle,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0580644364178571,Random shuffle within,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0521210388972666,Within cluster,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+-0.00314422397236376,Between clusters,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+7.94617279772721E-05,Random shuffle,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.0203376456533334,Random shuffle within,RufZamojski 2021 - M,RufZamojski 2021 - M,TRUE
+0.144266456072196,Within cluster,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0309262352262311,Between clusters,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0540406980089496,Within cluster,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0329252561538177,Between clusters,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0428529221126057,Within cluster,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0359686606681672,Between clusters,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0443693411445147,Within cluster,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0344819865810537,Between clusters,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0498436944811648,Within cluster,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0425180669049226,Between clusters,Vennekens 2021 - M,RufZamojski 2021 - M,FALSE
+0.0636992199788538,Within cluster,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+0.026158740637218,Between clusters,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+0.0792305382672335,Within cluster,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+-0.0281827501041292,Between clusters,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+0.156720080682823,Within cluster,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+0.0180762435829486,Between clusters,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+0.29356372710604,Within cluster,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+-0.0553651121250855,Between clusters,Cheung 2018 - M,Vennekens 2021 - M,FALSE
+0.0292028600427055,Within cluster,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.0204476034075296,Between clusters,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+-0.0148366490180127,Within cluster,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.00362133209170341,Between clusters,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.0404382883527317,Within cluster,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.020437064052257,Between clusters,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.0411983905912586,Within cluster,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.0142237629002557,Between clusters,Fletcher 2019 - M,Vennekens 2021 - M,FALSE
+0.132780018333847,Within cluster,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.0612265075281301,Between clusters,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.234073153901644,Within cluster,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.0936829934149097,Between clusters,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.0571705165261006,Within cluster,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.0623443632689254,Between clusters,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.451365596382653,Within cluster,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+-0.162029677172062,Between clusters,Lopez 2021 - M,Vennekens 2021 - M,FALSE
+0.0664984016505888,Within cluster,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.0200013829824817,Between clusters,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.0532211595511314,Within cluster,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.0260810429549642,Between clusters,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.0343495471524412,Within cluster,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.0215055576491257,Between clusters,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.185781434532234,Within cluster,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+-0.0533794893898701,Between clusters,Mayran 2019 - M,Vennekens 2021 - M,FALSE
+0.0607980202758544,Within cluster,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.0338551789713137,Between clusters,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.0403053330240865,Within cluster,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.0398213763287565,Between clusters,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.0754803243029834,Within cluster,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.0339463312317616,Between clusters,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.404809037753597,Within cluster,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+-0.127771294326532,Between clusters,RufZamojski 2021 - M,Vennekens 2021 - M,FALSE
+0.119846360207593,Within cluster,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.0219082158832337,Between clusters,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.000244300658991812,Random shuffle,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.0667924790828591,Random shuffle within,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.133010093906594,Within cluster,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+-0.0126416081629683,Between clusters,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.00199544210630641,Random shuffle,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.0766043129490946,Random shuffle within,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.147307478015633,Within cluster,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.0105749019838729,Between clusters,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+-0.000136592696619133,Random shuffle,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.103221176502732,Random shuffle within,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.276937756878891,Within cluster,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+-0.0396754518347921,Between clusters,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+-0.000851885765121485,Random shuffle,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
+0.0864128802970335,Random shuffle within,Vennekens 2021 - M,Vennekens 2021 - M,TRUE
