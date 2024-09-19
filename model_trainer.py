@@ -9,7 +9,7 @@ import tensorflow as tf
 import keras
 from keras import backend as K
 from keras.regularizers import L1, L2, L1L2
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.metrics import F1Score, AUC
 # import tensorflow_addons as tfa
 import pandas as pd
@@ -21,6 +21,7 @@ import os
 from math import exp
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
+
 
 class LabelTransferTrainer:
     """
@@ -101,7 +102,7 @@ class LabelTransferTrainer:
         tf.random.set_seed(self.random_seed)
 
         self._setup_models()
-        
+
     def _create_model(self, learning_rate: float, num_layers: int, num_nodes: int,
                       reg_factor: float, reg_type: str, dropout_rate: float,
                       bn_momentum: float, num_classes: int) -> keras.Sequential:
@@ -156,10 +157,11 @@ class LabelTransferTrainer:
 
         optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         model.compile(optimizer=optimizer,
-                      loss='categorical_crossentropy',                      
-                      metrics = ['accuracy', F1Score(average='micro', name='micro_f1_score'),
-                                 F1Score(average='macro', name='macro_f1_score'),
-                                 AUC(num_thresholds = 100, name='ROCAUC')])
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy', F1Score(average='micro', name='micro_f1_score'),
+                               F1Score(average='macro',
+                                       name='macro_f1_score'),
+                               AUC(num_thresholds=100, name='ROCAUC')])
         return model
 
     def _setup_models(self) -> None:
@@ -184,7 +186,7 @@ class LabelTransferTrainer:
             tf.keras.backend.clear_session()
 
             model = self._create_model(learning_rate=h['learning_rate'], num_layers=h['num_layers'],
-                                       num_nodes=h['num_nodes'], reg_factor=h['reg_factor'], 
+                                       num_nodes=h['num_nodes'], reg_factor=h['reg_factor'],
                                        reg_type=h['reg_type'], dropout_rate=h['dropout_rate'],
                                        bn_momentum=h['bn_momentum'], num_classes=h['num_classes'])
 
@@ -234,7 +236,7 @@ class LabelTransferTrainer:
         expr_data = pd.read_csv(os.path.join(
             self.data_dir, f"{dataset}_expression.csv"), index_col=0)
         expr_data = expr_data.T
-        
+
         labels_data = pd.read_csv(os.path.join(
             self.data_dir, f"{dataset}_clusters.csv"), index_col=0)
         labels_data = labels_data['Cluster'].values
@@ -242,12 +244,12 @@ class LabelTransferTrainer:
 
         expr_data_train, expr_data_test, labels_data_train, labels_data_test = train_test_split(
             expr_data, labels_data, train_size=1.0-test_size, random_state=self.random_seed)
-        
+
         # Min-max scaling
         scaler = MinMaxScaler()
         expr_data_train = scaler.fit_transform(expr_data_train)
-        expr_data_test = scaler.transform(expr_data_test)        
-        
+        expr_data_test = scaler.transform(expr_data_test)
+
         return (expr_data_train, expr_data_test,
                 labels_data_train, labels_data_test)
 
@@ -269,22 +271,33 @@ class LabelTransferTrainer:
         for f in os.listdir(self.output_dir):
             if (f.endswith('.keras') or f.endswith('.csv')) and "_best_" in f:
                 os.remove(os.path.join(self.output_dir, f))
+            
+            if (f.endswith('history.csv')):
+                os.remove(os.path.join(self.output_dir, f))
 
-    def load_best_models(self) -> None:
+    def load_best_models(self, clear_others: bool = False) -> pd.DataFrame:
         """
         Loads the best models from the output directory.
-        
+
         Parameters
         ----------
-        None
-        
+        clear_others : bool, optional, default = False
+            Whether to clear the other (non-best) models from the output directory or not.
+
         Returns
         -------
-        None
+        best_models_dict : pd.DataFrame
+            A DataFrame with the best models for each dataset. The columns are:
+            - filename: the filename of the model
+            - f1: the F1 score of the model
+            - date: the date the model was trained
         """
-        all_models = [f for f in os.listdir(self.output_dir) if (f.endswith('.keras') and "_best_" in f)]
+        best_models_dict = {}
+        all_models = [f for f in os.listdir(self.output_dir) if (
+            f.endswith('.keras') and "_best_" in f)]
 
-        studies = set([m.split("_best_")[0] for m in all_models]) # Get the name of the studies
+        studies = set([m.split("_best_")[0]
+                      for m in all_models])  # Get the name of the studies
         for s in studies:
             models = [m for m in all_models if m.startswith(s)]
             # Get F1 and date from the model name
@@ -294,12 +307,24 @@ class LabelTransferTrainer:
             # Sort the models by date, with latest first
             models = [m for _, m in sorted(zip(date, models), reverse=True)]
             best_model = models[np.argmax([float(f) for f in f1])]
-            self.models[s] = keras.models.load_model(os.path.join(self.output_dir, best_model))
-            self.training_histories[s] = pd.read_csv(os.path.join(self.output_dir, f"{s}_history.csv"))
+            self.models[s] = keras.models.load_model(
+                os.path.join(self.output_dir, best_model))
+            self.training_histories[s] = pd.read_csv(
+                os.path.join(self.output_dir, f"{s}_{date[np.argmax([float(f) for f in f1])]}_history.csv"))
+            if clear_others:
+                for m in models:
+                    if m != best_model:
+                        os.remove(os.path.join(self.output_dir, m))
+                        os.remove(os.path.join(
+                            self.output_dir, f"{s}_{date[np.argmax([float(f) for f in f1])]}_history.csv"))
+
             if self.verbose:
                 print(f"Loaded best model for {s} from {best_model}")
-            
-        
+            best_models_dict[s] = {
+                "filename": best_model, "f1": f1[np.argmax([float(f) for f in f1])], "date": date[np.argmax([float(f) for f in f1])]}
+
+        return pd.DataFrame(best_models_dict).T
+
     def _train_model(self,
                      model: keras.Sequential,
                      dataset: str,
@@ -334,18 +359,27 @@ class LabelTransferTrainer:
         date = time.strftime("%Y%m%d-%H%M%S")
         # Save model as <dataset_name>_best_<date>-<time>_ep<num_epochs>-f1sc<macro_f1_score>.keras
         checkpoint = ModelCheckpoint(f"{self.output_dir}{dataset}_best_{date}_ep" +
-                                                     "{epoch:02d}-f1_{val_macro_f1_score:.2f}.keras",
-                                                     monitor='val_macro_f1_score',
-                                                     save_best_only=True,
-                                                     initial_value_threshold=0.5,
-                                                     mode='max')
-        
+                                     "{epoch:02d}-f1_{val_macro_f1_score:.2f}.keras",
+                                     monitor='val_macro_f1_score',
+                                     save_best_only=True,
+                                     initial_value_threshold=0.3,
+                                     mode='max')
+
+        decay_rate = self._get_hyperparameters(dataset)['lr_exp_decay']
+        initial_lr = self._get_hyperparameters(dataset)['learning_rate']
+
+        def lr_exp_decay(epoch):
+            return initial_lr * np.exp(-decay_rate * epoch)
+
+        lr_scheduler_callback = LearningRateScheduler(
+            lambda epoch: lr_exp_decay(epoch))
+
         history = model.fit(train_expr, train_labels,
                             validation_split=0.2,
                             epochs=epochs,
                             batch_size=batch_size,
                             verbose="auto",
-                            callbacks=[checkpoint])
+                            callbacks=[checkpoint, lr_scheduler_callback])
 
         # Find all the files in the output directory with the pattern
         # f"{self.output_dir}/{dataset}_best_{date}_ep_{epoch:02d}-f1_{macro_f1_score:.2f}.keras"
@@ -369,11 +403,12 @@ class LabelTransferTrainer:
                 f"Loading best model for {dataset} from {filenames[np.argmax(scores)]}...")
 
         # Load the best model
-        model = keras.models.load_model(filepath = os.path.join(self.output_dir, filenames[np.argmax(scores)]))
+        model = keras.models.load_model(filepath=os.path.join(
+            self.output_dir, filenames[np.argmax(scores)]))
 
         # Save history to file
         pd.DataFrame(history.history).to_csv(
-            os.path.join(self.output_dir, f"{dataset}_history.csv"))
+            os.path.join(self.output_dir, f"{dataset}_{date}_history.csv"), index=False)
 
         end_time = time.time()
 
@@ -465,8 +500,10 @@ class LabelTransferTrainer:
                 row['dataset'])
             metrics[row['dataset']] = self.models[row['dataset']].evaluate(
                 expr_test, labels_test, batch_size=row['batch_size'])
-            metrics_names = ['accuracy', 'micro_f1_score', 'macro_f1_score', 'ROCAUC']
-            metrics[row['dataset']] = dict(zip(metrics_names, metrics[row['dataset']]))
+            metrics_names = ['accuracy', 'micro_f1_score',
+                             'macro_f1_score', 'ROCAUC']
+            metrics[row['dataset']] = dict(
+                zip(metrics_names, metrics[row['dataset']]))
 
         return metrics
 
@@ -537,11 +574,11 @@ class LabelTransferTrainer:
         tune_res : pd.DataFrame containing the results of the hyperparameter tuning.
         """
 
-        valid_hyperparameters = ['learning_rate', 'num_layers', 'num_nodes', 'reg_factor', 
+        valid_hyperparameters = ['learning_rate', 'num_layers', 'num_nodes', 'reg_factor',
                                  'reg_type', 'dropout_rate', 'bn_momentum', 'batch_size']
-        
-        assert hyperparam in valid_hyperparameters        
-        
+
+        assert hyperparam in valid_hyperparameters
+
         hyper = self._get_hyperparameters(dataset)
 
         expr_train, _, labels_train, _ = self._load_data(
@@ -551,7 +588,7 @@ class LabelTransferTrainer:
 
         for v in values:
             num_layers = hyper['num_layers'] if hyperparam != 'num_layers' else v
-            num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v            
+            num_nodes = hyper['num_nodes'] if hyperparam != 'num_nodes' else v
             reg_factor = hyper['reg_factor'] if hyperparam != 'reg_factor' else v
             reg_type = hyper['reg_type'] if hyperparam != 'reg_type' else v
             bn_momentum = hyper['bn_momentum'] if hyperparam != 'bn_momentum' else v
@@ -567,7 +604,7 @@ class LabelTransferTrainer:
 
             for i, (train, val) in enumerate(kfold.split(expr_train, labels_train)):
                 print(f"Fold {i+1}", end="...")
-                
+
                 # Reset model
                 K.clear_session()
                 model = self._create_model(learning_rate=learning_rate,
@@ -577,16 +614,17 @@ class LabelTransferTrainer:
                                            reg_type=reg_type,
                                            dropout_rate=dropout_rate,
                                            bn_momentum=bn_momentum,
-                                           num_classes=hyper['num_classes'])           
+                                           num_classes=hyper['num_classes'])
 
                 history = model.fit(expr_train[train], labels_train[train],
                                     validation_data=(
                                         expr_train[val], labels_train[val]),
                                     epochs=hyper['epochs'],
-                                    batch_size=batch_size,            
+                                    batch_size=batch_size,
                                     verbose=self.verbose)
 
-                print("max F1 score:", max(history.history['val_macro_f1_score']))
+                print("max F1 score:", max(
+                    history.history['val_macro_f1_score']))
 
                 tune_res = pd.concat([tune_res, pd.DataFrame({
                     hyperparam: [v] * hyper['epochs'],
@@ -618,9 +656,9 @@ class LabelTransferTrainer:
                 })
 
         return tune_res
-    
-    def tune_two_hyperparameters(self, dataset:str,
-                                 hyperparam1:str, hyperparam2:str, values1:list, values2:list, n_folds:int=5) -> pd.DataFrame:
+
+    def tune_two_hyperparameters(self, dataset: str,
+                                 hyperparam1: str, hyperparam2: str, values1: list, values2: list, n_folds: int = 5) -> pd.DataFrame:
         """
         Tests the effect of changing two hyperparameters on the performance of a single model
 
@@ -643,51 +681,62 @@ class LabelTransferTrainer:
         tune_res : pd.DataFrame containing the results of the hyperparameter tuning.
         """
 
-        valid_hyperparameters = ['learning_rate', 'num_layers', 'num_nodes', 'reg_factor', 
+        valid_hyperparameters = ['learning_rate', 'num_layers', 'num_nodes', 'reg_factor',
                                  'reg_type', 'dropout_rate', 'bn_momentum', 'batch_size']
-        
+
         if not hyperparam1 in valid_hyperparameters:
             raise ValueError(f"Invalid hyperparameter {hyperparam1}")
         if not hyperparam2 in valid_hyperparameters:
             raise ValueError(f"Invalid hyperparameter {hyperparam2}")
-        
+
         if hyperparam1 == hyperparam2:
-            raise ValueError("The two hyperparameters to tune should be different")
-        
+            raise ValueError(
+                "The two hyperparameters to tune should be different")
+
         hyper = self._get_hyperparameters(dataset)
-        expr_train, _, labels_train, _ = self._load_data(dataset, test_size=0.9)
+        expr_train, _, labels_train, _ = self._load_data(
+            dataset, test_size=0.9)
 
         tune_res = pd.DataFrame()
 
         for v1 in values1:
             for v2 in values2:
-                num_layers = v1 if hyperparam1 == 'num_layers' else v2 if hyperparam2 == 'num_layers' else hyper['num_layers']
-                num_nodes = v1 if hyperparam1 == 'num_nodes' else v2 if hyperparam2 == 'num_nodes' else hyper['num_nodes']
-                reg_factor = v1 if hyperparam1 == 'reg_factor' else v2 if hyperparam2 == 'reg_factor' else hyper['reg_factor']
-                reg_type = v1 if hyperparam1 == 'reg_type' else v2 if hyperparam2 == 'reg_type' else hyper['reg_type']
-                bn_momentum = v1 if hyperparam1 == 'bn_momentum' else v2 if hyperparam2 == 'bn_momentum' else hyper['bn_momentum']
-                dropout_rate = v1 if hyperparam1 == 'dropout_rate' else v2 if hyperparam2 == 'dropout_rate' else hyper['dropout_rate']
-                learning_rate = v1 if hyperparam1 == 'learning_rate' else v2 if hyperparam2 == 'learning_rate' else hyper['learning_rate']
-                batch_size = v1 if hyperparam1 == 'batch_size' else v2 if hyperparam2 == 'batch_size' else hyper['batch_size']
-                
-                print(f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam1} = {v1} and {hyperparam2} = {v2}")
+                num_layers = v1 if hyperparam1 == 'num_layers' else v2 if hyperparam2 == 'num_layers' else hyper[
+                    'num_layers']
+                num_nodes = v1 if hyperparam1 == 'num_nodes' else v2 if hyperparam2 == 'num_nodes' else hyper[
+                    'num_nodes']
+                reg_factor = v1 if hyperparam1 == 'reg_factor' else v2 if hyperparam2 == 'reg_factor' else hyper[
+                    'reg_factor']
+                reg_type = v1 if hyperparam1 == 'reg_type' else v2 if hyperparam2 == 'reg_type' else hyper[
+                    'reg_type']
+                bn_momentum = v1 if hyperparam1 == 'bn_momentum' else v2 if hyperparam2 == 'bn_momentum' else hyper[
+                    'bn_momentum']
+                dropout_rate = v1 if hyperparam1 == 'dropout_rate' else v2 if hyperparam2 == 'dropout_rate' else hyper[
+                    'dropout_rate']
+                learning_rate = v1 if hyperparam1 == 'learning_rate' else v2 if hyperparam2 == 'learning_rate' else hyper[
+                    'learning_rate']
+                batch_size = v1 if hyperparam1 == 'batch_size' else v2 if hyperparam2 == 'batch_size' else hyper[
+                    'batch_size']
+
+                print(
+                    f"Training model {dataset} for {hyper['epochs']} epochs, with {hyperparam1} = {v1} and {hyperparam2} = {v2}")
 
                 kfold = KFold(n_splits=n_folds, shuffle=True,
-                            random_state=self.random_seed)
+                              random_state=self.random_seed)
 
                 for i, (train, val) in enumerate(kfold.split(expr_train, labels_train)):
                     print(f"Fold {i+1}", end="...")
-                    
+
                     # Reset model
                     K.clear_session()
                     model = self._create_model(learning_rate=learning_rate,
-                                            num_layers=num_layers,
-                                            num_nodes=num_nodes,
-                                            reg_factor=reg_factor,
-                                            reg_type=reg_type,
-                                            dropout_rate=dropout_rate,
-                                            bn_momentum=bn_momentum,
-                                            num_classes=hyper['num_classes'])           
+                                               num_layers=num_layers,
+                                               num_nodes=num_nodes,
+                                               reg_factor=reg_factor,
+                                               reg_type=reg_type,
+                                               dropout_rate=dropout_rate,
+                                               bn_momentum=bn_momentum,
+                                               num_classes=hyper['num_classes'])
 
                     history = model.fit(expr_train[train], labels_train[train],
                                         validation_data=(
@@ -696,7 +745,8 @@ class LabelTransferTrainer:
                                         batch_size=batch_size,
                                         verbose=self.verbose)
 
-                    print("max macro F1 score:", max(history.history['val_macro_f1_score']))
+                    print("max macro F1 score:", max(
+                        history.history['val_macro_f1_score']))
 
                     tune_res = pd.concat([tune_res, pd.DataFrame({
                         hyperparam1: [v1] * hyper['epochs'],
