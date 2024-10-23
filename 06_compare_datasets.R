@@ -460,11 +460,11 @@ for (thr in c(10, 15, 20)) {
 
 
   if (output_format == "pdf") {
-    pdf(paste0("plots/community_proportions_thr", thr, "_", data_to_process, ".pdf"),
+    pdf(paste0("plots/markers_community_proportions_thr", thr, "_", data_to_process, ".pdf"),
       width = 7, height = 7
     )
   } else if (output_format == "png") {
-    png(paste0("plots/community_proportions_", data_to_process, ".png"),
+    png(paste0("plots/markers_community_proportions_", data_to_process, ".png"),
       width = 7, height = 7, units = "in", res = 300
     )
   }
