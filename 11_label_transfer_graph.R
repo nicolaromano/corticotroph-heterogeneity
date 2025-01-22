@@ -4,6 +4,7 @@ library(grid)
 library(gridExtra)
 library(pbapply)
 library(dplyr)
+library(forcats)
 library(igraph)
 library(RColorBrewer)
 
@@ -12,13 +13,13 @@ SHAP_path <- "label_transfer_model_output/shap_top_genes/"
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
-data_to_process <- "F" # M or F
+data_to_process <- "M" # M or F
 
 datasets <- datasets %>%
     dplyr::filter(author != "Ho") %>%
     dplyr::filter(sex == data_to_process)
 
-output_format <- "pdf" # or "png"
+output_format <- "none" # "pdf" or "png" or "none"
 output_folder <- "label_transfer_model_output/predictions/"
 
 filenames <- dir("rds_outs",
@@ -34,15 +35,19 @@ for (dataset in unique(datasets$study_id)) {
     predictions <- read.csv(filename)
     print(paste("Adding predictions to", dataset))
     # Add the predictions to the Seurat objects
-    seurat_corticotrophs[[dataset]]@meta.data <- cbind(seurat_corticotrophs[[dataset]]@meta.data, predictions[3:ncol(predictions)])
+    
+    pred <- predictions %>% 
+        select(starts_with("Predicted"))
+
+    seurat_corticotrophs[[dataset]]@meta.data <- cbind(seurat_corticotrophs[[dataset]]@meta.data, pred)
 
     seurat_corticotrophs[[dataset]]@meta.data %>%
         mutate_at(vars(starts_with("Predicted")), as.factor) -> seurat_corticotrophs[[dataset]]@meta.data
 }
 
 confusion_matrices <- lapply(seurat_corticotrophs, function(obj) {
-    predictions <- obj@meta.data %>% select(starts_with("Label_Transfer_Cluster"))
-    predictors_names <- sub("Label_Transfer_Cluster_", "", names(predictions))
+    predictions <- obj@meta.data %>% select(starts_with("Predicted_cluster_"))
+    predictors_names <- sub("Predicted_cluster_", "", names(predictions))
 
     # Get the confusion matrix for each dataset
     conf <- lapply(seq_along(predictions), function(i) {
@@ -189,10 +194,11 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
         weight <- E(network)$Freq - min_similarity
         plot(network,
             vertex.color = node_colors,
-            edge.width = weight * 50,
+            edge.width = weight * 30,
             edge.curved = 0.3,
             edge.color = rgb(0, 0, 0, 0.3 * weight * (1 / (1 - min_similarity))),
-            edge.arrow.size = 1.5,
+            edge.arrow.size = 2,
+            edge.arrow.alpha = 1,
             vertex.label.color = label_color,
             layout = layout,
             # layout = layout.fruchterman.reingold
@@ -208,6 +214,8 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
 }
 
 for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
+    print(paste("Processing min_similarity = ", min_similarity))
+
     if (output_format == "png") {
         png(paste0(output_folder, "label_transfer_graph_", data_to_process, "_", min_similarity, ".png"),
             width = 10, height = 10,
@@ -221,7 +229,7 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
 
     if (data_to_process == "M") {
         community_palette <- c(
-        "#F16745", "#FFC65D", "#7BC8A4"
+        "#F16745", "#FFC65D", "#7BC8A4", "#C44A9A", "#4A90F2", "#8A5A44"
         )
     } else {
         community_palette <- c(
@@ -230,14 +238,19 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
         )
     }
 
-    # community_palette <- c(
-    #     "#F16745", "#FFC65D", "#7BC8A4",
-    #     "#4CC3D9", "#93648D", "#808070"
-    # )
-
+    if (data_to_process == "M") {
+        out_radius <- 5
+        in_radius <- 1
+    } else {
+        out_radius <- 5
+        in_radius <- 1.5
+    }
+    
     graph <- get_similarity_graph(min_similarity,
         do_plot = TRUE,
-        node_palette = community_palette
+        node_palette = community_palette,
+        out_radius = out_radius,
+        in_radius = in_radius
     )
     dev.off()
 
@@ -282,11 +295,11 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
     })
 
     if (output_format == "pdf") {
-        pdf(paste0(output_folder, "umap_xgboost_communities_min_sim_", min_similarity, "_", data_to_process, ".pdf"),
+        pdf(paste0(output_folder, "umap_nn_communities_min_sim_", min_similarity, "_", data_to_process, ".pdf"),
             width = 10, height = 10
         )
     } else {
-        png(paste0(output_folder, "umap_xgboost_communities_min_sim_", min_similarity, "_", data_to_process, ".png"),
+        png(paste0(output_folder, "umap_nn_communities_min_sim_", min_similarity, "_", data_to_process, ".png"),
             width = 10, height = 10, units = "in", res = 300
         )
     }
@@ -299,7 +312,47 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
         )
     )
     dev.off()
+
+    # Now plot the proportion of cells in each community
+    community_prop <- lapply(seurat_corticotrophs, function(s) {
+        table(Community = s[[paste0("nn_community_", min_similarity)]]) %>%
+            as.data.frame() %>%
+            filter(Freq > 0) %>%
+            mutate(Freq = Freq / ncol(s) * 100) %>%
+            mutate(Dataset = paste(s$author[1]))
+        })
+    community_prop <- do.call(rbind, community_prop)
+    colnames(community_prop) <- c("Community", "Freq", "Dataset")
+
+    if (output_format == "pdf") {
+        pdf(paste0(output_folder, "nn_community_proportions_thr", min_similarity, "_", data_to_process, ".pdf"),
+        width = 7, height = 7
+        )
+    } else if (output_format == "png") {
+        png(paste0(output_folder, "nn_community_proportions_", data_to_process, ".png"),
+        width = 7, height = 7, units = "in", res = 300
+        )
+    }
+
+    p <- ggplot(community_prop, aes(x = Dataset, y = Freq, fill = fct_rev(Community))) +
+    scale_fill_manual(values = c(comm_colors, c("None" = "lightgray")), name = "Community") +
+    geom_bar(stat = "identity") +
+    ylab("Percentage of cells") +
+    theme_minimal() +
+    theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom"
+    )
+
+    print(p)
+
+    if (output_format != "none") {
+    dev.off()
+    }
 } # end for min_similarity
+
+
+
 
 min_similarity <- 0.9
 
