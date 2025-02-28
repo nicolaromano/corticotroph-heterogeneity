@@ -7,7 +7,10 @@ library(cowplot)
 library(RColorBrewer)
 library(grid)
 library(gridExtra)
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tibble)
 library(pbapply)
 library(pheatmap)
 library(igraph)
@@ -18,7 +21,7 @@ datasets <- read.csv("datasets.csv")
 ####### Compare datasets #######
 
 # Data to process ("M" or "F")
-data_to_process <- "F"
+data_to_process <- "M"
 output_format <- "pdf" # "pdf", "png" or "none"
 
 markers_output_folder <- "markers/"
@@ -112,7 +115,7 @@ if (output_format == "png") {
     width = 5, height = 10,
     units = "in", res = 300
   )
-} else {
+} else if (output_format == "pdf") {
   pdf(paste0("plots/common_markers_boxplot_", data_to_process, ".pdf"),
     width = 10, height = 5
   )
@@ -221,7 +224,7 @@ if (output_format == "png") {
   png(paste0("plots/perc_common_markers_", data_to_process, ".png"),
     width = width, height = 7, units = "in", res = 300
   )
-} else {
+} else if (output_format == "pdf") {
   pdf(paste0("plots/perc_common_markers_", data_to_process, ".pdf"),
     width = width, height = 7
   )
@@ -407,7 +410,7 @@ for (thr in c(10, 15, 20)) {
     seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]][tb[seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]]] == 1] <- NA
 
     # Convert to factor
-    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(unique(memberships)))
+    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(names(tb[tb>1])))
   }
 
   # Now plot the UMAP reductions, colouring by community
@@ -643,49 +646,6 @@ for (simil in c(10, 15, 20)) {
 write.csv(marker_stats, file.path(markers_output_folder, paste0("markers_stats_", data_to_process, ".csv")), row.names = FALSE)
 
 community_df <- read.csv(file.path(markers_output_folder, paste0("markers_communities_", 10, "_", data_to_process, ".csv")))
-
-# Upset plots
-plot_upSet <- function(community, all_markers, community_df) {
-  mrk_df <- lapply(seq_along(all_markers), function(i) {
-    all_markers[[i]] %>%
-      mutate(Dataset = names(all_markers)[i]) %>%
-      select(Dataset, cluster, gene) %>%
-      mutate(Community = community_df$Community[match(paste(names(all_markers)[i], cluster, sep = "-"), paste(community_df$Dataset, community_df$Cluster, sep = "-"))])
-  })
-
-  mrk_df <- do.call(rbind, mrk_df) %>%
-    filter(Community == community) %>%
-    rename(Cluster = cluster)
-
-  # Prepare data for the upset plot
-  # We want Dataset, Community, Cluster, Gene1, Gene2, Gene3, ...
-  # The values of the gene columns will be 0 or 1
-  # depending on whether the gene is present in that Dataset, Community, Cluster
-  mrk_df <- mrk_df %>%
-    pivot_wider(names_from = gene, values_from = gene, values_fn = length, values_fill = 0) %>%
-    # Group is the first letter of the dataset name plus the cluster number
-    mutate(Group = paste0(substr(Dataset, 1, 1), Cluster)) %>%
-    select(-Dataset, -Community, -Cluster)
-
-  upset_groups <- mrk_df$Group
-
-  mrk_df <- mrk_df %>%
-    select(-Group) %>%
-    t() %>%
-    as.data.frame() %>%
-    rownames_to_column("Gene")
-
-  colnames(mrk_df) <- upset_groups
-  head(mrk_df)
-  upset(mrk_df, order.by = "freq")
-}
-
-upset_plots <- lapply(1:3, function(comm) {
-  plot_upSet(comm, all_markers, community_df)
-})
-
-grid.arrange(grobs = upset_plots, ncol = 1)
-
 
 plot_perc_cell_per_marker <- function(perc_similarity = 10) {
   #' Plots the percentage of cells in each dataset, for each community that express common markers
