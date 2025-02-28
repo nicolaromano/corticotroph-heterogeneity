@@ -1,14 +1,21 @@
+# 11_label_transfer_graph.R
+# This script creates a graph connecting subclusters with at least `min_similarity` cells predicted to be the same
+# It also plots the UMAP reductions, colouring by community and the proportion of cells in each community
+# Finally, it matches the communities between the marker-based and label transfer-based approaches
+# INPUTS: rds_outs/ - Seurat objects with the subclustered cells
+# OUTPUTS: label_transfer_model_output/predictions - Graphs and UMAP plots, confusion matrix, community proportions
+#          rds_outs/ - Updated Seurat objects with the new community information
+
 library(Seurat)
 library(ggplot2)
 library(grid)
 library(gridExtra)
 library(pbapply)
 library(dplyr)
+library(tidyr)
 library(forcats)
 library(igraph)
 library(RColorBrewer)
-
-SHAP_path <- "label_transfer_model_output/shap_top_genes/"
 
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
@@ -19,7 +26,7 @@ datasets <- datasets %>%
     dplyr::filter(author != "Ho") %>%
     dplyr::filter(sex == data_to_process)
 
-output_format <- "none" # "pdf" or "png" or "none"
+output_format <- "pdf" # "pdf" or "png" or "none"
 output_folder <- "label_transfer_model_output/predictions/"
 
 filenames <- dir("rds_outs",
@@ -30,13 +37,13 @@ filenames <- dir("rds_outs",
 seurat_corticotrophs <- pblapply(filenames, readRDS)
 names(seurat_corticotrophs) <- gsub("(\\.rds|rds_outs/|_subclustered)", "", filenames)
 
+# Add the NN predictions to the Seurat objects metadata
 for (dataset in unique(datasets$study_id)) {
     filename <- paste0(output_folder, dataset, "_label_transfer_predictions.csv")
     predictions <- read.csv(filename)
     print(paste("Adding predictions to", dataset))
-    # Add the predictions to the Seurat objects
-    
-    pred <- predictions %>% 
+
+    pred <- predictions %>%
         select(starts_with("Predicted"))
 
     seurat_corticotrophs[[dataset]]@meta.data <- cbind(seurat_corticotrophs[[dataset]]@meta.data, pred)
@@ -44,6 +51,8 @@ for (dataset in unique(datasets$study_id)) {
     seurat_corticotrophs[[dataset]]@meta.data %>%
         mutate_at(vars(starts_with("Predicted")), as.factor) -> seurat_corticotrophs[[dataset]]@meta.data
 }
+
+#### CREATE THE GRAPH ####
 
 confusion_matrices <- lapply(seurat_corticotrophs, function(obj) {
     predictions <- obj@meta.data %>% select(starts_with("Predicted_cluster_"))
@@ -114,7 +123,7 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
                                  label_color = "black",
                                  out_radius = 5, in_radius = 1) {
     #' Plots a graph, connecting subcluster with at least `min_similarity` cells predicted to be the same
-    #' @param min_similarity: The minimum percentage of cells predicted to be the same
+    #' @param minsum_similarity: The minimum percentage of cells predicted to be the same
     #' @param do_plot: Whether to plot the graph - default is TRUE
     #' @param node_palette: The palette for the nodes - NULL for default (Set2)
     #' @param label_color: The colour for the labels - default is black
@@ -213,6 +222,8 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
     return(network)
 }
 
+# Now we can plot the graph for different min_similarity values
+
 for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
     print(paste("Processing min_similarity = ", min_similarity))
 
@@ -229,12 +240,15 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
 
     if (data_to_process == "M") {
         community_palette <- c(
-        "#F16745", "#FFC65D", "#7BC8A4", "#C44A9A", "#4A90F2", "#8A5A44"
+            "#F16745", "#FFC65D", 
+            "#7BC8A4", "#C44A9A", 
+            "#4A90F2", "#8A5A44"
         )
     } else {
         community_palette <- c(
-        "#F11E4E", "#5B2C6F",
-        "#1A9337", "#4CC3D9"
+            "#F11E4E", "#5B2C6F",
+            "#1A9337", "#4CC3D9",
+            "#db9b1c"
         )
     }
 
@@ -245,14 +259,17 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
         out_radius <- 5
         in_radius <- 1.5
     }
-    
+
     graph <- get_similarity_graph(min_similarity,
         do_plot = TRUE,
         node_palette = community_palette,
         out_radius = out_radius,
         in_radius = in_radius
     )
-    dev.off()
+
+    if (output_format != "none") {
+        dev.off()
+    }
 
     memberships <- membership(walktrap.community(graph, steps = 100))
 
@@ -274,8 +291,13 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
                 ),
                 names(memberships)
             )]
-        seurat_corticotrophs[[i]]@meta.data[[paste0("nn_community_", min_similarity)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("nn_community_", min_similarity)]], levels = sort(unique(memberships)))
-    }
+
+        # "Lone" communities of only 1 node should be marked as NA
+        seurat_corticotrophs[[i]]@meta.data[[paste0("nn_community_", min_similarity)]][tb[seurat_corticotrophs[[i]]@meta.data[[paste0("nn_community_", min_similarity)]]] == 1] <- NA
+
+        # Convert to factor
+        seurat_corticotrophs[[i]]@meta.data[[paste0("nn_community_", min_similarity)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("nn_community_", min_similarity)]], levels = sort(names(tb[tb>1])))
+        }
 
     # Now plot the UMAP reductions, colouring by community
     community_plots <- lapply(seurat_corticotrophs, function(s) {
@@ -298,7 +320,7 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
         pdf(paste0(output_folder, "umap_nn_communities_min_sim_", min_similarity, "_", data_to_process, ".pdf"),
             width = 10, height = 10
         )
-    } else {
+    } else if (output_format == "png") {
         png(paste0(output_folder, "umap_nn_communities_min_sim_", min_similarity, "_", data_to_process, ".png"),
             width = 10, height = 10, units = "in", res = 300
         )
@@ -311,7 +333,10 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
             gp = gpar(fontsize = 20)
         )
     )
-    dev.off()
+
+    if (output_format != "none") {
+        dev.off()
+    }
 
     # Now plot the proportion of cells in each community
     community_prop <- lapply(seurat_corticotrophs, function(s) {
@@ -320,153 +345,227 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
             filter(Freq > 0) %>%
             mutate(Freq = Freq / ncol(s) * 100) %>%
             mutate(Dataset = paste(s$author[1]))
-        })
+    })
     community_prop <- do.call(rbind, community_prop)
     colnames(community_prop) <- c("Community", "Freq", "Dataset")
 
     if (output_format == "pdf") {
         pdf(paste0(output_folder, "nn_community_proportions_thr", min_similarity, "_", data_to_process, ".pdf"),
-        width = 7, height = 7
+            width = 7, height = 7
         )
     } else if (output_format == "png") {
         png(paste0(output_folder, "nn_community_proportions_", data_to_process, ".png"),
-        width = 7, height = 7, units = "in", res = 300
+            width = 7, height = 7, units = "in", res = 300
         )
     }
 
     p <- ggplot(community_prop, aes(x = Dataset, y = Freq, fill = fct_rev(Community))) +
-    scale_fill_manual(values = c(comm_colors, c("None" = "lightgray")), name = "Community") +
-    geom_bar(stat = "identity") +
-    ylab("Percentage of cells") +
-    theme_minimal() +
-    theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom"
-    )
+        scale_fill_manual(values = c(comm_colors, c("None" = "lightgray")), name = "Community") +
+        geom_bar(stat = "identity") +
+        ylab("Percentage of cells") +
+        theme_minimal() +
+        theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "bottom"
+        )
 
     print(p)
 
     if (output_format != "none") {
-    dev.off()
+        dev.off()
     }
 } # end for min_similarity
 
+# Update RDS files with the new community information
+pbsapply(seurat_corticotrophs, function(obj) {
+    saveRDS(obj, file = paste0("rds_outs/", obj$orig.ident[1], "_subclustered.rds"))
+})
 
-
+# Update metadata files
+sapply(seurat_corticotrophs, function(obj) {
+  outfile <- paste0("exported_matrices", obj$orig.ident[1], "_metadata.csv")
+  write.csv(obj@meta.data, outfile, row.names = FALSE, quote = FALSE)
+})
 
 min_similarity <- 0.9
 
-# Community-specific important genes (in terms of saliency)
-community_top_genes_intersection <- list()
-community_top_genes_union <- list()
-num_clusters_per_community <- list()
+#### MATCH THE COMMUNITIES BETWEEN THE MARKER-BASED AND LABEL TRANSFER-BASED APPROACHES ####
 
-all_important_genes <- lapply(unique(datasets$study_id), function(dataset) {
-    filename <- paste0(SHAP_path, dataset, "_shap_top_genes.csv")
-    genes <- read.csv(filename)
-
-    # Get top 10% SHAP genes
-    genes <- genes %>%
-        filter(Saliency_mean > quantile(Saliency_mean, 0.9)) %>%
-        select(Gene, Saliency_mean, Cluster)
-
-    genes
-})
-
-names(all_important_genes) <- unique(datasets$study_id)
-
-for (i in seq_along(seurat_corticotrophs)) {
-    obj <- seurat_corticotrophs[[i]]
-    dataset_name <- names(seurat_corticotrophs)[i]
-    for (cl in unique(Idents(obj))) {
-        comm_num <- obj[[paste0("nn_community_", min_similarity)]][Idents(obj) == cl, ][1]
-
-        # INTERSECTION
-        if (is.null(community_top_genes_intersection[[paste0("comm_", comm_num)]])) {
-            community_top_genes_intersection[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
-                filter(Cluster == cl) %>%
-                pull(Gene)
-        } else {
-            community_top_genes_intersection[[paste0("comm_", comm_num)]] <- intersect(
-                community_top_genes_intersection[[paste0("comm_", comm_num)]],
-                all_important_genes[[dataset_name]] %>%
-                    filter(Cluster == cl) %>%
-                    pull(Gene)
-            )
-        }
-
-        # UNION
-        if (is.null(community_top_genes_union[[paste0("comm_", comm_num)]])) {
-            community_top_genes_union[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
-                filter(Cluster == cl) %>%
-                pull(Gene)
-        } else {
-            community_top_genes_union[[paste0("comm_", comm_num)]] <- union(
-                community_top_genes_union[[paste0("comm_", comm_num)]],
-                all_important_genes[[dataset_name]] %>%
-                    filter(Cluster == cl) %>%
-                    pull(Gene)
-            )
-        }
-
-        # Number of clusters per community
-        if (is.null(num_clusters_per_community[[paste0("comm_", comm_num)]])) {
-            num_clusters_per_community[[paste0("comm_", comm_num)]] <- 1
-        } else {
-            num_clusters_per_community[[paste0("comm_", comm_num)]] <- num_clusters_per_community[[paste0("comm_", comm_num)]] + 1
-        }
-    } # end for cl
-} # end for i
-
-num_clusters_per_community <- unlist(num_clusters_per_community)
-# Only get the communities with more than one cluster
-comm_names <- sort(names(num_clusters_per_community[num_clusters_per_community > 1]))
-
-# Write to file
-for (cn in comm_names) {
-    community_un <- community_top_genes_union[[cn]]
-    community_in <- community_top_genes_intersection[[cn]]
-
-    print(paste(
-        "Community", cn, " - markers intersection / union = ",
-        format(length(community_in) / length(community_un) * 100, digits = 2), "%"
+community_match <- lapply(seurat_corticotrophs, function(obj) {
+    tb <- as.matrix(table(
+        Marker_community = obj$marker_community_10,
+        NN_community = obj$nn_community_0.9,
+        useNA = "always"
     ))
 
-    write.table(community_un, file.path(saliency_path, paste0(cn, "_top_genes_union.csv")),
-        row.names = FALSE, col.names = FALSE, quote = FALSE
+    tb <- tb[rowSums(tb) > 0, colSums(tb) > 0]
+    tb
+})
+
+communities_confusion_mtx <- community_match %>%
+    lapply(as.data.frame) %>%
+    do.call(rbind, .) %>%
+    group_by(Marker_community, NN_community) %>%
+    summarise(Freq = sum(Freq), .groups = "keep") %>%
+    ungroup() %>%
+    group_by(Marker_community) %>%
+    mutate(Count = Freq) %>% 
+    mutate(Freq = Freq / sum(Freq) * 100)
+
+if (output_format == "pdf") {
+    pdf(paste0(output_folder, "communities_confusion_mtx_", data_to_process, ".pdf"),
+        width = 7, height = 7
     )
-    write.table(community_in, file.path(saliency_path, paste0(cn, "_top_genes_intersection.csv")),
-        row.names = FALSE, col.names = FALSE, quote = FALSE
+} else if (output_format == "png") {
+    png(paste0(output_folder, "communities_confusion_mtx_", data_to_process, ".png"),
+        width = 7, height = 7, units = "in", res = 300
     )
 }
 
-
-
-
-
-# Write a table of Dataset, Cluster, Community
-community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
-    obj <- seurat_corticotrophs[[i]]
-    dataset_name <- names(seurat_corticotrophs)[i]
-
-    clusters <- unique(Idents(obj))
-    sapply(clusters, function(cl) {
-        subset(obj, idents = cl)[[paste0(
-            "nn_community_", min_similarity
-        )]][1, 1]
-    }) -> communities
-
-    res <- data.frame(
-        Dataset = dataset_name,
-        Cluster = clusters,
-        Community = communities
+ggplot(communities_confusion_mtx, aes(x = factor(Marker_community, levels = 1:4),
+ y = NN_community, fill = Freq)) +
+    geom_tile() +
+    scale_fill_gradientn(colors = c("#ffffff", "#0797da"), name = "Percentage", limits = c(0, 100)) +
+    xlab("Marker community") +
+    ylab("Label transfer community") +
+    theme_minimal() +
+    theme(
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)
     )
-})
 
-do.call("rbind", community_df) %>%
-    write.csv(
-        file.path(
-            output_folder, paste0("nn_communities_", min_similarity, ".csv")
-        ),
-        row.names = FALSE
-    )
+m <- communities_confusion_mtx %>%
+  select(-Count) %>% 
+  pivot_wider(names_from = Marker_community, values_from = Freq) %>%  
+  select(-NN_community) %>% 
+  as.matrix()
+
+mc <- communities_confusion_mtx %>%
+  select(-Freq) %>% 
+  pivot_wider(names_from = Marker_community, values_from = Count) %>%  
+  select(-NN_community) %>% 
+  as.matrix()
+
+colSums(m)
+mc
+
+if (output_format != "none") {
+    dev.off()
+}
+
+# min_similarity <- 0.9
+
+# # Community-specific important genes (in terms of saliency)
+# community_top_genes_intersection <- list()
+# community_top_genes_union <- list()
+# num_clusters_per_community <- list()
+
+# all_important_genes <- lapply(unique(datasets$study_id), function(dataset) {
+#     filename <- paste0(SHAP_path, dataset, "_shap_top_genes.csv")
+#     genes <- read.csv(filename)
+
+#     # Get top 10% SHAP genes
+#     genes <- genes %>%
+#         filter(Saliency_mean > quantile(Saliency_mean, 0.9)) %>%
+#         select(Gene, Saliency_mean, Cluster)
+
+#     genes
+# })
+
+# names(all_important_genes) <- unique(datasets$study_id)
+
+# for (i in seq_along(seurat_corticotrophs)) {
+#     obj <- seurat_corticotrophs[[i]]
+#     dataset_name <- names(seurat_corticotrophs)[i]
+#     for (cl in unique(Idents(obj))) {
+#         comm_num <- obj[[paste0("nn_community_", min_similarity)]][Idents(obj) == cl, ][1]
+
+#         # INTERSECTION
+#         if (is.null(community_top_genes_intersection[[paste0("comm_", comm_num)]])) {
+#             community_top_genes_intersection[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
+#                 filter(Cluster == cl) %>%
+#                 pull(Gene)
+#         } else {
+#             community_top_genes_intersection[[paste0("comm_", comm_num)]] <- intersect(
+#                 community_top_genes_intersection[[paste0("comm_", comm_num)]],
+#                 all_important_genes[[dataset_name]] %>%
+#                     filter(Cluster == cl) %>%
+#                     pull(Gene)
+#             )
+#         }
+
+#         # UNION
+#         if (is.null(community_top_genes_union[[paste0("comm_", comm_num)]])) {
+#             community_top_genes_union[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
+#                 filter(Cluster == cl) %>%
+#                 pull(Gene)
+#         } else {
+#             community_top_genes_union[[paste0("comm_", comm_num)]] <- union(
+#                 community_top_genes_union[[paste0("comm_", comm_num)]],
+#                 all_important_genes[[dataset_name]] %>%
+#                     filter(Cluster == cl) %>%
+#                     pull(Gene)
+#             )
+#         }
+
+#         # Number of clusters per community
+#         if (is.null(num_clusters_per_community[[paste0("comm_", comm_num)]])) {
+#             num_clusters_per_community[[paste0("comm_", comm_num)]] <- 1
+#         } else {
+#             num_clusters_per_community[[paste0("comm_", comm_num)]] <- num_clusters_per_community[[paste0("comm_", comm_num)]] + 1
+#         }
+#     } # end for cl
+# } # end for i
+
+# num_clusters_per_community <- unlist(num_clusters_per_community)
+# # Only get the communities with more than one cluster
+# comm_names <- sort(names(num_clusters_per_community[num_clusters_per_community > 1]))
+
+# # Write to file
+# for (cn in comm_names) {
+#     community_un <- community_top_genes_union[[cn]]
+#     community_in <- community_top_genes_intersection[[cn]]
+
+#     print(paste(
+#         "Community", cn, " - markers intersection / union = ",
+#         format(length(community_in) / length(community_un) * 100, digits = 2), "%"
+#     ))
+
+#     write.table(community_un, file.path(saliency_path, paste0(cn, "_top_genes_union.csv")),
+#         row.names = FALSE, col.names = FALSE, quote = FALSE
+#     )
+#     write.table(community_in, file.path(saliency_path, paste0(cn, "_top_genes_intersection.csv")),
+#         row.names = FALSE, col.names = FALSE, quote = FALSE
+#     )
+# }
+
+
+
+
+
+# # Write a table of Dataset, Cluster, Community
+# community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
+#     obj <- seurat_corticotrophs[[i]]
+#     dataset_name <- names(seurat_corticotrophs)[i]
+
+#     clusters <- unique(Idents(obj))
+#     sapply(clusters, function(cl) {
+#         subset(obj, idents = cl)[[paste0(
+#             "nn_community_", min_similarity
+#         )]][1, 1]
+#     }) -> communities
+
+#     res <- data.frame(
+#         Dataset = dataset_name,
+#         Cluster = clusters,
+#         Community = communities
+#     )
+# })
+
+# do.call("rbind", community_df) %>%
+#     write.csv(
+#         file.path(
+#             output_folder, paste0("nn_communities_", min_similarity, ".csv")
+#         ),
+#         row.names = FALSE
+#     )
