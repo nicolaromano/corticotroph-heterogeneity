@@ -5,13 +5,11 @@ Generates predictions for all datasets using each of the trained models.
 """
 
 from model_trainer import LabelTransferTrainer
-from glob import glob
 import pandas as pd
 import numpy as np
-import random
-import keras
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 import os
 # Silence TensorFlow warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -93,7 +91,7 @@ class LabelTransferPredictor (LabelTransferTrainer):
         """
 
         return self._load_all_data(dataset)
-    
+
     def predict_dataset(self, dataset: str, threshold: float = 0.7) -> pd.DataFrame:
         """
         Generates predictions for a single dataset using each of the trained models.
@@ -193,7 +191,7 @@ class LabelTransferPredictor (LabelTransferTrainer):
             plt.savefig(f"{self.output_dir}{dataset}_predictions.pdf",
                         bbox_inches='tight')
 
-    def compute_saliency_map(self, dataset: str, input_data: np.ndarray, class_index: int) -> np.ndarray:
+    def _compute_saliency_map(self, dataset: str, input_data: np.ndarray, class_index: int) -> np.ndarray:
         """
         Compute a saliency map for the specified class index for the given input data.
 
@@ -223,27 +221,29 @@ class LabelTransferPredictor (LabelTransferTrainer):
 
         return gradients.numpy()
 
-    def get_saliency(self, dataset: str) -> dict:
+    def get_saliency(self, dataset: str) -> (dict, dict):
         """
-        Calculates the saliency maps for the dataset. This is done by calculating the gradient of the model output with
+        Calculates the saliency maps for a single dataset. This is done by calculating the gradient of the model output with
         respect to the input. The saliency map is then calculated by taking the gradient and averaging over the samples for each cluster.
-        We get a value per input (gene)
+        Saliency values are normalized using z-scores across genes per cluster.
 
         Parameters
         ----------
-
         dataset : str
             The name of the dataset to calculate the saliency maps for.
 
         Returns
         -------
-
-        saliency_maps : dict
-            A dictionary containing the saliency maps for each cluster. The keys are the cluster labels and the values are
-            the average and sd of saliency for each gene (pd.DataFrame)
+        saliency_maps_summary : dict
+            A dictionary containing the normalized saliency maps for each cluster. The keys are the cluster labels, and the values are
+            the normalized average and SD of saliency for each gene (pd.DataFrame).
+        all_saliency_maps : dict
+            A dictionary containing the normalized saliency maps for each cluster. The keys are the cluster labels, and the values are
+            the normalized saliency maps for each sample and gene (pd.DataFrame).
         """
 
-        saliency_maps = {}
+        saliency_maps_summary = {}
+        all_saliency_maps = {}
         expr_data = self._load_all_data(dataset)
 
         for cluster in expr_data['Cluster'].unique():
@@ -251,18 +251,48 @@ class LabelTransferPredictor (LabelTransferTrainer):
             input_data = expr_data.drop(columns=['Cluster', 'Barcode'])[
                 cluster_indices.values]
 
-            saliency_map = [self.compute_saliency_map(
+            # Compute saliency maps for all samples in the cluster
+            saliency_map = [self._compute_saliency_map(
                 dataset, input_data[i:i+1], cluster) for i in range(input_data.shape[0])]
 
+            # Convert saliency maps to NumPy array for aggregation
+            saliency_map = np.array(saliency_map)
+
+            # Compute average and standard deviation of saliency for each gene
             saliency_map_avg = np.mean(saliency_map, axis=0)[0]
             saliency_map_sd = np.std(saliency_map, axis=0)[0]
 
+            # Normalize using z-score across genes (per cluster)
+            mean_per_gene = saliency_map_avg.mean()
+            std_per_gene = saliency_map_avg.std()
+
+            normalized_saliency_map = (saliency_map - mean_per_gene) / std_per_gene
+
+            # Compute normalized average and SD for summary
+            normalized_saliency_mean = (saliency_map_avg - mean_per_gene) / std_per_gene
+            normalized_saliency_sd = saliency_map_sd / std_per_gene  # Normalize SD consistently
+
+            # Create DataFrame for normalized saliency map summary
             saliency_map_df = pd.DataFrame(
-                {'Saliency_mean': saliency_map_avg, 'Saliency_sd': saliency_map_sd, 'Cluster': cluster}, index=input_data.columns)
+                {
+                    'Saliency_mean': normalized_saliency_mean,
+                    'Saliency_sd': normalized_saliency_sd,
+                    'Cluster': cluster
+                },
+                index=input_data.columns
+            )
             saliency_map_df = saliency_map_df.sort_values(
                 by='Saliency_mean', ascending=False)
 
             saliency_map_df.index.rename("Gene", inplace=True)
-            saliency_maps[cluster] = saliency_map_df
 
-        return saliency_maps
+            # Save summary and per-sample normalized maps
+            saliency_maps_summary[cluster] = saliency_map_df
+            all_saliency_maps[cluster] = pd.DataFrame(
+                normalized_saliency_map[:, 0],  # Convert normalized array to DataFrame
+                columns=input_data.columns,
+                index=[f"Sample_{i}" for i in range(normalized_saliency_map.shape[0])]
+            )
+
+        return saliency_maps_summary, all_saliency_maps
+
