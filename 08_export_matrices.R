@@ -63,7 +63,7 @@ sapply(seurat_obj_cort, function(obj) {
 
   print("Exporting metadata")
   outfile <- paste0(outdir, obj$orig.ident[1], "_metadata.csv")
-  write.csv(obj@meta.data, outfile, row.names = FALSE, quote = FALSE)
+  write.csv(cbind(Barcode = Cells(obj), obj@meta.data), outfile, row.names = FALSE, quote = FALSE)
 })
 
 # # Get all SCT filenames
