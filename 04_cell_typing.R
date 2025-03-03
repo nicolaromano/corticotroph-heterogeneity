@@ -156,7 +156,7 @@ get_pomc_cells <- function(seurat_obj, resolution = 0.6,
   #' @return: a Seurat object with only the cells classified as corticotrophs/melanotrophs
 
   seurat_obj %>%
-    FindNeighbors() %>%
+    FindNeighbors(k.param = 20) %>%
     FindClusters(resolution = resolution) -> seurat_obj
 
   to_plot <- seurat_obj[, sample(colnames(seurat_obj),
