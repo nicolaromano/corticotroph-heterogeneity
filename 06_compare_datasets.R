@@ -10,6 +10,7 @@ library(gridExtra)
 library(dplyr)
 library(tidyr)
 library(stringr)
+library(forcats)
 library(tibble)
 library(pbapply)
 library(pheatmap)
@@ -21,7 +22,7 @@ datasets <- read.csv("datasets.csv")
 ####### Compare datasets #######
 
 # Data to process ("M" or "F")
-data_to_process <- "M"
+data_to_process <- "F"
 output_format <- "pdf" # "pdf", "png" or "none"
 
 markers_output_folder <- "markers/"
@@ -152,7 +153,10 @@ common_markers %>%
     outlier.size = 0.7,
     outlier.alpha = 1, alpha = 0.9
   ) +
-  scale_fill_brewer(palette = "Set4", name = "Dataset") +
+  scale_fill_brewer(
+    palette = ifelse(data_to_process == "M", "Greens",
+      "Purples"), name = "Dataset"
+  ) +
   # Global box
   geom_boxplot(
     # Note these works because All becomes the first factor
@@ -215,7 +219,7 @@ leg$layout[2, ]$b <- 2
 pl_list$legend <- leg
 
 if (data_to_process == "F") {
-  width <- 9
+  width <- 14
 } else {
   width <- 8
 }
@@ -319,7 +323,7 @@ get_similarity_graph <- function(min_pct, do_plot = TRUE,
     # each dataset on a larger circle
 
     layout <- sapply(seq_along(nodes_by_group), function(i) {
-      l <- in_radius * layout.circle(subgraph(network, nodes_by_group[[i]]$FullName))
+      l <- in_radius * layout_in_circle(subgraph(network, nodes_by_group[[i]]$FullName))
       l[, 1] <- l[, 1] + out_radius * sin(2 * pi * i / length(nodes_by_group))
       l[, 2] <- l[, 2] + out_radius * cos(2 * pi * i / length(nodes_by_group))
 
@@ -367,7 +371,9 @@ for (thr in c(10, 15, 20)) {
 
   if (data_to_process == "M") {
     community_palette <- c(
-      "#F16745", "#FFC65D", "#7BC8A4"
+      "#F16745", "#FFC65D",
+      "#7BC8A4", "#C44A9A",
+      "#4A90F2", "#8A5A44"
     )
   } else {
     community_palette <- c(
@@ -386,7 +392,7 @@ for (thr in c(10, 15, 20)) {
   graph <- get_similarity_graph(thr,
     do_plot = FALSE
   )
-  memberships <- membership(walktrap.community(graph, steps = 100))
+  memberships <- membership(cluster_walktrap(graph, steps = 100))
 
   tb <- table(memberships)
 
@@ -410,7 +416,7 @@ for (thr in c(10, 15, 20)) {
     seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]][tb[seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]]] == 1] <- NA
 
     # Convert to factor
-    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(names(tb[tb>1])))
+    seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]] <- factor(seurat_corticotrophs[[i]]@meta.data[[paste0("marker_community_", thr)]], levels = sort(names(tb[tb > 1])))
   }
 
   # Now plot the UMAP reductions, colouring by community
@@ -742,63 +748,3 @@ zero_perc <- lapply(seurat_corticotrophs, function(s) {
 })
 
 quantile(unlist(zero_perc))
-
-
-##### Gene rankings #####
-
-# plot_gene_rankings <- function(seurat_corticotrophs, reference_dataset, outfile = NULL) {
-#   #' Plots the gene rankings for each dataset, using one
-#   #' dataset as a reference.
-#   #' @param seurat_corticotrophs: A list of Seurat objects.
-#   #' @param reference_dataset: The dataset to use as a reference (as an index in the list)
-#   #' @param outfile: The file to save the plot to. If NULL, the plot is not saved.
-
-#   # Get the gene rankings for each dataset
-#   rankings <- lapply(seurat_corticotrophs, function(s) {
-#     expr <- GetAssayData(s, slot = "data")
-#     data.frame(
-#       Dataset = paste(s$author[1], s$year[1], "-", s$sex[1]),
-#       Gene = rownames(s),
-#       Rank = rank(-rowMeans(expr)),
-#       AvgExpr = rowMeans(expr)
-#     ) %>%
-#       arrange(Rank)
-#   })
-
-#   # Get the ranked gene name for the reference dataset
-#   ref_rankings <- rankings[[reference_dataset]] %>%
-#     arrange(Rank) %>%
-#     pull(Gene)
-
-#   # Now sort the rankings by the reference dataset
-#   ranks <- lapply(rankings, function(r) {
-#     r[ref_rankings, ]$Rank
-#   })
-
-#   if (!is.null(outfile)) {
-#     png(outfile, width = 15, height = 10, units = "in", res = 300)
-#   }
-
-#   g <- do.call("rbind", rankings) %>%
-#     as.data.frame() %>%
-#     # Substitute the ranks with the ranks sorted by the reference dataset's order
-#     mutate(Rank = Reduce(c, ranks)) %>%
-#     ggplot(aes(x = Rank, AvgExpr)) +
-#     geom_line() +
-#     scale_y_log10() +
-#     ylab("Average expression") +
-#     facet_wrap(~Dataset) +
-#     theme(
-#       axis.title = element_text(size = 15),
-#       axis.text = element_text(size = 14),
-#       strip.text = element_text(size = 16)
-#     )
-
-#   print(g)
-
-#   if (!is.null(outfile)) {
-#     dev.off()
-#   }
-# }
-
-# plot_gene_rankings(seurat_corticotrophs, 1, paste0("plots/gene_rankings_", data_to_process, ".png"))
