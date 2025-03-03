@@ -4,14 +4,21 @@
 library(Seurat)
 library(ggplot2)
 library(dplyr)
+library(purrr)
+library(tidyr)
+library(stringr)
 library(grid)
 library(gridExtra)
 library(scales)
-library(tidyverse)
 library(pbapply)
 library(pheatmap)
 library(nlme)
 library(emmeans)
+library(pbapply)
+
+# Set the pseudo-random seed for reproducibility, changing this will change
+# the random swaps, however it should not affect the results in any significant way
+set.seed(12345)
 
 plot_out_type <- "pdf" # or "pdf" or "none"
 
