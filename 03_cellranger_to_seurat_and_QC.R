@@ -1,7 +1,7 @@
 # 03_cellranger_to_seurat_and_QC.R
 # Imports data into Seurat and performs quality controls
 # Inputs: CellRanger output folders
-# Outputs: RDS files with Seurat objects (rds_outs/dataset_SCT.rds), QC plots (plots/QC_plots)
+# Outputs: RDS files with Seurat objects (rds_outs/dataset_raw_counts_preQC.rds, rds_outs/dataset_raw_counts.rds, rds_outs/dataset_SCT.rds), QC plots (plots/QC_plots)
 
 library(Seurat)
 library(tidyverse)
@@ -60,7 +60,9 @@ load_data <- function(metadata, study) {
   seurat_obj[["author"]] <- metadata$author[1]
   seurat_obj[["year"]] <- metadata$year[1]
 
-  # Filtering cells
+  saveRDS(object = seurat_obj, file = paste0("rds_outs/", study$study_id, "_raw_counts_preQC.rds"))
+  
+  ####### QC #######
 
   # We use a relatively loose filtering here.
   # Filter anything greater than 75th percentile + 3 * SD for counts and features,
