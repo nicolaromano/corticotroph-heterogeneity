@@ -124,23 +124,43 @@ type_pomc_cells <- function(seurat_obj) {
   #' @param seurat_obj: the Seurat object
   #' @return: a plot of the cell types
 
-  expr <- GetAssayData(seurat_obj)["Pomc", ]
-  thr <- otsu_thresh(expr)
+  expr <- GetAssayData(seurat_obj)
+  thr_Pomc <- otsu_thresh(expr["Pomc", ])
+  if ("Pax7" %in% rownames(expr))
+    thr_Pax7 <- otsu_thresh(expr["Pax7", ])
+  if ("Pcsk2" %in% rownames(expr))
+    thr_Pcsk2 <- otsu_thresh(expr["Pcsk2", ])
 
-  cells_bc <- Cells(subset(seurat_obj, Pomc > thr))
+  cells_bc <- Cells(subset(seurat_obj, Pomc > thr_Pomc))
   print(paste0(
     round(length(cells_bc) / length(Cells(seurat_obj)) * 100, 2),
     "% cells typed as corticotrophs/melanotrophs"
   ))
-  levels(seurat_obj@active.ident) <- c(levels(seurat_obj@active.ident), "Cortico/Melano")
-  Idents(seurat_obj)[cells_bc] <- "Cortico/Melano"
-  p <- DimPlot(seurat_obj, pt.size = 0.5) +
-    scale_color_manual(values = c("lightgray", "navy")) +
+
+  Pomc_pos <- expr["Pomc", ] > thr_Pomc
+  if ("Pax7" %in% rownames(expr) & "Pcsk2" %in% rownames(expr)) {
+    Pax7_Pcsk2_pos <- expr["Pax7", ] > thr_Pax7 | expr["Pcsk2", ] > thr_Pcsk2
+  } else if ("Pax7" %in% rownames(expr)) {
+    Pax7_Pcsk2_pos <- expr["Pax7", ] > thr_Pax7
+  } else if ("Pcsk2" %in% rownames(expr)) {
+    Pax7_Pcsk2_pos <- expr["Pcsk2", ] > thr_Pcsk2
+  } else {
+    Pax7_Pcsk2_pos <- rep(0, length(cells_bc))
+  }
+
+  seurat_obj$finalIdent <- ifelse(Pomc_pos + Pax7_Pcsk2_pos == 0, "Other",
+    ifelse(Pomc_pos + Pax7_Pcsk2_pos == 1, "Corticotroph",
+      "Melanotroph"
+    )
+  )
+  
+  p <- FeaturePlot(seurat_obj, "finalIdent", pt.size = 0.2) +
+    scale_color_manual(name = "Cell type", values=c("#c3e600", "#c904cf", "lightgray")) +
     xlab(expression(UMAP[1])) +
     ylab(expression(UMAP[2])) +
     theme(legend.position = "none") +
     ggtitle(paste(seurat_obj$author[1], seurat_obj$year[1], "-", seurat_obj$sex[1]))
-
+    
   return(p)
 }
 
