@@ -3,8 +3,8 @@
 # It also plots the UMAP reductions, colouring by community and the proportion of cells in each community
 # Finally, it matches the communities between the marker-based and label transfer-based approaches
 # INPUTS: rds_outs/ - Seurat objects with the subclustered cells
-# OUTPUTS: label_transfer_model_output/predictions - Graphs and UMAP plots, confusion matrix, community proportions
-#          rds_outs/ - Updated Seurat objects with the new community information
+# OUTPUTS: label_transfer_model_output/predictions - Graphs and UMAP plots, confusion matrix, community proportions, csv of community assignments (nn_communities_<percentage>.csv)
+#          rds_outs/ - Updated Seurat objects with the new community information (dataset_subclustered.rds)
 
 library(Seurat)
 library(ggplot2)
@@ -20,7 +20,7 @@ library(RColorBrewer)
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
-data_to_process <- "M" # M or F
+data_to_process <- "F" # M or F
 
 datasets <- datasets %>%
     dplyr::filter(author != "Ho") %>%
@@ -172,7 +172,7 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
         group_split(Dataset) -> nodes_by_group
 
     # # Find communities
-    wc <- walktrap.community(network, steps = 100)
+    wc <- cluster_walktrap(network, steps = 100)
     node_comm <- membership(wc)
     nodes_per_comm <- table(node_comm)
 
@@ -189,7 +189,7 @@ get_similarity_graph <- function(min_similarity, do_plot = TRUE,
         # each dataset on a larger circle
 
         layout <- sapply(seq_along(nodes_by_group), function(i) {
-            l <- in_radius * layout.circle(subgraph(network, nodes_by_group[[i]]$FullName))
+            l <- in_radius * layout_in_circle(subgraph(network, nodes_by_group[[i]]$FullName))
             l[, 1] <- l[, 1] + out_radius * sin(2 * pi * i / length(nodes_by_group))
             l[, 2] <- l[, 2] + out_radius * cos(2 * pi * i / length(nodes_by_group))
 
@@ -374,6 +374,21 @@ for (min_similarity in c(0.6, 0.8, 0.9, 0.95)) {
     if (output_format != "none") {
         dev.off()
     }
+
+    # Save a csv with the community assignments
+    community_assignments <- lapply(seurat_corticotrophs, function(s) {
+        res <- unique(data.frame(
+            Dataset = paste0(s$author[1], s$year[1], s$sex[1]),
+            Cluster = Idents(s),
+            Community = s[[paste0("nn_community_", min_similarity)]]))
+        rownames(res) <- NULL
+
+        return(res)
+    })
+    
+    write.csv(do.call(rbind, community_assignments), file = paste0(output_folder, "nn_communities_", min_similarity, "_", data_to_process, ".csv"),
+        row.names = FALSE
+    )
 } # end for min_similarity
 
 # Update RDS files with the new community information
