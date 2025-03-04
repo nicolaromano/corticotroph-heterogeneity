@@ -4,7 +4,7 @@
 # Outputs: RDS files with Seurat objects (rds_outs/dataset_raw_counts_preQC.rds, rds_outs/dataset_raw_counts.rds, rds_outs/dataset_SCT.rds), QC plots (plots/QC_plots)
 
 library(Seurat)
-library(tidyverse)
+library(dplyr)
 library(ggplot2)
 library(gridExtra)
 library(pbapply)
@@ -28,8 +28,8 @@ load_data <- function(metadata, study) {
       "Loading ", row["source"], " (", study$study_id, ") from ",
       input_cellranger_dir
     ))
-
-    res <- Read10X(paste0(getwd(), "/", input_cellranger_dir))
+    
+    res <- Read10X(paste0(getwd(), "/OriginalData/", input_cellranger_dir))
 
     return(res)
   })
@@ -61,7 +61,7 @@ load_data <- function(metadata, study) {
   seurat_obj[["year"]] <- metadata$year[1]
 
   saveRDS(object = seurat_obj, file = paste0("rds_outs/", study$study_id, "_raw_counts_preQC.rds"))
-  
+
   ####### QC #######
 
   # We use a relatively loose filtering here.
