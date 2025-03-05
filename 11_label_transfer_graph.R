@@ -468,119 +468,32 @@ if (output_format != "none") {
     dev.off()
 }
 
-# min_similarity <- 0.9
+# Load saliency genes
+# Note the dataset here refers to the dataset that was used to train the model
+saliency_genes <- read.csv(paste0(saliency_gene_folder, "/saliency_top_100_genes.csv"), header = TRUE)
 
-# # Community-specific important genes (in terms of saliency)
-# community_top_genes_intersection <- list()
-# community_top_genes_union <- list()
-# num_clusters_per_community <- list()
+# Ruf-Zamojski dataset is saved with an underscore instead of a dash here...
+# Similarly Kučka is saved as Kucka
+saliency_genes$dataset <- gsub("_", "-", saliency_genes$dataset)
+saliency_genes$dataset <- gsub("Kucka", "Kučka", saliency_genes$dataset)
 
-# all_important_genes <- lapply(unique(datasets$study_id), function(dataset) {
-#     filename <- paste0(SHAP_path, dataset, "_shap_top_genes.csv")
-#     genes <- read.csv(filename)
+# Load community assignments
+min_pct <- 0.9
+communities <- read.csv(paste0(saliency_gene_folder, "predictions/nn_communities_", min_pct, "_M.csv"), header = TRUE)
+communities <- rbind(communities, read.csv(paste0(saliency_gene_folder, "predictions/nn_communities_", min_pct, "_F.csv"), header = TRUE))
 
-#     # Get top 10% SHAP genes
-#     genes <- genes %>%
-#         filter(Saliency_mean > quantile(Saliency_mean, 0.9)) %>%
-#         select(Gene, Saliency_mean, Cluster)
+mapping <- left_join(communities, saliency_genes, by = c("Dataset" = "dataset", "Cluster")) %>%
+    select(Dataset, Cluster, nn_community_0.9) %>%
+    unique()
 
-#     genes
-# })
-
-# names(all_important_genes) <- unique(datasets$study_id)
-
-# for (i in seq_along(seurat_corticotrophs)) {
-#     obj <- seurat_corticotrophs[[i]]
-#     dataset_name <- names(seurat_corticotrophs)[i]
-#     for (cl in unique(Idents(obj))) {
-#         comm_num <- obj[[paste0("nn_community_", min_similarity)]][Idents(obj) == cl, ][1]
-
-#         # INTERSECTION
-#         if (is.null(community_top_genes_intersection[[paste0("comm_", comm_num)]])) {
-#             community_top_genes_intersection[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
-#                 filter(Cluster == cl) %>%
-#                 pull(Gene)
-#         } else {
-#             community_top_genes_intersection[[paste0("comm_", comm_num)]] <- intersect(
-#                 community_top_genes_intersection[[paste0("comm_", comm_num)]],
-#                 all_important_genes[[dataset_name]] %>%
-#                     filter(Cluster == cl) %>%
-#                     pull(Gene)
-#             )
-#         }
-
-#         # UNION
-#         if (is.null(community_top_genes_union[[paste0("comm_", comm_num)]])) {
-#             community_top_genes_union[[paste0("comm_", comm_num)]] <- all_important_genes[[dataset_name]] %>%
-#                 filter(Cluster == cl) %>%
-#                 pull(Gene)
-#         } else {
-#             community_top_genes_union[[paste0("comm_", comm_num)]] <- union(
-#                 community_top_genes_union[[paste0("comm_", comm_num)]],
-#                 all_important_genes[[dataset_name]] %>%
-#                     filter(Cluster == cl) %>%
-#                     pull(Gene)
-#             )
-#         }
-
-#         # Number of clusters per community
-#         if (is.null(num_clusters_per_community[[paste0("comm_", comm_num)]])) {
-#             num_clusters_per_community[[paste0("comm_", comm_num)]] <- 1
-#         } else {
-#             num_clusters_per_community[[paste0("comm_", comm_num)]] <- num_clusters_per_community[[paste0("comm_", comm_num)]] + 1
-#         }
-#     } # end for cl
-# } # end for i
-
-# num_clusters_per_community <- unlist(num_clusters_per_community)
-# # Only get the communities with more than one cluster
-# comm_names <- sort(names(num_clusters_per_community[num_clusters_per_community > 1]))
-
-# # Write to file
-# for (cn in comm_names) {
-#     community_un <- community_top_genes_union[[cn]]
-#     community_in <- community_top_genes_intersection[[cn]]
-
-#     print(paste(
-#         "Community", cn, " - markers intersection / union = ",
-#         format(length(community_in) / length(community_un) * 100, digits = 2), "%"
-#     ))
-
-#     write.table(community_un, file.path(saliency_path, paste0(cn, "_top_genes_union.csv")),
-#         row.names = FALSE, col.names = FALSE, quote = FALSE
-#     )
-#     write.table(community_in, file.path(saliency_path, paste0(cn, "_top_genes_intersection.csv")),
-#         row.names = FALSE, col.names = FALSE, quote = FALSE
-#     )
-# }
-
-
-
-
-
-# # Write a table of Dataset, Cluster, Community
-# community_df <- lapply(seq_along(seurat_corticotrophs), function(i) {
-#     obj <- seurat_corticotrophs[[i]]
-#     dataset_name <- names(seurat_corticotrophs)[i]
-
-#     clusters <- unique(Idents(obj))
-#     sapply(clusters, function(cl) {
-#         subset(obj, idents = cl)[[paste0(
-#             "nn_community_", min_similarity
-#         )]][1, 1]
-#     }) -> communities
-
-#     res <- data.frame(
-#         Dataset = dataset_name,
-#         Cluster = clusters,
-#         Community = communities
-#     )
-# })
-
-# do.call("rbind", community_df) %>%
-#     write.csv(
-#         file.path(
-#             output_folder, paste0("nn_communities_", min_similarity, ".csv")
-#         ),
-#         row.names = FALSE
-#     )
+saliency_genes %>%
+    mutate(NN_Community = mapping$nn_community_0.9[match(
+        paste0(dataset, "_", Cluster),
+        paste0(mapping$Dataset, "_", mapping$Cluster)
+    )]) %>%
+    mutate(Sex = substr(dataset, nchar(dataset), nchar(dataset))) %>%
+    group_by(Sex, NN_Community) %>% 
+    filter(!is.na(NN_Community)) %>%
+    top_n(100, abs(Saliency_mean)) %>%
+    arrange(Sex, NN_Community, Saliency_mean) %>%
+    write.csv(paste0(saliency_gene_folder, "saliency_top_100_genes_by_community.csv"), row.names = FALSE)
