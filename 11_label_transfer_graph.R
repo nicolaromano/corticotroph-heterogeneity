@@ -467,33 +467,3 @@ mc
 if (output_format != "none") {
     dev.off()
 }
-
-# Load saliency genes
-# Note the dataset here refers to the dataset that was used to train the model
-saliency_genes <- read.csv(paste0(saliency_gene_folder, "/saliency_top_100_genes.csv"), header = TRUE)
-
-# Ruf-Zamojski dataset is saved with an underscore instead of a dash here...
-# Similarly Kučka is saved as Kucka
-saliency_genes$dataset <- gsub("_", "-", saliency_genes$dataset)
-saliency_genes$dataset <- gsub("Kucka", "Kučka", saliency_genes$dataset)
-
-# Load community assignments
-min_pct <- 0.9
-communities <- read.csv(paste0(saliency_gene_folder, "predictions/nn_communities_", min_pct, "_M.csv"), header = TRUE)
-communities <- rbind(communities, read.csv(paste0(saliency_gene_folder, "predictions/nn_communities_", min_pct, "_F.csv"), header = TRUE))
-
-mapping <- left_join(communities, saliency_genes, by = c("Dataset" = "dataset", "Cluster")) %>%
-    select(Dataset, Cluster, nn_community_0.9) %>%
-    unique()
-
-saliency_genes %>%
-    mutate(NN_Community = mapping$nn_community_0.9[match(
-        paste0(dataset, "_", Cluster),
-        paste0(mapping$Dataset, "_", mapping$Cluster)
-    )]) %>%
-    mutate(Sex = substr(dataset, nchar(dataset), nchar(dataset))) %>%
-    group_by(Sex, NN_Community) %>% 
-    filter(!is.na(NN_Community)) %>%
-    top_n(100, abs(Saliency_mean)) %>%
-    arrange(Sex, NN_Community, Saliency_mean) %>%
-    write.csv(paste0(saliency_gene_folder, "saliency_top_100_genes_by_community.csv"), row.names = FALSE)
