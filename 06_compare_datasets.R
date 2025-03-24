@@ -363,7 +363,7 @@ for (thr in c(10, 15, 20)) {
     pdf(paste0("plots/common_markers_graph_thr", thr, "_", data_to_process, ".pdf"),
       width = 7, height = 7
     )
-  } else {
+  } else if (output_format == "png") {
     png(paste0("plots/common_markers_graph_thr", thr, "_", data_to_process, ".png"),
       width = 7, height = 7, units = "in", res = 300
     )
