@@ -55,19 +55,30 @@ get_KEGG_pathway_genes <- function(pathway, cache = TRUE) {
     return(res)
 }
 
-get_GO_genes <- function(go_term) {
+get_GO_genes <- function(go_term, cache = TRUE) {
+    #' Get genes from GO term
+    #' @param go_term GO term ID
+    #' @param cache If TRUE, save the result to a file, otherwise download it again.
+    #' Default is TRUE, especially useful here as Ensembl servers are often slow/down.
+    #' @return Data frame with columns ID, Gene
     # Get genes from GO term
-    ensembl <- useEnsembl(
-        biomart = "ENSEMBL_MART_ENSEMBL",
-        dataset = "mmusculus_gene_ensembl"
-    )
 
-    go_term <- getBM(
-        attributes = c("ensembl_gene_id", "mgi_symbol", "description"),
-        filters = "go", values = go_term, mart = ensembl
-    )
-    colnames(go_term) <- c("ID", "Gene")
-    return(go_term)
+    if (cache & file.exists(paste0("go_", go_term, ".rds"))) {
+        go_genes <- readRDS(paste0("go_", go_term, ".rds"))
+    } else {
+        ensembl <- useEnsembl(
+            biomart = "ENSEMBL_MART_ENSEMBL",
+            dataset = "mmusculus_gene_ensembl"
+        )
+        go_genes <- getBM(
+            attributes = c("ensembl_gene_id", "mgi_symbol", "description"),
+            filters = "go", values = go_term, mart = ensembl
+        )
+        saveRDS(go_genes, paste0("go_", go_term, ".rds"))
+    }
+
+    colnames(go_genes) <- c("ID", "Gene")
+    return(go_genes)
 }
 
 # To find specific pathways you can use e.g.
@@ -75,7 +86,7 @@ get_GO_genes <- function(go_term) {
 
 plot_pathway_scores <- function(pathways, extra_gene_list = NULL, title = "") {
     #' Plot module scores for a given pathway
-    #' @param pathways list of KEGG pathway ID or GO term.    
+    #' @param pathways list of KEGG pathway ID or GO term.
     #' @param extra_gene_list Extra list of genes to include
     #' @param title Title of the plot
     #' @return ggplot object
@@ -164,10 +175,10 @@ IEG <- c(
     "Pmaip1", "Rcan1", "Sgk1", "Slc2a3", "Srf", "Tnfaip3", "Trib1", "Tsc22d1", "Zfp36"
 )
 
-p1 <- plot_pathway_scores(c("GO:0009725", "mmu04081"), title = "Response to hormone")
+p1 <- plot_pathway_scores(c("GO:0009725", "GO:0019933", "mmu04081"), title = "Response to hormone")
 p2 <- plot_pathway_scores(NULL, extra_gene_list = IEG, title = "Immediate early genes")
-p3 <- plot_pathway_scores("mmu00190", title = "Oxidative phosphorylation")
-p4 <- plot_pathway_scores("GO:0006099", title = "TCA cycle")
+p3 <- plot_pathway_scores(c("GO:0006119", "GO:0045333", "mmu00190"), title = "Oxidative phosphorylation")
+p4 <- plot_pathway_scores(c("GO:0006099", "mmu00020"), title = "TCA cycle")
 
 
 if (output_format == "pdf") {
@@ -183,7 +194,7 @@ if (output_format == "pdf") {
 }
 
 p1$plot + p2$plot + p3$plot + p4$plot
-
+    
 if (output_format != "none") {
     dev.off()
 }
@@ -234,7 +245,9 @@ get_boot_comparison <- function(df, nboot = 1000) {
     comparisons <- expand.grid(Community1 = communities, Community2 = communities) %>%
         filter(Community1 < Community2)
 
-    res <- lapply(1:nrow(comparisons), function(i) {
+    print("Bootstrapping, this may take a while...")
+
+    res <- pblapply(1:nrow(comparisons), function(i) {
         df_filtered <- df %>%
             filter(Community %in% c(
                 comparisons$Community1[i],
@@ -253,15 +266,16 @@ get_boot_comparison <- function(df, nboot = 1000) {
         CI_high <- CI[2]
         p_value <- 2 * min(
             mean(boot_res$t > 0, na.rm = TRUE),
-            mean(boot_res$t < 0, na.rm = TRUE))
+            mean(boot_res$t < 0, na.rm = TRUE)
+        )
 
         return(data.frame(
             Community1 = comparisons$Community1[i],
             Community2 = comparisons$Community2[i],
             CI_low = CI_low,
             CI_high = CI_high,
-            p_value = p_value)
-        )
+            p_value = p_value
+        ))
     })
 
     res <- do.call(rbind, res)
@@ -274,6 +288,8 @@ r3 <- get_boot_comparison(p3$data, 1000)
 r4 <- get_boot_comparison(p4$data, 1000)
 
 r <- rbind(r1, r2, r3, r4)
+r$Pathway <- rep(c("Response to hormone", "Immediate early genes", "Oxidative phosphorylation", "TCA cycle"), each = nrow(r1))
+r$CI_low <- round(r$CI_low, 4)
+r$CI_high <- round(r$CI_high, 4)
 
-write.csv(r, paste0("tables/pathway_scores_markers_communities", data_to_process, ".csv"), row.names = FALSE)
-
+write.csv(r, paste0("pathway_scores_markers_communities", data_to_process, ".csv"), row.names = FALSE)
