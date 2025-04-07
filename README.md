@@ -1,6 +1,7 @@
-# Corticotrophs heterogeneity
+# Dynamic transcriptional heterogeneity in pituitary corticotrophs
 
-This repository contains scripts for the analysis of corticotrophs in scRNAseq pituitary datasets.
+This repository contains the scripts for the analysis of corticotrophs in scRNAseq pituitary datasets, as described in:
+[Yuan et al 2025](https://www.biorxiv.org/content/10.1101/2025.04.04.645979v1)
 
 The datasets used for this study are listed in the `datasets.csv` file
 The scripts have been numbered sequentially to help navigate the repository.
