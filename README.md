@@ -1,6 +1,7 @@
-# Corticotrophs heterogeneity
+# Dynamic transcriptional heterogeneity in pituitary corticotrophs
 
-This repository contains scripts for the analysis of corticotrophs in scRNAseq pituitary datasets.
+This repository contains the scripts for the analysis of corticotrophs in scRNAseq pituitary datasets, as described in:
+[Yuan et al 2025](https://www.biorxiv.org/content/10.1101/2025.04.04.645979v1)
 
 The datasets used for this study are listed in the `datasets.csv` file
 The scripts have been numbered sequentially to help navigate the repository.
@@ -8,6 +9,8 @@ The scripts have been numbered sequentially to help navigate the repository.
 ---
 
 [00_download_data.sh](#00downloaddata)
+
+[00b_donwload_ArrayExp_data.sh](#00downloadAEdata)
 
 [01_align_to_genome.sh](#01aligntogenome)
 
@@ -33,11 +36,15 @@ The scripts have been numbered sequentially to help navigate the repository.
 
 [11_label_transfer_graph.R](#11labeltransfergraph)
 
-[12_prepare_velocity_analysis.R](#11preparevelo)
+[12_SHAP.ipynb](#12SHAP)
 
-[13_get_velocyto_loom.sh](#13getloom)
+[13_prepare_velocity_analysis.R](#11preparevelo)
 
-[14_scvelo.ipynb](#14scvelo)
+[14_get_velocyto_loom.sh](#13getloom)
+
+[15_scvelo.ipynb](#14scvelo)
+
+[16_module_scores.R](#15modulescores)
 
 ---------------
 
@@ -45,7 +52,7 @@ The scripts have been numbered sequentially to help navigate the repository.
 
 ### `00_download_data.sh`
 
-Downloads raw data for each dataset - Note that this takes **a lot** of space.
+Downloads raw data for each dataset - Note that this takes **a lot** of space. Raw files are publicly available and have not been included in this repository. 
 Usage
 
     00_download_data.sh <SRA_id> <output_dir> <SRA_toolkit_dir>
@@ -54,7 +61,10 @@ For example
 
     00_download_data.sh SRR123456 /home/pitdatasets/Example2022 /home/sratoolkit/
 
-Note some data is deposited on ArrayExpress, which is not accessible from the NCBI SRA toolkit. A list of files to download is available in the directory and can be simply downloaded using `wget`.
+<a name="00downloadAEdata"></a>
+
+An alternative script to download data from ArrayExpress, where some of the datasets have been deposited. This is a simple script that uses `wget` to download files to the specified output directory.
+Use this for Vennekens et al., 2021
 
 <a name="01aligntogenome"></a>
 
@@ -119,6 +129,7 @@ Finds markers for each subcluster in each dataset, and compares the % of common 
 Plots correlation maps between the markers from each datasets on to the others. Plots intra-cluster and between-clusters metrics.
 
 <a name="08exportmatrices"></a>
+
 ### `08_export_matrices.R`
 
 Exports the expression data, dimension reductions, metadata and the assigned clusters to CSV files, to be used in Python for transfer learning and later for velocity analysis.
@@ -135,25 +146,38 @@ Trains the models for transfer learning, and saves them to disk.
 
 Performs prediction of labels on the new dataset, and calculates saliency maps to identify the most important genes for the prediction.
 
-<a name="11labeltransfergraph"></a
+<a name="11labeltransfergraph"></a>
+
 ### `11_label_transfer_graph.R`
 
 Creates a graph from the prediction results.
 
-<a name="12preparevelo"></a>
+<a name="12SHAP"></a>
 
-### `12_prepare_velocity_analysis.R`
+### `12_SHAP.ipynb`
+
+Calculates SHAP values for the genes used in the prediction, plots the results and saves them to file.
+
+<a name="13preparevelo"></a>
+
+### `13_prepare_velocity_analysis.R`
 
 Prepares the data for velocity analysis, by creating corticotrops-specific barcode files to feed to velocyto.
 
-<a name="13getloom"></a>
+<a name="14getloom"></a>
 
-### `13_get_velocyto_loom.sh`
+### `14_get_velocyto_loom.sh`
 
 Runs velocyto on the data, and creates loom files containing the spliced and unspliced matrices for all datasets.
 
-<a name="14scvelo"></a>
+<a name="15scvelo"></a>
 
-### `14_scvelo.ipynb`
+### `15_scvelo.ipynb`
 
 Runs scvelo on the loom files, and plots the results.
+
+<a name="16modulescores"></a>
+
+### `16_module_scores.R`
+
+Calculates module scores for pathways of interest, implements a bootstrapping method to calculate the statistical significance of the score differences in the commumnities.
