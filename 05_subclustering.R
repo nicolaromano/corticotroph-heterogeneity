@@ -1,7 +1,10 @@
 library(Seurat)
 library(ggplot2)
 library(gridExtra)
-library(tidyverse)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(stringr)
 library(pbapply)
 library(pheatmap)
 library(parallel)
@@ -21,8 +24,9 @@ names(all_corticotrophs) <- filenames
 gene_names <- lapply(all_corticotrophs, function(x) {
   rownames(x)
 })
-# 11103 common genes
+# 11101 common genes
 common_genes <- Reduce(intersect, gene_names)
+length(common_genes)
 
 all_corticotrophs <- lapply(all_corticotrophs, function(x) {
   x <- x[common_genes, ]
@@ -54,7 +58,7 @@ data_to_process <- "F"
 plot_out_type <- "pdf" # "png", "pdf" or "none"
 
 # This is very heavy to compute, so this is a switch to turn it off if already computed
-calculate_elbow_plots <- FALSE
+calculate_elbow_plots <- TRUE
 
 # Read only M or F files
 filenames <- dir("rds_outs",
@@ -186,12 +190,43 @@ wss_data <- read.csv(paste0(
   data_to_process, ".csv"
 ))
 
+# Find elbow points
+
+kneedle <- function(x, y) {
+  #' Find the "elbow" point in a curve using the Kneedle algorithm
+  #' See https://en.wikipedia.org/wiki/Knee_of_a_curve#Kneedle_algorithm
+  #' Satopaa et al. (2011) - DOI: 10.1109/ICDCSW.2011.20
+  #' @param x: the x values of the curve
+  #' @param y: the y values of the curve
+  #' @return the index of the elbow point
+
+  x_norm <- (x - min(x)) / (max(x) - min(x))
+  y_norm <- (y - min(y)) / (max(y) - min(y))
+  
+  x1 <- x_norm[1]; y1 <- y_norm[1]
+  x2 <- x_norm[length(x_norm)]; y2 <- y_norm[length(y_norm)]
+  
+  dist <- abs((y2 - y1) * x_norm - (x2 - x1) * y_norm + x2 * y1 - y2 * x1) /
+    sqrt((y2 - y1)^2 + (x2 - x1)^2)
+  
+  which.max(dist)
+}
+
+elbow_points <- wss_data %>%
+  arrange(dataset, resol) %>%
+  group_by(dataset) %>%
+  group_modify(~ {
+    idx <- kneedle(.x$resol, .x$wss_mean)
+    tibble(resol = .x$resol[idx], wss_mean = .x$wss_mean[idx])
+  }) %>%
+  ungroup()
+
 if (plot_out_type == "png") {
   png(paste0("plots/elbow_plots_", data_to_process, ".png"),
     width = 15, height = 10, units = "in", res = 300
   )
 } else if (plot_out_type == "pdf") {
-  pdf(paste0("plots/elbow_plots_", data_to_process, ".pdf"),
+  cairo_pdf(paste0("plots/elbow_plots_", data_to_process, ".pdf"),
     width = 15, height = 10
   )
 }
@@ -206,7 +241,13 @@ ggplot(wss_data, aes(x = resol, y = wss_mean)) +
     ),
     alpha = 0.2
   ) +
+  geom_point(size = 2) +  
   geom_point(size = 2) +
+  geom_point(
+    data = elbow_points,
+    aes(x = resol, y = wss_mean),
+    color = "red", size = 3
+  ) +
   scale_x_continuous(limits = c(0, max(resolutions))) +
   geom_text(aes(label = paste(min_n_clusters, max_n_clusters, sep = "-")), vjust = -1.5,
   size = 4) +
@@ -225,13 +266,7 @@ if (plot_out_type != "none") {
   dev.off()
 }
 
-# These were manually chosen based on the elbow plots
-# These are the values where the WSS change is < 10%
-if (data_to_process == "M") {
-  resolutions <- c(0.5, 0.4, 0.6, 0.5, 0.5, 0.4)
-} else if (data_to_process == "F") {
-  resolutions <- c(0.4, 0.3, 0.4, 0.5)
-}
+resolutions <- elbow_points$resol
 
 seurat_corticotrophs <- lapply(
   seq_along(seurat_corticotrophs),
@@ -265,7 +300,7 @@ if (plot_out_type == "png") {
     width = 15, height = 10, units = "in", res = 300
   )
 } else if (plot_out_type == "pdf") {
-  pdf(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".pdf"),
+  cairo_pdf(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".pdf"),
     width = 15, height = 10
   )
 }
