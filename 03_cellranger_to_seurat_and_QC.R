@@ -5,9 +5,14 @@
 
 library(Seurat)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(gridExtra)
 library(pbapply)
+
+# Set the maximum size of global variables for future package to 3GB.
+# This is needed for Seurat to run on large datasets
+options("future.globals.maxSize" = 3000 * 1024^2)
 
 plot_out_type <- "pdf" # "png" or "pdf" or "none"
 load_CR_matrices <- FALSE # Set to TRUE to reload data from CellRanger output
@@ -67,13 +72,13 @@ load_data <- function(metadata, study) {
   # We use a relatively loose filtering here.
   # Filter anything greater than 75th percentile + 3 * SD for counts and features,
   # anything below 25th percentile - 3 * SD for counts and features (or 300 and 100 respectively, whichever is higher),
-  # and anything with >80% mitochondrial genes
+  # and anything with >20% mitochondrial genes
   low_counts <- max(500, quantile(seurat_obj$nCount_RNA, 0.25) - 3 * sd(seurat_obj$nCount_RNA))
   high_counts <- quantile(seurat_obj$nCount_RNA, 0.75) + 3 * sd(seurat_obj$nCount_RNA)
   low_features <- max(300, quantile(seurat_obj$nCount_RNA, 0.25) - 3 * sd(seurat_obj$nCount_RNA))
   high_features <- quantile(seurat_obj$nFeature_RNA, 0.75) + 3 * sd(seurat_obj$nFeature_RNA)
   low_mt <- 0
-  high_mt <- 70
+  high_mt <- 15
 
   print("Filtering cells with:")
   print(paste("Counts:", low_counts, high_counts))
@@ -337,13 +342,15 @@ cell_num <- data.frame(
   })) %>%
   mutate(perc_reported = round(cells / reported * 100, 2))
 
+print(cell_num)
+
 # Stats - is the ratio reported vs. published different from 1?
 # Does sex affect the ratio?
 model <- lm(I((cells / reported) - 1) ~ sex, data = cell_num)
 summary(model)
 
 if (plot_out_type == "pdf") {
-  pdf("plots/cell_number_perc_reported.pdf",
+  cairo_pdf("plots/cell_number_perc_reported.pdf",
     width = 10, height = 8
   )
 } else if (plot_out_type == "png") {
@@ -352,6 +359,7 @@ if (plot_out_type == "pdf") {
   )
 }
 
+# FIGURE 1B
 ggplot(
   cell_num, aes(
     x = author, y = perc_reported,
@@ -376,7 +384,7 @@ if (plot_out_type != "none") {
 }
 
 if (plot_out_type == "pdf") {
-  pdf("plots/cell_number.pdf", width = 10, height = 8)
+  cairo_pdf("plots/cell_number.pdf", width = 10, height = 8)
 } else if (plot_out_type == "png") {
   png("plots/cell_number.png", width = 1000, height = 500)
 }
@@ -472,7 +480,7 @@ p3 <- ggplot(all_qc_data, aes(x = dataset, y = mt_perc, fill = sex)) +
   )
 
 if (plot_out_type == "pdf") {
-  pdf("plots/all_qc.pdf", width = 15, height = 5)
+  cairo_pdf("plots/all_qc.pdf", width = 15, height = 5)
 } else if (plot_out_type == "png") {
   png("plots/all_qc.png", width = 1500, height = 500)
 }
@@ -514,7 +522,7 @@ allQC <- lapply(seurat_objects_SCT, function(s) {
 })
 
 if (plot_out_type == "pdf") {
-  pdf("plots/qc_summary_all_datasets.pdf",
+  cairo_pdf("plots/qc_summary_all_datasets.pdf",
     width = 15, height = 10,
     pointsize = 25
   )
@@ -564,15 +572,15 @@ if (plot_out_type != "none") {
 }
 
 if (plot_out_type == "pdf") {
-  pdf("plots/umap_all_datasets.pdf",
-    width = 15, height = 10,
-    units = "in", res = 300
+  cairo_pdf("plots/umap_all_datasets.pdf",
+    width = 15, height = 10
   )
 } else if (plot_out_type == "png") {
 png("plots/umap_all_datasets.png",
-  width = 15, height = 10,
-  units = "in", res = 300
-)
+    width = 15, height = 10,
+    units = "in", res = 300
+  )
+}
 
 p <- lapply(seurat_objects_SCT, function(obj) {
   DimPlot(obj, pt.size = 0.05, cols = "lightgray") +
