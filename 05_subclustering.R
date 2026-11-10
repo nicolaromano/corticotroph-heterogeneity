@@ -49,6 +49,7 @@ gc()
 
 #### SUBCLUSTERING ####
 
+set.seed(54321)
 # Load corticotrophs
 datasets <- read.csv("datasets.csv")
 
@@ -190,36 +191,11 @@ wss_data <- read.csv(paste0(
   data_to_process, ".csv"
 ))
 
-# Find elbow points
-
-kneedle <- function(x, y) {
-  #' Find the "elbow" point in a curve using the Kneedle algorithm
-  #' See https://en.wikipedia.org/wiki/Knee_of_a_curve#Kneedle_algorithm
-  #' Satopaa et al. (2011) - DOI: 10.1109/ICDCSW.2011.20
-  #' @param x: the x values of the curve
-  #' @param y: the y values of the curve
-  #' @return the index of the elbow point
-
-  x_norm <- (x - min(x)) / (max(x) - min(x))
-  y_norm <- (y - min(y)) / (max(y) - min(y))
-  
-  x1 <- x_norm[1]; y1 <- y_norm[1]
-  x2 <- x_norm[length(x_norm)]; y2 <- y_norm[length(y_norm)]
-  
-  dist <- abs((y2 - y1) * x_norm - (x2 - x1) * y_norm + x2 * y1 - y2 * x1) /
-    sqrt((y2 - y1)^2 + (x2 - x1)^2)
-  
-  which.max(dist)
+if (data_to_process == "M") {
+  elbows <- c(0.6, 0.5, 0.5, 0.5, 0.4, 0.4)
+} else {
+  elbows <- c(0.5, 0.3, 0.6, 0.5)
 }
-
-elbow_points <- wss_data %>%
-  arrange(dataset, resol) %>%
-  group_by(dataset) %>%
-  group_modify(~ {
-    idx <- kneedle(.x$resol, .x$wss_mean)
-    tibble(resol = .x$resol[idx], wss_mean = .x$wss_mean[idx])
-  }) %>%
-  ungroup()
 
 if (plot_out_type == "png") {
   png(paste0("plots/elbow_plots_", data_to_process, ".png"),
@@ -231,6 +207,16 @@ if (plot_out_type == "png") {
   )
 }
 
+elbow_points <- data.frame(
+  dataset = unique(wss_data$dataset),
+  resol = elbows,
+  wss_mean = sapply(unique(wss_data$dataset), function(x) {
+    wss_data %>%
+      filter(dataset == x, resol == elbows[which(unique(wss_data$dataset) == x)]) %>%
+      pull(wss_mean)
+  })
+)
+
 # Plot the results
 ggplot(wss_data, aes(x = resol, y = wss_mean)) +
   geom_line() +
@@ -241,7 +227,6 @@ ggplot(wss_data, aes(x = resol, y = wss_mean)) +
     ),
     alpha = 0.2
   ) +
-  geom_point(size = 2) +  
   geom_point(size = 2) +
   geom_point(
     data = elbow_points,
@@ -249,8 +234,10 @@ ggplot(wss_data, aes(x = resol, y = wss_mean)) +
     color = "red", size = 3
   ) +
   scale_x_continuous(limits = c(0, max(resolutions))) +
-  geom_text(aes(label = paste(min_n_clusters, max_n_clusters, sep = "-")), vjust = -1.5,
-  size = 4) +
+  geom_text(aes(label = paste(min_n_clusters, max_n_clusters, sep = "-")),
+    vjust = -1.5,
+    size = 4
+  ) +
   facet_wrap(~dataset, ncol = 3, scales = "free") +
   xlab("Resolution") +
   ylab("WSS") +
@@ -266,7 +253,6 @@ if (plot_out_type != "none") {
   dev.off()
 }
 
-resolutions <- elbow_points$resol
 
 seurat_corticotrophs <- lapply(
   seq_along(seurat_corticotrophs),
@@ -279,7 +265,7 @@ seurat_corticotrophs <- lapply(
     obj <- obj %>%
       RunUMAP(dims = 1:20) %>%
       FindNeighbors(k = 30) %>%
-      FindClusters(resolution = resolutions[i])
+      FindClusters(resolution = elbows[i])
 
     return(obj)
   }
@@ -290,10 +276,12 @@ pblapply(seurat_corticotrophs, function(obj) {
   saveRDS(obj, file = paste0("rds_outs/", obj$orig.ident[1], "_subclustered.rds"))
 })
 
-# seurat_corticotrophs <- pblapply(
-#   paste0("rds_outs/", datasets$orig.ident, "_subclustered.rds"),
-#   readRDS
-# )
+filenames <- dir("rds_outs",
+  pattern = paste0(data_to_process, "_subclustered.rds"),
+  full.names = TRUE
+)
+
+seurat_corticotrophs <- pblapply(filenames, readRDS)
 
 if (plot_out_type == "png") {
   png(paste0("plots/corticotrophs_all_datasets_", data_to_process, ".png"),
