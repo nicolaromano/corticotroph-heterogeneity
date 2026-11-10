@@ -17,45 +17,57 @@ if (!dir.exists(outdir)) {
   print(paste("Created output directory", outdir))
 }
 
+# Double check all objects have the same number of features
+stopifnot(length(unique(sapply(seurat_obj_cort, nrow))) == 1)
+
 sapply(seurat_obj_cort, function(obj) {
   print(paste(obj$author[1], obj$year[1], "-", obj$sex[1]))
   print("---------------------------------")
 
-  print("Exporting expression matrix")
+  # Export expression matrix (SCT normalized)
+  expr <- GetAssayData(obj)
+  print(paste("Exporting expression matrix", nrow(expr), "genes x", ncol(expr), "cells"))
   outfile <- paste0(outdir, obj$orig.ident[1], "_expression.csv")
-  write.csv(GetAssayData(obj), file = outfile, row.names = TRUE)
+  write.csv(expr, file = outfile, row.names = TRUE)
   # gzip(outfile, overwrite = TRUE)
 
-  print("Exporting raw counts")
+  # Export raw counts matrix
   outfile <- paste0(outdir, obj$orig.ident[1], "_counts")
-  counts_matrix <- GetAssayData(obj, assay = "RNA", slot = "counts")
+  counts_matrix <- GetAssayData(obj, assay = "RNA", layer = "counts")
+  print(paste("Exporting raw counts", nrow(counts_matrix), "genes x", ncol(counts_matrix), "cells"))
   write.csv(counts_matrix, file = paste0(outfile, ".csv"), row.names = TRUE)
   writeMM(counts_matrix, file = paste0(outfile, ".mtx"))
 
-  print("Exporting cluster assignments")
+  # Export cluster assignments and marker communities
   outfile <- paste0(outdir, obj$orig.ident[1], "_clusters.csv")
 
-  write.csv(
-    data.frame(
+  clust <- data.frame(
       Barcode = Cells(obj),
       Cluster = Idents(obj),
       Community_markers_10 = obj$marker_community_10,
       Community_markers_15 = obj$marker_community_15,
       Community_markers_20 = obj$marker_community_20
-    ),
+    )
+
+  print(paste("Exporting cluster assignments", nrow(clust), "cells"))
+  
+  write.csv(clust,
     outfile,
     row.names = FALSE, quote = FALSE
   )
 
-  print("Exporting dimension reductions (PCA and UMAP)")
   outfile_pca <- paste0(outdir, obj$orig.ident[1], "_pca.csv")
   outfile_umap <- paste0(outdir, obj$orig.ident[1], "_umap.csv")
   pca <- Embeddings(obj, reduction = "pca")
   umap <- Embeddings(obj, reduction = "umap")
+  
+  print(paste("Exporting dimension reductions (PCA and UMAP)", nrow(pca), "cells"))
+
   write.csv(cbind(Barcode = Cells(obj), pca),
     outfile_pca,
     row.names = FALSE, quote = FALSE
   )
+  
   write.csv(data.frame(Barcode = Cells(obj), UMAP_1 = umap[, 1], UMAP_2 = umap[, 2]),
     outfile_umap,
     row.names = FALSE, quote = FALSE
