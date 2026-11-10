@@ -22,7 +22,7 @@ datasets <- read.csv("datasets.csv")
 ####### Compare datasets #######
 
 # Data to process ("M" or "F")
-data_to_process <- "F"
+data_to_process <- "M"
 output_format <- "pdf" # "pdf", "png" or "none"
 
 markers_output_folder <- "markers/"
@@ -117,7 +117,7 @@ if (output_format == "png") {
     units = "in", res = 300
   )
 } else if (output_format == "pdf") {
-  pdf(paste0("plots/common_markers_boxplot_", data_to_process, ".pdf"),
+  cairo_pdf(paste0("plots/common_markers_boxplot_", data_to_process, ".pdf"),
     width = 10, height = 5
   )
 }
@@ -229,7 +229,7 @@ if (output_format == "png") {
     width = width, height = 7, units = "in", res = 300
   )
 } else if (output_format == "pdf") {
-  pdf(paste0("plots/perc_common_markers_", data_to_process, ".pdf"),
+  cairo_pdf(paste0("plots/perc_common_markers_", data_to_process, ".pdf"),
     width = width, height = 7
   )
 }
@@ -306,7 +306,7 @@ get_similarity_graph <- function(min_pct, do_plot = TRUE,
     group_split(Dataset) -> nodes_by_group
 
   # Find communities
-  wc <- walktrap.community(network, steps = 100)
+  wc <- cluster_walktrap(network, steps = 100)
   node_comm <- membership(wc)
   nodes_per_comm <- table(node_comm)
 
@@ -437,7 +437,7 @@ for (thr in c(10, 15, 20)) {
   })
 
   if (output_format == "pdf") {
-    pdf(paste0("plots/umap_communities_common_markers_thr", thr, "_", data_to_process, ".pdf"),
+    cairo_pdf(paste0("plots/umap_communities_common_markers_thr", thr, "_", data_to_process, ".pdf"),
       width = 7, height = 7
     )
   } else if (output_format == "png") {
@@ -469,7 +469,7 @@ for (thr in c(10, 15, 20)) {
 
 
   if (output_format == "pdf") {
-    pdf(paste0("plots/markers_community_proportions_thr", thr, "_", data_to_process, ".pdf"),
+    cairo_pdf(paste0("plots/markers_community_proportions_thr", thr, "_", data_to_process, ".pdf"),
       width = 7, height = 7
     )
   } else if (output_format == "png") {
@@ -735,7 +735,7 @@ names(seurat_corticotrophs) <- sapply(seurat_corticotrophs, function(s) {
 
 # How much of the reads are Pomc?
 pomc_perc <- lapply(seurat_corticotrophs, function(s) {
-  expr <- GetAssayData(s, slot = "counts")
+  expr <- GetAssayData(s, layer = "counts")
   sum(expr["Pomc", ]) / sum(expr) * 100
 })
 
@@ -743,7 +743,7 @@ quantile(unlist(pomc_perc))
 
 # How many reads are 0?
 zero_perc <- lapply(seurat_corticotrophs, function(s) {
-  expr <- GetAssayData(s, slot = "counts")
+  expr <- GetAssayData(s, layer = "counts")
   sum(expr == 0) / (nrow(expr) * ncol(expr)) * 100
 })
 
