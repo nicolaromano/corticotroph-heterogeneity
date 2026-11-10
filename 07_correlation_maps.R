@@ -26,7 +26,7 @@ plot_out_type <- "pdf" # or "pdf" or "none"
 datasets <- read.csv("datasets.csv")
 
 # Data to process ("M" or "F")
-data_to_process <- "F"
+data_to_process <- "M"
 
 # Number of random swaps to perform
 num_swaps <- 100
@@ -501,7 +501,7 @@ write.csv(all_avg_corr, file = paste0("all_average_correlations", data_to_proces
 all_avg_corr <- read.csv(paste0("all_average_correlations", data_to_process, ".csv"))
 
 if (plot_out_type == "pdf") {
-  pdf(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".pdf"),
+  cairo_pdf(paste0("plots/correlation_maps/all_avg_corr_", data_to_process, ".pdf"),
     width = 15, height = 8
   )
 } else if (plot_out_type == "png") {
@@ -568,7 +568,7 @@ plot_correlation_boxplot <- function(data, with_shuffles = FALSE, ncol = 4) {
 }
 
 if (plot_out_type == "pdf") {
-  pdf(paste0("plots/correlation_maps/all_avg_corr", data_to_process, ".pdf"),
+  cairo_pdf(paste0("plots/correlation_maps/all_avg_corr", data_to_process, ".pdf"),
     width = 15, height = 8
   )
 } else if (plot_out_type == "png") {
@@ -590,7 +590,7 @@ all_avg_corr_mf <- rbind(
 )
 
 if (plot_out_type == "pdf") {
-    pdf("plots/correlation_maps/all_avg_corr_MF.pdf", width = 9, height = 8)
+    cairo_pdf("plots/correlation_maps/all_avg_corr_MF.pdf", width = 9, height = 8)
   } else if (plot_out_type == "png") {
     png("plots/correlation_maps/all_avg_corr_MF.png", width = 9, height = 8, units = "in", res = 300)
 }
